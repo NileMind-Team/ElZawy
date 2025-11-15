@@ -7,6 +7,7 @@ import AuthPage from "./pages/AuthPage";
 import Profile from "./pages/Profile";
 import Addresses from "./pages/Addresses";
 import Reviews from "./pages/Reviews";
+import Cart from "./pages/Cart";
 
 function App() {
   const location = useLocation();
@@ -41,6 +42,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/addresses" element={<Addresses />} />
           <Route path="/reviews" element={<Reviews />} />
+          <Route path="/cart" element={<Cart />} />
         </Routes>
       </main>
     </div>

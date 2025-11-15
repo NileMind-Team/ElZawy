@@ -7,6 +7,7 @@ import {
   FaMapMarkerAlt,
   FaTrash,
   FaStar,
+  FaShoppingCart,
 } from "react-icons/fa";
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,7 +22,10 @@ const Navbar = () => {
   const dropdownRef = useRef(null);
 
   const isLoggedIn = !!localStorage.getItem("token");
-  const links = [{ path: "/", label: "Home", icon: <FaHome /> }];
+  const links = [
+    { path: "/", label: "Home", icon: <FaHome /> },
+    { path: "/cart", label: "Cart", icon: <FaShoppingCart /> },
+  ];
 
   const authLinks = [
     { path: "/login", label: "Sign In" },

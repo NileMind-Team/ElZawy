@@ -12,13 +12,12 @@ import {
   FaCoffee,
   FaIceCream,
   FaHamburger,
-  FaFire,
-  FaLeaf,
   FaClock,
   FaEye,
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 const Home = () => {
@@ -34,6 +33,7 @@ const Home = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+  const navigate = useNavigate();
 
   // Categories with icons
   const categories = [
@@ -66,8 +66,6 @@ const Home = () => {
         rating: 4.8,
         prepTime: "15-20 mins",
         calories: "420 kcal",
-        isPopular: true,
-        isSpicy: false,
       },
       {
         id: 2,
@@ -88,8 +86,6 @@ const Home = () => {
         rating: 4.6,
         prepTime: "10-15 mins",
         calories: "320 kcal",
-        isPopular: true,
-        isSpicy: true,
       },
       {
         id: 3,
@@ -110,7 +106,6 @@ const Home = () => {
         rating: 4.9,
         prepTime: "5 mins",
         calories: "280 kcal",
-        isVegan: false,
       },
       {
         id: 4,
@@ -125,7 +120,6 @@ const Home = () => {
         rating: 4.7,
         prepTime: "3 mins",
         calories: "110 kcal",
-        isVegan: true,
       },
       {
         id: 5,
@@ -147,7 +141,6 @@ const Home = () => {
         rating: 4.9,
         prepTime: "12-15 mins",
         calories: "380 kcal",
-        isPopular: true,
       },
       {
         id: 6,
@@ -356,30 +349,21 @@ const Home = () => {
   };
 
   const renderStars = (rating) => {
+    const numericRating = Number(rating);
+
     return (
       <div className="flex items-center gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
           <FaStar
             key={star}
             className={`text-sm ${
-              star <= rating ? "text-[#FDB913]" : "text-gray-300"
+              star <= numericRating ? "text-[#FDB913]" : "text-gray-300"
             }`}
           />
         ))}
       </div>
     );
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#E41E26] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading delicious products...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] font-sans relative overflow-x-hidden">
@@ -528,26 +512,9 @@ const Home = () => {
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
-                    {product.isPopular && (
-                      <div className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-[#E41E26] text-white px-2 sm:px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                        <FaFire className="text-[#FDB913]" />
-                        Popular
-                      </div>
-                    )}
                     <div className="absolute top-2 sm:top-3 right-2 sm:right-3 bg-white/90 backdrop-blur-sm rounded-full p-1 sm:p-2 shadow-lg">
                       {renderStars(product.rating)}
                     </div>
-                    {product.isSpicy && (
-                      <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                        🌶️ Spicy
-                      </div>
-                    )}
-                    {product.isVegan && (
-                      <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                        <FaLeaf />
-                        Vegan
-                      </div>
-                    )}
                   </div>
 
                   {/* Product Info */}
@@ -618,7 +585,7 @@ const Home = () => {
             >
               <div
                 className="bg-white rounded-3xl shadow-2xl overflow-hidden w-full max-w-6xl mx-auto my-auto"
-                onClick={(e) => e.stopPropagation()} 
+                onClick={(e) => e.stopPropagation()}
               >
                 {/* Close Button */}
                 <button
@@ -636,25 +603,6 @@ const Home = () => {
                       alt={selectedProduct.name}
                       className="w-full h-64 sm:h-80 lg:h-full object-cover"
                     />
-                    <div className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 flex gap-2 flex-wrap">
-                      {selectedProduct.isPopular && (
-                        <div className="bg-[#E41E26] text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1">
-                          <FaFire className="text-[#FDB913]" />
-                          Popular
-                        </div>
-                      )}
-                      {selectedProduct.isSpicy && (
-                        <div className="bg-red-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold">
-                          🌶️ Spicy
-                        </div>
-                      )}
-                      {selectedProduct.isVegan && (
-                        <div className="bg-green-500 text-white px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-bold flex items-center gap-1">
-                          <FaLeaf />
-                          Vegan
-                        </div>
-                      )}
-                    </div>
                   </div>
 
                   {/* Product Details */}
@@ -771,41 +719,11 @@ const Home = () => {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white rounded-full p-3 sm:p-4 shadow-2xl z-40 cursor-pointer hover:scale-110 transition-transform duration-200"
-          onClick={() => {
-            Swal.fire({
-              title: "Your Cart",
-              html: `
-                <div class="text-left">
-                  ${cart
-                    .map(
-                      (item) => `
-                    <div class="border-b py-2">
-                      <div class="font-semibold">${item.name}</div>
-                      <div class="text-sm text-gray-600">Quantity: ${
-                        item.quantity
-                      } • EGP ${(item.price * item.quantity).toFixed(2)}</div>
-                    </div>
-                  `
-                    )
-                    .join("")}
-                  <div class="font-bold text-lg mt-4">
-                    Total: EGP ${cart
-                      .reduce(
-                        (total, item) => total + item.price * item.quantity,
-                        0
-                      )
-                      .toFixed(2)}
-                  </div>
-                </div>
-              `,
-              confirmButtonText: "Continue Shopping",
-              confirmButtonColor: "#E41E26",
-            });
-          }}
+          onClick={() => navigate("/cart")}
         >
           <div className="relative">
             <FaShoppingCart size={20} className="sm:w-6" />
-            <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-white text-[#E41E26] rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs sm:text-sm font-bold">
+            <span className="absolute -top-2 -right-2 bg-white text-[#E41E26] rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs font-bold">
               {cart.reduce((total, item) => total + item.quantity, 0)}
             </span>
           </div>
