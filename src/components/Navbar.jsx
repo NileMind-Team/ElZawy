@@ -23,10 +23,7 @@ const Navbar = () => {
   const dropdownRef = useRef(null);
 
   const isLoggedIn = !!localStorage.getItem("token");
-  const links = [
-    { path: "/", label: "Home", icon: <FaHome /> },
-    { path: "/cart", label: "Cart", icon: <FaShoppingCart /> },
-  ];
+  const links = [{ path: "/", label: "Home", icon: <FaHome /> }];
 
   const authLinks = [
     { path: "/login", label: "Sign In" },
@@ -107,6 +104,11 @@ const Navbar = () => {
     navigate("/my-orders");
   };
 
+  const handleCartClick = () => {
+    setIsDropdownOpen(false);
+    navigate("/cart");
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -183,24 +185,6 @@ const Navbar = () => {
               </Link>
             </motion.li>
           ))}
-
-          {/* My Orders Link - Only show when logged in */}
-          {isLoggedIn && (
-            <motion.li whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link
-                to="/my-orders"
-                className={`flex items-center gap-2 font-medium transition-all duration-200 
-                hover:text-[#E41E26] ${
-                  location.pathname === "/my-orders"
-                    ? "text-[#E41E26]"
-                    : "text-gray-700"
-                }`}
-              >
-                <FaClipboardList />
-                My Orders
-              </Link>
-            </motion.li>
-          )}
         </ul>
 
         {/* Auth Section */}
@@ -296,6 +280,19 @@ const Navbar = () => {
                       >
                         <FaClipboardList className="text-[#E41E26]" />
                         <span>My Orders</span>
+                      </button>
+                    </motion.div>
+
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <button
+                        onClick={handleCartClick}
+                        className="w-full text-left flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] transition-all duration-200 font-medium rounded-lg"
+                      >
+                        <FaShoppingCart className="text-[#E41E26]" />
+                        <span>My Cart</span>
                       </button>
                     </motion.div>
 
