@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/ElZawy/static/css/main.8d6a8a30.css",
+    "main.js": "/ElZawy/static/js/main.9dc77d8b.js",
+    "static/media/logo.png": "/ElZawy/static/media/logo.9ad712f40a83eaf4761a.png",
+    "index.html": "/ElZawy/index.html",
+    "main.8d6a8a30.css.map": "/ElZawy/static/css/main.8d6a8a30.css.map",
+    "main.9dc77d8b.js.map": "/ElZawy/static/js/main.9dc77d8b.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.8d6a8a30.css",
+    "static/js/main.9dc77d8b.js"
+  ]
+}
