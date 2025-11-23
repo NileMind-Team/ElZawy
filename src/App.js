@@ -17,6 +17,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminBranches from "./pages/AdminBranches";
 import DeliveryCostManagement from "./pages/DeliveryCostManagement";
 import CouponsManagement from "./pages/CouponsManagement";
+import CitiesManagement from "./pages/CitiesManagement";
 
 function App() {
   const location = useLocation();
@@ -87,6 +88,7 @@ function App() {
             element={<DeliveryCostManagement />}
           />
           <Route path="/admin/coupons" element={<CouponsManagement />} />
+          <Route path="/admin/cities" element={<CitiesManagement />} />
         </Routes>
       </main>
 
