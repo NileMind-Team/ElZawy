@@ -38,6 +38,8 @@ const ProductForm = () => {
   const [selectedDays, setSelectedDays] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [originalImageUrl, setOriginalImageUrl] = useState("");
+  console.log(originalImageUrl);
+  
 
   const daysOfWeek = [
     { id: 0, name: "الأحد" },
@@ -240,18 +242,6 @@ const ProductForm = () => {
       formData.Description &&
       formData.Image
     );
-  };
-
-  // دالة جديدة لتحويل URL إلى Blob
-  const urlToBlob = async (url) => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      return blob;
-    } catch (error) {
-      console.error("Error converting URL to blob:", error);
-      throw error;
-    }
   };
 
   const handleSubmit = async (e) => {
