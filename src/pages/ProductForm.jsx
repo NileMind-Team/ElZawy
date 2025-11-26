@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   FaArrowLeft,
@@ -12,6 +12,10 @@ import {
   FaTrash,
   FaChevronDown,
   FaFire,
+  FaList,
+  FaEdit,
+  FaCog,
+  FaTag,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import axiosInstance from "../api/axiosInstance";
@@ -29,6 +33,10 @@ const ProductForm = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
   const [initialFormData, setInitialFormData] = useState(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [showOptionTypesManager, setShowOptionTypesManager] = useState(false);
+  const [optionTypes, setOptionTypes] = useState([]);
+  const [editingOptionType, setEditingOptionType] = useState(null);
+  const [newOptionType, setNewOptionType] = useState({ name: "" });
 
   const [formData, setFormData] = useState({
     Name: "",
@@ -66,6 +74,181 @@ const ProductForm = () => {
     { id: "الخميس", name: "الخميس" },
     { id: "الجمعة", name: "الجمعة" },
   ];
+
+  const isArabic = (text) => {
+    const arabicRegex = /[\u0600-\u06FF]/;
+    return arabicRegex.test(text);
+  };
+
+  useEffect(() => {
+    const fetchOptionTypes = async () => {
+      try {
+        const response = await axiosInstance.get(
+          "/api/MenuItemOptionTypes/GetAll"
+        );
+        setOptionTypes(response.data);
+      } catch (error) {
+        console.error("Error fetching option types:", error);
+        Swal.fire({
+          icon: "error",
+          title: "خطأ",
+          text: "فشل في تحميل أنواع الاضافات",
+          confirmButtonColor: "#E41E26",
+        });
+      }
+    };
+
+    fetchOptionTypes();
+  }, []);
+
+  const handleOpenOptionTypesManager = () => {
+    setShowOptionTypesManager(true);
+    document.body.style.overflow = "hidden";
+  };
+
+  const handleCloseOptionTypesManager = () => {
+    setShowOptionTypesManager(false);
+    setEditingOptionType(null);
+    setNewOptionType({ name: "" });
+    document.body.style.overflow = "auto";
+  };
+
+  const handleEditOptionType = (optionType) => {
+    setEditingOptionType({ ...optionType });
+    setNewOptionType({ name: "" });
+  };
+
+  const handleSaveOptionType = async () => {
+    if (!editingOptionType.name.trim()) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: "اسم نوع الإضافة مطلوب",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    try {
+      await axiosInstance.put(
+        `/api/MenuItemOptionTypes/Update/${editingOptionType.id}`,
+        {
+          name: editingOptionType.name,
+        }
+      );
+
+      setOptionTypes(
+        optionTypes.map((type) =>
+          type.id === editingOptionType.id ? { ...editingOptionType } : type
+        )
+      );
+
+      setEditingOptionType(null);
+      Swal.fire({
+        icon: "success",
+        title: "تم التحديث!",
+        text: "تم تحديث نوع الإضافة بنجاح",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Error updating option type:", error);
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: "فشل في تحديث نوع الإضافة",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    }
+  };
+
+  const handleAddOptionType = async () => {
+    if (!newOptionType.name.trim()) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: "اسم نوع الإضافة مطلوب",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.post(
+        "/api/MenuItemOptionTypes/Add",
+        {
+          name: newOptionType.name,
+        }
+      );
+
+      const newOptionTypeData = response.data;
+
+      setOptionTypes([...optionTypes, newOptionTypeData]);
+      setNewOptionType({ name: "" });
+
+      Swal.fire({
+        icon: "success",
+        title: "تم الإضافة!",
+        text: "تم إضافة نوع الإضافة الجديد بنجاح",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Error adding option type:", error);
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: "فشل في إضافة نوع الإضافة",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    }
+  };
+
+  const handleDeleteOptionType = async (optionTypeId) => {
+    Swal.fire({
+      title: "هل أنت متأكد؟",
+      text: "لن تتمكن من التراجع عن هذا الإجراء!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E41E26",
+      cancelButtonColor: "#6B7280",
+      confirmButtonText: "نعم، احذفه!",
+      cancelButtonText: "إلغاء",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axiosInstance.delete(
+            `/api/MenuItemOptionTypes/Delete/${optionTypeId}`
+          );
+
+          setOptionTypes(
+            optionTypes.filter((type) => type.id !== optionTypeId)
+          );
+
+          Swal.fire({
+            title: "تم الحذف!",
+            text: "تم حذف نوع الإضافة بنجاح",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        } catch (error) {
+          console.error("Error deleting option type:", error);
+          Swal.fire({
+            icon: "error",
+            title: "خطأ",
+            text: "فشل في حذف نوع الإضافة",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
+      }
+    });
+  };
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -1112,6 +1295,229 @@ const ProductForm = () => {
           </motion.div>
         </div>
       </motion.div>
+
+      <motion.button
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={handleOpenOptionTypesManager}
+        className="fixed bottom-4 left-4 z-40 bg-purple-500 text-white rounded-full p-3 sm:p-4 shadow-2xl hover:bg-purple-600 transition-colors duration-200"
+      >
+        <FaCog className="w-4 h-4 sm:w-6 sm:h-6" />
+      </motion.button>
+
+      <AnimatePresence>
+        {showOptionTypesManager && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              onClick={handleCloseOptionTypesManager}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+              onClick={handleCloseOptionTypesManager}
+            >
+              <div
+                className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden w-full max-w-4xl mx-auto my-auto max-h-[90vh] overflow-y-auto transition-colors duration-300"
+                onClick={(e) => e.stopPropagation()}
+                dir="rtl"
+              >
+                <div className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white p-6 relative">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+                        <FaCog className="text-2xl" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold">
+                          إدارة أنواع الإضافات
+                        </h2>
+                        <p className="text-white/80 mt-1">
+                          إضافة، تعديل وحذف أنواع الإضافات
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleCloseOptionTypesManager}
+                      className="bg-white/20 backdrop-blur-sm rounded-full p-3 text-white hover:bg-white/30 transition-all duration-200 hover:scale-110"
+                    >
+                      <FaTimes size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl p-6 mb-8 transition-colors duration-300 shadow-lg">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="bg-[#E41E26]/10 p-2 rounded-xl">
+                        <FaPlus className="text-[#E41E26] text-lg" />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                        إضافة نوع إضافة جديد
+                      </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                          اسم نوع الإضافة
+                        </label>
+                        <div className="relative">
+                          <FaTag className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
+                          <input
+                            type="text"
+                            value={newOptionType.name}
+                            onChange={(e) =>
+                              setNewOptionType({
+                                ...newOptionType,
+                                name: e.target.value,
+                              })
+                            }
+                            placeholder="أدخل اسم نوع الإضافة الجديد..."
+                            className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-[#E41E26] focus:border-[#E41E26] outline-none transition-all text-right text-lg font-medium"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-start mt-6">
+                      <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleAddOptionType}
+                        className="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-xl font-bold hover:shadow-xl transition-all flex items-center gap-3 text-lg shadow-lg"
+                      >
+                        <FaPlus />
+                        إضافة نوع إضافة جديد
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="bg-[#FDB913]/10 p-2 rounded-xl">
+                        <FaList className="text-[#FDB913] text-lg" />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                        أنواع الإضافات الحالية ({optionTypes.length})
+                      </h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      {optionTypes.map((optionType) => (
+                        <motion.div
+                          key={optionType.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 hover:border-[#E41E26]/30 dark:hover:border-[#E41E26]/30 rounded-2xl p-6 transition-all duration-300 hover:shadow-lg group"
+                        >
+                          {editingOptionType &&
+                          editingOptionType.id === optionType.id ? (
+                            <div className="space-y-6">
+                              <div className="grid grid-cols-1 gap-6">
+                                <div>
+                                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                                    اسم نوع الإضافة
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editingOptionType.name}
+                                    onChange={(e) =>
+                                      setEditingOptionType({
+                                        ...editingOptionType,
+                                        name: e.target.value,
+                                      })
+                                    }
+                                    className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-[#E41E26] focus:border-[#E41E26] outline-none transition-all text-right text-lg font-medium"
+                                    dir="rtl"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex gap-3 justify-start pt-4 border-t border-gray-200 dark:border-gray-600">
+                                <motion.button
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() => setEditingOptionType(null)}
+                                  className="px-6 py-3 rounded-xl font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all"
+                                >
+                                  إلغاء التعديل
+                                </motion.button>
+                                <motion.button
+                                  whileHover={{ scale: 1.02, y: -2 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={handleSaveOptionType}
+                                  className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all flex items-center gap-2 shadow-lg"
+                                >
+                                  <FaSave />
+                                  حفظ التغييرات
+                                </motion.button>
+                              </div>
+                            </div>
+                          ) : (
+                            // View Mode
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-xl">
+                                  <FaCog className="text-blue-600 text-lg" />
+                                </div>
+                                <div>
+                                  <h4
+                                    className="font-bold text-gray-800 dark:text-gray-200 text-lg mb-1"
+                                    dir={
+                                      isArabic(optionType.name) ? "rtl" : "ltr"
+                                    }
+                                  >
+                                    {optionType.name}
+                                  </h4>
+
+                                </div>
+                              </div>
+
+                              <div className="flex gap-2">
+                                <motion.button
+                                  whileHover={{ scale: 1.1, y: -2 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() =>
+                                    handleEditOptionType(optionType)
+                                  }
+                                  className="bg-blue-500 text-white p-3 rounded-xl hover:bg-blue-600 transition-all shadow-md"
+                                  title="تعديل نوع الإضافة"
+                                >
+                                  <FaEdit size={18} />
+                                </motion.button>
+                                <motion.button
+                                  whileHover={{ scale: 1.1, y: -2 }}
+                                  whileTap={{ scale: 0.9 }}
+                                  onClick={() =>
+                                    handleDeleteOptionType(optionType.id)
+                                  }
+                                  className="bg-red-500 text-white p-3 rounded-xl hover:bg-red-600 transition-all shadow-md"
+                                  title="حذف نوع الإضافة"
+                                >
+                                  <FaTrash size={18} />
+                                </motion.button>
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

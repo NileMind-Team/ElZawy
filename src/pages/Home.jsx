@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaSearch,
   FaShoppingCart,
@@ -12,6 +12,10 @@ import {
   FaEye,
   FaChevronLeft,
   FaChevronRight,
+  FaSave,
+  FaTimes,
+  FaLayerGroup,
+  FaTag,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -27,11 +31,12 @@ const Home = () => {
     useState(false);
   const [loading, setLoading] = useState(true);
   const [productsLoading, setProductsLoading] = useState(false);
-  // eslint-disable-next-line no-unused-vars
   const [showCategoriesManager, setShowCategoriesManager] = useState(false);
   const [categories, setCategories] = useState([
     { id: "all", name: "جميع العناصر" },
   ]);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [newCategory, setNewCategory] = useState({ name: "", isActive: true });
   const categoriesContainerRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -117,9 +122,12 @@ const Home = () => {
           params.categoryId = parseInt(selectedCategory);
         }
 
-        const response = await axiosInstance.get("/api/MenuItems/GetAllWithoutPagination", {
-          params,
-        });
+        const response = await axiosInstance.get(
+          "/api/MenuItems/GetAllWithoutPagination",
+          {
+            params,
+          }
+        );
         const productsData = response.data;
 
         const transformedProducts = productsData.map((product) => ({
@@ -338,9 +346,248 @@ const Home = () => {
     navigate("/products/new");
   };
 
+  const handleEditCategory = (category) => {
+    setEditingCategory({ ...category });
+    setNewCategory({ name: "", isActive: true });
+  };
+
+  const handleSaveCategory = async () => {
+    if (!editingCategory.name.trim()) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: "اسم التصنيف مطلوب",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    if (editingCategory.id === "all") {
+      Swal.fire({
+        icon: "error",
+        title: "لا يمكن التعديل",
+        text: "لا يمكن تعديل تصنيف 'جميع العناصر'",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    try {
+      await axiosInstance.put(
+        `/api/Categories/Update/${editingCategory.originalId}`,
+        {
+          name: editingCategory.name,
+          isActive: editingCategory.isActive,
+        }
+      );
+
+      setCategories(
+        categories.map((cat) =>
+          cat.id === editingCategory.id ? { ...editingCategory } : cat
+        )
+      );
+
+      setEditingCategory(null);
+      Swal.fire({
+        icon: "success",
+        title: "تم التحديث!",
+        text: "تم تحديث التصنيف بنجاح",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Error updating category:", error);
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: "فشل في تحديث التصنيف",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    }
+  };
+
+  const handleAddCategory = async () => {
+    if (!newCategory.name.trim()) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: "اسم التصنيف مطلوب",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    try {
+      const response = await axiosInstance.post("/api/Categories/Add", null, {
+        params: {
+          Name: newCategory.name,
+          IsActive: newCategory.isActive,
+        },
+      });
+
+      const newCategoryData = response.data;
+
+      const newCat = {
+        id: newCategoryData.id.toString(),
+        name: newCategoryData.name,
+        isActive: newCategoryData.isActive,
+        originalId: newCategoryData.id,
+      };
+
+      setCategories([...categories, newCat]);
+      setNewCategory({ name: "", isActive: true });
+
+      Swal.fire({
+        icon: "success",
+        title: "تم الإضافة!",
+        text: "تم إضافة التصنيف الجديد بنجاح",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Error adding category:", error);
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: "فشل في إضافة التصنيف",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    if (categoryId === "all") {
+      Swal.fire({
+        icon: "error",
+        title: "لا يمكن الحذف",
+        text: "لا يمكن حذف تصنيف 'جميع العناصر'",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    const category = categories.find((cat) => cat.id === categoryId);
+
+    const productsInCategory = products.filter(
+      (product) => product.categoryId === category.originalId
+    );
+
+    if (productsInCategory.length > 0) {
+      Swal.fire({
+        title: "لا يمكن حذف التصنيف",
+        text: `يوجد ${productsInCategory.length} منتج في هذا التصنيف. يرجى إعادة تعيين أو حذف هذه المنتجات أولاً.`,
+        icon: "warning",
+        confirmButtonColor: "#E41E26",
+        confirmButtonText: "حسناً",
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: "هل أنت متأكد؟",
+      text: "لن تتمكن من التراجع عن هذا الإجراء!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E41E26",
+      cancelButtonColor: "#6B7280",
+      confirmButtonText: "نعم، احذفه!",
+      cancelButtonText: "إلغاء",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axiosInstance.delete(
+            `/api/Categories/Delete/${category.originalId}`
+          );
+
+          setCategories(categories.filter((cat) => cat.id !== categoryId));
+
+          if (selectedCategory === categoryId) {
+            setSelectedCategory("all");
+          }
+
+          Swal.fire({
+            title: "تم الحذف!",
+            text: "تم حذف التصنيف بنجاح",
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        } catch (error) {
+          console.error("Error deleting category:", error);
+          Swal.fire({
+            icon: "error",
+            title: "خطأ",
+            text: "فشل في حذف التصنيف",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
+      }
+    });
+  };
+
+  const handleToggleCategoryActive = async (categoryId, e) => {
+    e.stopPropagation();
+
+    if (categoryId === "all") {
+      Swal.fire({
+        icon: "error",
+        title: "لا يمكن التعديل",
+        text: "لا يمكن تعديل تصنيف 'جميع العناصر'",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    const category = categories.find((cat) => cat.id === categoryId);
+
+    try {
+      await axiosInstance.put(
+        `/api/Categories/ChangeCategoryActiveStatus/${category.originalId}`
+      );
+
+      setCategories(
+        categories.map((cat) =>
+          cat.id === categoryId ? { ...cat, isActive: !cat.isActive } : cat
+        )
+      );
+
+      Swal.fire({
+        icon: "success",
+        title: "تم تحديث الحالة!",
+        text: `تم ${category.isActive ? "تعطيل" : "تفعيل"} التصنيف`,
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Error updating category status:", error);
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: "فشل في تحديث حالة التصنيف",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    }
+  };
+
   const handleOpenCategoriesManager = () => {
     setShowCategoriesManager(true);
     document.body.style.overflow = "hidden";
+  };
+
+  const handleCloseCategoriesManager = () => {
+    setShowCategoriesManager(false);
+    setEditingCategory(null);
+    setNewCategory({ name: "", isActive: true });
+    document.body.style.overflow = "auto";
   };
 
   const scrollCategories = (direction) => {
@@ -704,6 +951,383 @@ const Home = () => {
           </motion.button>
         </div>
       )}
+      {/* Categories Manager Modal */}
+      <AnimatePresence>
+        {showCategoriesManager && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              onClick={handleCloseCategoriesManager}
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+              onClick={handleCloseCategoriesManager}
+            >
+              <div
+                className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden w-full max-w-4xl mx-auto my-auto max-h-[90vh] overflow-y-auto transition-colors duration-300"
+                onClick={(e) => e.stopPropagation()}
+                dir="rtl"
+              >
+                {/* Header */}
+                <div className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white p-6 relative">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-sm">
+                        <FaLayerGroup className="text-2xl" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold">إدارة التصنيفات</h2>
+                        <p className="text-white/80 mt-1">
+                          إضافة، تعديل وحذف التصنيفات
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleCloseCategoriesManager}
+                      className="bg-white/20 backdrop-blur-sm rounded-full p-3 text-white hover:bg-white/30 transition-all duration-200 hover:scale-110"
+                    >
+                      <FaTimes size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  {/* Add New Category Section */}
+                  <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl p-6 mb-8 transition-colors duration-300 shadow-lg">
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="bg-[#E41E26]/10 p-2 rounded-xl">
+                        <FaPlus className="text-[#E41E26] text-lg" />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                        إضافة تصنيف جديد
+                      </h3>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <div className="lg:col-span-2">
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                          اسم التصنيف
+                        </label>
+                        <div className="relative">
+                          <FaTag className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg" />
+                          <input
+                            type="text"
+                            value={newCategory.name}
+                            onChange={(e) =>
+                              setNewCategory({
+                                ...newCategory,
+                                name: e.target.value,
+                              })
+                            }
+                            placeholder="أدخل اسم التصنيف الجديد..."
+                            className="w-full pl-12 pr-4 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-[#E41E26] focus:border-[#E41E26] outline-none transition-all text-right text-lg font-medium"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col justify-center">
+                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                          حالة التصنيف
+                        </label>
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center cursor-pointer">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                checked={newCategory.isActive}
+                                onChange={(e) =>
+                                  setNewCategory({
+                                    ...newCategory,
+                                    isActive: e.target.checked,
+                                  })
+                                }
+                                className="sr-only"
+                              />
+                              <div
+                                className={`block w-16 h-8 rounded-full transition-colors ${
+                                  newCategory.isActive
+                                    ? "bg-green-500"
+                                    : "bg-gray-400"
+                                }`}
+                              ></div>
+                              <div
+                                className={`absolute right-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 shadow-lg ${
+                                  newCategory.isActive
+                                    ? "transform translate-x-[-1.75rem]"
+                                    : ""
+                                }`}
+                              ></div>
+                            </div>
+                          </label>
+                          <span
+                            className={`font-semibold text-lg ${
+                              newCategory.isActive
+                                ? "text-green-600"
+                                : "text-gray-500"
+                            }`}
+                          >
+                            {newCategory.isActive ? "مفعل" : "معطل"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-start mt-6">
+                      <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleAddCategory}
+                        className="bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-xl font-bold hover:shadow-xl transition-all flex items-center gap-3 text-lg shadow-lg"
+                      >
+                        <FaPlus />
+                        إضافة تصنيف جديد
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  {/* Current Categories Section */}
+                  <div>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="bg-[#FDB913]/10 p-2 rounded-xl">
+                        <FaList className="text-[#FDB913] text-lg" />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                        التصنيفات الحالية ({categories.length - 1})
+                      </h3>
+                    </div>
+
+                    <div className="space-y-4">
+                      {categories.map((category) => (
+                        <motion.div
+                          key={category.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`bg-white dark:bg-gray-700 border-2 ${
+                            category.id === "all"
+                              ? "border-gray-300 dark:border-gray-600"
+                              : "border-gray-200 dark:border-gray-600 hover:border-[#E41E26]/30 dark:hover:border-[#E41E26]/30"
+                          } rounded-2xl p-6 transition-all duration-300 hover:shadow-lg group`}
+                        >
+                          {editingCategory &&
+                          editingCategory.id === category.id ? (
+                            // Edit Mode
+                            <div className="space-y-6">
+                              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div className="lg:col-span-2">
+                                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                                    اسم التصنيف
+                                  </label>
+                                  <input
+                                    type="text"
+                                    value={editingCategory.name}
+                                    onChange={(e) =>
+                                      setEditingCategory({
+                                        ...editingCategory,
+                                        name: e.target.value,
+                                      })
+                                    }
+                                    className="w-full px-4 py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-[#E41E26] focus:border-[#E41E26] outline-none transition-all text-right text-lg font-medium"
+                                    dir="rtl"
+                                  />
+                                </div>
+
+                                <div className="flex flex-col justify-center">
+                                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                                    حالة التصنيف
+                                  </label>
+                                  <div className="flex items-center gap-4">
+                                    <label className="flex items-center cursor-pointer">
+                                      <div className="relative">
+                                        <input
+                                          type="checkbox"
+                                          checked={editingCategory.isActive}
+                                          onChange={(e) =>
+                                            setEditingCategory({
+                                              ...editingCategory,
+                                              isActive: e.target.checked,
+                                            })
+                                          }
+                                          className="sr-only"
+                                        />
+                                        <div
+                                          className={`block w-16 h-8 rounded-full transition-colors ${
+                                            editingCategory.isActive
+                                              ? "bg-green-500"
+                                              : "bg-gray-400"
+                                          }`}
+                                        ></div>
+                                        <div
+                                          className={`absolute right-1 top-1 bg-white w-6 h-6 rounded-full transition-transform duration-300 shadow-lg ${
+                                            editingCategory.isActive
+                                              ? "transform translate-x-[-1.75rem]"
+                                              : ""
+                                          }`}
+                                        ></div>
+                                      </div>
+                                    </label>
+                                    <span
+                                      className={`font-semibold text-lg ${
+                                        editingCategory.isActive
+                                          ? "text-green-600"
+                                          : "text-gray-500"
+                                      }`}
+                                    >
+                                      {editingCategory.isActive
+                                        ? "مفعل"
+                                        : "معطل"}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex gap-3 justify-start pt-4 border-t border-gray-200 dark:border-gray-600">
+                                <motion.button
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() => setEditingCategory(null)}
+                                  className="px-6 py-3 rounded-xl font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all"
+                                >
+                                  إلغاء التعديل
+                                </motion.button>
+                                <motion.button
+                                  whileHover={{ scale: 1.02, y: -2 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={handleSaveCategory}
+                                  className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all flex items-center gap-2 shadow-lg"
+                                >
+                                  <FaSave />
+                                  حفظ التغييرات
+                                </motion.button>
+                              </div>
+                            </div>
+                          ) : (
+                            // View Mode
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div
+                                  className={`p-3 rounded-xl ${
+                                    category.id === "all"
+                                      ? "bg-gray-100 dark:bg-gray-600"
+                                      : category.isActive
+                                      ? "bg-green-100 dark:bg-green-900/30"
+                                      : "bg-red-100 dark:bg-red-900/30"
+                                  }`}
+                                >
+                                  <FaTag
+                                    className={`text-lg ${
+                                      category.id === "all"
+                                        ? "text-gray-600 dark:text-gray-400"
+                                        : category.isActive
+                                        ? "text-green-600"
+                                        : "text-red-600"
+                                    }`}
+                                  />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-gray-800 dark:text-gray-200 text-lg mb-1">
+                                    {category.name}
+                                  </h4>
+                                  <div className="flex items-center gap-3 text-sm">
+                                    {category.id !== "all" && (
+                                      <>
+                                        <span
+                                          className={`px-2 py-1 rounded-full font-medium ${
+                                            category.isActive
+                                              ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
+                                              : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
+                                          }`}
+                                        >
+                                          {category.isActive ? "مفعل" : "معطل"}
+                                        </span>
+                                        <span className="text-gray-500 dark:text-gray-400">
+                                          {
+                                            products.filter(
+                                              (p) =>
+                                                p.categoryId ===
+                                                category.originalId
+                                            ).length
+                                          }{" "}
+                                          منتج
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex gap-2">
+                                {category.id !== "all" && (
+                                  <>
+                                    <motion.button
+                                      whileHover={{ scale: 1.1, y: -2 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      onClick={(e) =>
+                                        handleToggleCategoryActive(
+                                          category.id,
+                                          e
+                                        )
+                                      }
+                                      className={`p-3 rounded-xl transition-all shadow-md ${
+                                        category.isActive
+                                          ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                                          : "bg-green-500 hover:bg-green-600 text-white"
+                                      }`}
+                                      title={
+                                        category.isActive
+                                          ? "تعطيل التصنيف"
+                                          : "تفعيل التصنيف"
+                                      }
+                                    >
+                                      {category.isActive ? (
+                                        <FaTimesCircle size={18} />
+                                      ) : (
+                                        <FaCheckCircle size={18} />
+                                      )}
+                                    </motion.button>
+                                    <motion.button
+                                      whileHover={{ scale: 1.1, y: -2 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      onClick={() =>
+                                        handleEditCategory(category)
+                                      }
+                                      className="bg-blue-500 text-white p-3 rounded-xl hover:bg-blue-600 transition-all shadow-md"
+                                      title="تعديل التصنيف"
+                                    >
+                                      <FaEdit size={18} />
+                                    </motion.button>
+                                    <motion.button
+                                      whileHover={{ scale: 1.1, y: -2 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      onClick={() =>
+                                        handleDeleteCategory(category.id)
+                                      }
+                                      className="bg-red-500 text-white p-3 rounded-xl hover:bg-red-600 transition-all shadow-md"
+                                      title="حذف التصنيف"
+                                    >
+                                      <FaTrash size={18} />
+                                    </motion.button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {cart.length > 0 && (
         <motion.div
