@@ -10,11 +10,7 @@ import {
   FaCheck,
   FaTimes,
   FaChevronDown,
-  FaCalendar,
-  FaClock,
-  FaHamburger,
-  FaShippingFast,
-  FaUtensils,
+  FaStore,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import axiosInstance from "../api/axiosInstance";
@@ -26,77 +22,70 @@ export default function Reviews() {
   const [editingId, setEditingId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const [branches, setBranches] = useState([]);
 
   const [formData, setFormData] = useState({
-    menuItemId: "",
+    branchId: "",
     rating: 0,
-    deliveryRating: 0,
     comment: "",
   });
-
-  const [menuItems] = useState([
-    { id: 1, name: "Classic Fried Chicken" },
-    { id: 2, name: "Spicy Chicken Wings" },
-    { id: 3, name: "Chicken Burger" },
-    { id: 4, name: "Grilled Chicken Sandwich" },
-    { id: 5, name: "Chicken Tenders" },
-    { id: 6, name: "Chicken Shawarma" },
-    { id: 7, name: "Chicken Salad" },
-    { id: 8, name: "Family Chicken Bucket" },
-    { id: 9, name: "Chicken Wrap" },
-    { id: 10, name: "Special Chicken Meal" },
-  ]);
 
   const toggleDropdown = (menu) =>
     setOpenDropdown(openDropdown === menu ? null : menu);
 
-  // Fetch reviews on component mount
   useEffect(() => {
     fetchReviews();
+    fetchBranches();
   }, []);
 
   const fetchReviews = async () => {
     try {
       setIsLoading(true);
-      // Replace with your actual API endpoint
-      const res = await axiosInstance.get("/api/Account/Reviews");
+      const res = await axiosInstance.get("/api/Reviews/GetAllForUser");
       if (res.status === 200) {
-        setReviews(res.data);
+        const reviewsWithBranchNames = await Promise.all(
+          res.data.map(async (review) => {
+            try {
+              const branchRes = await axiosInstance.get(
+                `/api/Branches/Get/${review.branchId}`
+              );
+              if (branchRes.status === 200) {
+                return {
+                  ...review,
+                  branchName: branchRes.data.name,
+                };
+              }
+            } catch (err) {
+              console.error(`Failed to fetch branch ${review.branchId}`, err);
+            }
+            return {
+              ...review,
+              branchName: `فرع ${review.branchId}`,
+            };
+          })
+        );
+        setReviews(reviewsWithBranchNames);
       }
     } catch (err) {
       console.error("Failed to fetch reviews", err);
-      // For demo purposes, using mock data
-      setReviews([
-        {
-          id: 1,
-          menuItemName: "Classic Fried Chicken",
-          rating: 5,
-          deliveryRating: 4,
-          comment:
-            "Amazing fried chicken! The crust was perfectly crispy and the meat was juicy and flavorful. Highly recommended!",
-          createdAt: "2024-01-15T20:45:00",
-        },
-        {
-          id: 2,
-          menuItemName: "Spicy Chicken Wings",
-          rating: 4,
-          deliveryRating: 5,
-          comment:
-            "Great flavor and nice spice level. The wings were cooked perfectly, but could be a bit crispier next time.",
-          createdAt: "2024-01-14T18:30:00",
-        },
-        {
-          id: 3,
-          menuItemName: "Chicken Burger",
-          rating: 5,
-          deliveryRating: 3,
-          comment:
-            "Best chicken burger I've ever had! The bun was fresh and the chicken patty was massive and delicious.",
-          createdAt: "2024-01-12T12:15:00",
-        },
-      ]);
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        text: "فشل في تحميل التقييمات.",
+      });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchBranches = async () => {
+    try {
+      const res = await axiosInstance.get("/api/Branches/GetList");
+      if (res.status === 200) {
+        setBranches(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch branches", err);
     }
   };
 
@@ -115,13 +104,6 @@ export default function Reviews() {
     });
   };
 
-  const handleDeliveryRatingChange = (rating) => {
-    setFormData({
-      ...formData,
-      deliveryRating: rating,
-    });
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -129,50 +111,28 @@ export default function Reviews() {
       if (editingId) {
         // Update existing review
         const res = await axiosInstance.put(
-          `/api/Account/Reviews/${editingId}`,
+          `/api/Reviews/Update/${editingId}`,
           formData
         );
-        if (res.status === 200) {
-          setReviews(
-            reviews.map((review) =>
-              review.id === editingId
-                ? {
-                    ...review,
-                    ...formData,
-                    menuItemName:
-                      menuItems.find(
-                        (m) => m.id === parseInt(formData.menuItemId)
-                      )?.name || "Unknown Item",
-                  }
-                : review
-            )
-          );
+        if (res.status === 200 || res.status === 204) {
+          await fetchReviews();
           Swal.fire({
             icon: "success",
-            title: "Review Updated",
-            text: "Your review has been updated successfully.",
+            title: "تم تحديث التقييم",
+            text: "تم تحديث تقييمك بنجاح.",
             timer: 2000,
             showConfirmButton: false,
           });
         }
       } else {
         // Add new review
-        const res = await axiosInstance.post("/api/Account/Reviews", formData);
-        if (res.status === 201) {
-          const selectedMenuItem = menuItems.find(
-            (m) => m.id === parseInt(formData.menuItemId)
-          );
-          const newReview = {
-            ...formData,
-            id: Date.now(),
-            menuItemName: selectedMenuItem?.name || "Unknown Item",
-            createdAt: new Date().toISOString(),
-          };
-          setReviews([newReview, ...reviews]);
+        const res = await axiosInstance.post("/api/Reviews/Add", formData);
+        if (res.status === 200 || res.status === 201) {
+          await fetchReviews();
           Swal.fire({
             icon: "success",
-            title: "Review Added",
-            text: "Your review has been added successfully.",
+            title: "تم إضافة التقييم",
+            text: "تم إضافة تقييمك بنجاح.",
             timer: 2000,
             showConfirmButton: false,
           });
@@ -183,24 +143,21 @@ export default function Reviews() {
     } catch (err) {
       Swal.fire({
         icon: "error",
-        title: "Error",
-        text: err.response?.data?.message || "Failed to save review.",
+        title: "خطأ",
+        text: err.response?.data?.message || "فشل في حفظ التقييم.",
       });
     }
   };
 
   const handleEdit = (review) => {
     setFormData({
-      menuItemId:
-        menuItems.find((m) => m.name === review.menuItemName)?.id || "",
+      branchId: review.branchId.toString(),
       rating: review.rating,
-      deliveryRating: review.deliveryRating || 0,
       comment: review.comment,
     });
     setEditingId(review.id);
     setIsAdding(true);
 
-    // Scroll to form in mobile view
     setTimeout(() => {
       const formElement = document.getElementById("review-form");
       if (formElement && window.innerWidth < 1280) {
@@ -211,21 +168,22 @@ export default function Reviews() {
 
   const handleDelete = (id) => {
     Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
+      title: "هل أنت متأكد؟",
+      text: "لن تتمكن من التراجع عن هذا!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#E41E26",
       cancelButtonColor: "#6B7280",
-      confirmButtonText: "Yes, delete it!",
+      confirmButtonText: "نعم، احذفه!",
+      cancelButtonText: "إلغاء",
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axiosInstance.delete(`/api/Account/Reviews/${id}`);
-          setReviews(reviews.filter((review) => review.id !== id));
+          await axiosInstance.delete(`/api/Reviews/Delete/${id}`);
+          await fetchReviews();
           Swal.fire({
-            title: "Deleted!",
-            text: "Your review has been deleted.",
+            title: "تم الحذف!",
+            text: "تم حذف تقييمك بنجاح.",
             icon: "success",
             timer: 2000,
             showConfirmButton: false,
@@ -233,8 +191,8 @@ export default function Reviews() {
         } catch (err) {
           Swal.fire({
             icon: "error",
-            title: "Error",
-            text: "Failed to delete review.",
+            title: "خطأ",
+            text: "فشل في حذف التقييم.",
           });
         }
       }
@@ -243,9 +201,8 @@ export default function Reviews() {
 
   const resetForm = () => {
     setFormData({
-      menuItemId: "",
+      branchId: "",
       rating: 0,
-      deliveryRating: 0,
       comment: "",
     });
     setEditingId(null);
@@ -256,7 +213,6 @@ export default function Reviews() {
   const handleAddNewReview = () => {
     setIsAdding(true);
 
-    // Scroll to form in mobile view
     setTimeout(() => {
       const formElement = document.getElementById("review-form");
       if (formElement && window.innerWidth < 1280) {
@@ -265,62 +221,11 @@ export default function Reviews() {
     }, 100);
   };
 
-  // Check if all required fields are filled - REMOVED deliveryRating from required
   const isFormValid = () => {
-    const requiredFields = ["menuItemId", "rating", "comment"];
+    const requiredFields = ["branchId", "rating", "comment"];
     return requiredFields.every(
       (field) => formData[field] && formData[field].toString().trim() !== ""
     );
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const formatTime = (dateString) => {
-    return new Date(dateString).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
-  const getRelativeTime = (dateString) => {
-    const now = new Date();
-    const reviewDate = new Date(dateString);
-    const diffInHours = Math.floor((now - reviewDate) / (1000 * 60 * 60));
-
-    if (diffInHours < 1) {
-      return "Just now";
-    } else if (diffInHours < 24) {
-      return `${diffInHours} hours ago`;
-    } else if (diffInHours < 168) {
-      const days = Math.floor(diffInHours / 24);
-      return `${days} day${days > 1 ? "s" : ""} ago`;
-    } else {
-      return formatDate(dateString);
-    }
-  };
-
-  const getDeliveryRatingText = (rating) => {
-    switch (rating) {
-      case 1:
-        return "Very Slow";
-      case 2:
-        return "Slow";
-      case 3:
-        return "Average";
-      case 4:
-        return "Fast";
-      case 5:
-        return "Very Fast";
-      default:
-        return "Not Rated";
-    }
   };
 
   const renderStars = (
@@ -412,7 +317,7 @@ export default function Reviews() {
                 <FaStar className="text-white text-xl sm:text-2xl md:text-3xl" />
               </div>
               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white">
-                My Reviews
+                تقييماتي
               </h1>
             </motion.div>
 
@@ -422,7 +327,7 @@ export default function Reviews() {
               transition={{ delay: 0.3 }}
               className="text-white/90 text-sm sm:text-base md:text-lg lg:text-xl max-w-2xl mb-2 sm:mb-3"
             >
-              Share your experience with our menu items
+              شارك تجربتك مع فروعنا
             </motion.p>
           </div>
         </div>
@@ -443,7 +348,7 @@ export default function Reviews() {
               className="flex items-center gap-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-5 md:px-6 py-3 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-2xl sm:shadow-3xl hover:shadow-4xl hover:shadow-[#E41E26]/50 transition-all duration-300 text-sm sm:text-base md:text-lg border-2 border-white whitespace-nowrap transform translate-y-2"
             >
               <FaPlus className="text-sm sm:text-base md:text-lg" />
-              <span>Write New Review</span>
+              <span>اكتب تقييم جديد</span>
             </motion.button>
           </motion.div>
 
@@ -467,11 +372,11 @@ export default function Reviews() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                           <div className="p-1 sm:p-2 rounded-lg sm:rounded-xl bg-gradient-to-r from-[#fff8e7] to-[#ffe5b4] border border-[#FDB913]/30 dark:from-gray-600 dark:to-gray-500">
-                            <FaHamburger className="text-[#E41E26] text-xs sm:text-sm" />
+                            <FaStore className="text-[#E41E26] text-xs sm:text-sm" />
                           </div>
                           <div className="min-w-0 flex-1">
                             <h3 className="font-bold text-gray-800 dark:text-gray-200 text-base sm:text-lg md:text-xl truncate">
-                              {review.menuItemName}
+                              {review.branchName || `فرع ${review.branchId}`}
                             </h3>
                             <div className="flex items-center gap-2 mt-1">
                               {renderStars(review.rating)}
@@ -482,41 +387,9 @@ export default function Reviews() {
                           </div>
                         </div>
 
-                        {/* Delivery Rating Display - IMPROVED TO SINGLE LINE */}
-                        <div className="flex items-center justify-between gap-2 mb-3 sm:mb-4 bg-gradient-to-r from-blue-50 to-blue-100/50 p-2 sm:p-3 rounded-lg border border-blue-200/50 dark:from-blue-900/20 dark:to-blue-800/20 dark:border-blue-700/30">
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <FaShippingFast className="text-blue-600 text-xs sm:text-sm" />
-                            <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap hidden sm:block">
-                              Delivery Speed:
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {renderStars(review.deliveryRating || 0)}
-                            <span className="text-xs sm:text-sm font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">
-                              {getDeliveryRatingText(
-                                review.deliveryRating || 0
-                              )}
-                            </span>
-                          </div>
-                        </div>
-
                         <p className="text-gray-700 dark:text-gray-300 text-sm sm:text-base mb-3 sm:mb-4 leading-relaxed">
                           {review.comment}
                         </p>
-
-                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-                          <div className="flex items-center gap-1">
-                            <FaCalendar className="text-[#E41E26] text-xs sm:text-sm" />
-                            <span>{formatDate(review.createdAt)}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <FaClock className="text-[#E41E26] text-xs sm:text-sm" />
-                            <span>{formatTime(review.createdAt)}</span>
-                          </div>
-                          <div className="text-[#E41E26] font-medium">
-                            {getRelativeTime(review.createdAt)}
-                          </div>
-                        </div>
                       </div>
 
                       <div className="flex flex-row sm:flex-col lg:flex-row gap-1 sm:gap-2 justify-end sm:justify-start">
@@ -527,7 +400,7 @@ export default function Reviews() {
                           className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200 text-xs sm:text-sm font-medium flex-1 sm:flex-none justify-center dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
                         >
                           <FaEdit className="text-xs sm:text-sm" />
-                          <span className="whitespace-nowrap">Edit</span>
+                          <span className="whitespace-nowrap">تعديل</span>
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.05 }}
@@ -536,7 +409,7 @@ export default function Reviews() {
                           className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors duration-200 text-xs sm:text-sm font-medium flex-1 sm:flex-none justify-center dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50"
                         >
                           <FaTrash className="text-xs sm:text-sm" />
-                          <span className="whitespace-nowrap">Delete</span>
+                          <span className="whitespace-nowrap">حذف</span>
                         </motion.button>
                       </div>
                     </div>
@@ -552,10 +425,10 @@ export default function Reviews() {
                 >
                   <FaStar className="mx-auto text-3xl sm:text-4xl md:text-5xl text-gray-400 dark:text-gray-500 mb-3 sm:mb-4" />
                   <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-600 dark:text-gray-400 mb-2 sm:mb-3">
-                    No reviews yet
+                    لا توجد تقييمات بعد
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base mb-4 sm:mb-6 max-w-xs sm:max-w-sm mx-auto">
-                    Share your experience by reviewing our menu items
+                    شارك تجربتك من خلال تقييم فروعنا
                   </p>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -564,7 +437,7 @@ export default function Reviews() {
                     className="flex items-center gap-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base mx-auto"
                   >
                     <FaPlus className="text-xs sm:text-sm" />
-                    <span>Write Your First Review</span>
+                    <span>اكتب أول تقييم لك</span>
                   </motion.button>
                 </motion.div>
               )}
@@ -583,7 +456,7 @@ export default function Reviews() {
                   <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-5 lg:p-6 border border-gray-200/50 shadow-lg sticky top-4 sm:top-6 dark:bg-gray-700/80 dark:border-gray-600/50">
                     <div className="flex items-center justify-between mb-3 sm:mb-4">
                       <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 dark:text-gray-200 truncate">
-                        {editingId ? "Edit Review" : "Write New Review"}
+                        {editingId ? "تعديل التقييم" : "كتابة تقييم جديد"}
                       </h3>
                       <button
                         onClick={resetForm}
@@ -597,31 +470,31 @@ export default function Reviews() {
                       onSubmit={handleSubmit}
                       className="space-y-3 sm:space-y-4"
                     >
-                      {/* Menu Item Dropdown */}
+                      {/* Branch Dropdown */}
                       <div>
                         <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
-                          Menu Item *
+                          الفرع *
                         </label>
                         <div className="relative">
                           <button
                             type="button"
-                            onClick={() => toggleDropdown("menuItem")}
+                            onClick={() => toggleDropdown("branch")}
                             className="w-full flex items-center justify-between border border-gray-200 bg-white rounded-lg sm:rounded-xl px-3 py-2.5 sm:py-3 text-gray-600 hover:border-[#E41E26] transition-all group text-sm sm:text-base dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300"
                           >
                             <div className="flex items-center gap-3">
-                              <FaHamburger className="text-[#E41E26] text-sm" />
+                              <FaStore className="text-[#E41E26] text-sm" />
                               <span>
-                                {formData.menuItemId
-                                  ? menuItems.find(
-                                      (m) =>
-                                        m.id === parseInt(formData.menuItemId)
+                                {formData.branchId
+                                  ? branches.find(
+                                      (b) =>
+                                        b.id === parseInt(formData.branchId)
                                     )?.name
-                                  : "Select Menu Item"}
+                                  : "اختر الفرع"}
                               </span>
                             </div>
                             <motion.div
                               animate={{
-                                rotate: openDropdown === "menuItem" ? 180 : 0,
+                                rotate: openDropdown === "branch" ? 180 : 0,
                               }}
                               transition={{ duration: 0.3 }}
                             >
@@ -629,7 +502,7 @@ export default function Reviews() {
                             </motion.div>
                           </button>
                           <AnimatePresence>
-                            {openDropdown === "menuItem" && (
+                            {openDropdown === "branch" && (
                               <motion.ul
                                 initial={{ opacity: 0, y: -5 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -637,19 +510,19 @@ export default function Reviews() {
                                 transition={{ duration: 0.2 }}
                                 className="absolute z-10 mt-2 w-full bg-white border border-gray-200 shadow-xl rounded-lg sm:rounded-xl overflow-hidden max-h-48 overflow-y-auto dark:bg-gray-700 dark:border-gray-600"
                               >
-                                {menuItems.map((item) => (
+                                {branches.map((branch) => (
                                   <li
-                                    key={item.id}
+                                    key={branch.id}
                                     onClick={() => {
                                       setFormData({
                                         ...formData,
-                                        menuItemId: item.id,
+                                        branchId: branch.id,
                                       });
                                       setOpenDropdown(null);
                                     }}
                                     className="px-4 py-2.5 sm:py-3 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] cursor-pointer text-gray-700 transition-all text-sm sm:text-base border-b border-gray-100 last:border-b-0 dark:hover:from-gray-600 dark:hover:to-gray-500 dark:text-gray-300 dark:border-gray-600"
                                   >
-                                    {item.name}
+                                    {branch.name}
                                   </li>
                                 ))}
                               </motion.ul>
@@ -658,16 +531,16 @@ export default function Reviews() {
                         </div>
                       </div>
 
-                      {/* Food Rating - IMPROVED TO SINGLE LINE */}
+                      {/* Rating */}
                       <div>
                         <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
-                          Food Rating *
+                          التقييم *
                         </label>
                         <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-[#fff8e7] to-[#ffe5b4] p-2 sm:p-3 rounded-lg sm:rounded-xl border border-[#FDB913]/30 dark:from-gray-600 dark:to-gray-500 dark:border-gray-500">
                           <div className="flex items-center gap-2 flex-shrink-0">
-                            <FaUtensils className="text-[#E41E26] text-xs sm:text-sm" />
+                            <FaStar className="text-[#E41E26] text-xs sm:text-sm" />
                             <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap hidden sm:block">
-                              Food Quality:
+                              التقييم العام:
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
@@ -684,36 +557,10 @@ export default function Reviews() {
                         </div>
                       </div>
 
-                      {/* Delivery Rating - IMPROVED TO SINGLE LINE */}
-                      <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
-                          Delivery Speed Rating
-                        </label>
-                        <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-blue-50 to-blue-100/50 p-2 sm:p-3 rounded-lg sm:rounded-xl border border-blue-200/50 dark:from-blue-900/20 dark:to-blue-800/20 dark:border-blue-700/30">
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <FaShippingFast className="text-blue-600 text-xs sm:text-sm" />
-                            <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap hidden sm:block">
-                              Delivery Speed:
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {renderStars(
-                              formData.deliveryRating,
-                              true,
-                              handleDeliveryRatingChange,
-                              "lg"
-                            )}
-                            <span className="text-xs sm:text-sm font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">
-                              {getDeliveryRatingText(formData.deliveryRating)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
                       {/* Comment */}
                       <div>
                         <label className="block text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 sm:mb-2">
-                          Your Review *
+                          تقييمك *
                         </label>
                         <textarea
                           name="comment"
@@ -722,11 +569,11 @@ export default function Reviews() {
                           required
                           rows="4"
                           className="w-full border border-gray-200 bg-white text-black rounded-lg sm:rounded-xl px-3 py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-sm sm:text-base resize-none dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                          placeholder="Share your experience with this menu item... (What did you like? How was the taste? Any suggestions?)"
+                          placeholder="شارك تجربتك مع هذا الفرع... (كيف كانت الخدمة؟ جودة الطعام؟ التجربة العامة؟)"
                         />
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Share your honest feedback about the taste, quality,
-                          and overall experience
+                          شارك ملاحظاتك الصادقة حول الخدمة وجودة الطعام والتجربة
+                          العامة
                         </p>
                       </div>
 
@@ -738,7 +585,7 @@ export default function Reviews() {
                           onClick={resetForm}
                           className="flex-1 py-2.5 sm:py-3 border-2 border-[#E41E26] text-[#E41E26] rounded-lg sm:rounded-xl font-semibold hover:bg-[#E41E26] hover:text-white transition-all duration-300 text-sm sm:text-base dark:border-[#E41E26] dark:text-[#E41E26] dark:hover:bg-[#E41E26] dark:hover:text-white"
                         >
-                          Cancel
+                          إلغاء
                         </motion.button>
                         <motion.button
                           type="submit"
@@ -752,7 +599,7 @@ export default function Reviews() {
                           }`}
                         >
                           <FaCheck className="text-xs sm:text-sm" />
-                          {editingId ? "Update Review" : "Submit Review"}
+                          {editingId ? "تحديث التقييم" : "إرسال التقييم"}
                         </motion.button>
                       </div>
                     </form>
