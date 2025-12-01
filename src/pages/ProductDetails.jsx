@@ -13,9 +13,11 @@ import {
   FaTimesCircle,
   FaCheck,
 } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
 import axiosInstance from "../api/axiosInstance";
-import "../style/ProductDetails.css"
+import "../style/ProductDetails.css";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -24,7 +26,6 @@ const ProductDetails = () => {
   const [product, setProduct] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
-  // eslint-disable-next-line no-unused-vars
   const [cart, setCart] = useState([]);
   const [isAdminOrRestaurantOrBranch, setIsAdminOrRestaurantOrBranch] =
     useState(false);
@@ -76,6 +77,8 @@ const ProductDetails = () => {
       ],
     },
   ]);
+
+  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -184,7 +187,6 @@ const ProductDetails = () => {
       const cartSection = document.getElementById("cart-section");
       if (cartSection) {
         const rect = cartSection.getBoundingClientRect();
-        // عندما يكون العنصر في موضعه الطبيعي، نتوقف عن التثبيت
         setIsSticky(rect.top > 0);
       }
     };
@@ -262,12 +264,15 @@ const ProductDetails = () => {
 
   const handleAddToCart = () => {
     if (!product.isActive) {
-      Swal.fire({
-        icon: "error",
-        title: "المنتج غير متوفر",
-        text: `${product.name} غير متوفر حالياً`,
-        timer: 2000,
-        showConfirmButton: false,
+      toast.warning(`${product.name} غير متوفر حالياً`, {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+        rtl: true,
       });
       return;
     }
@@ -278,36 +283,45 @@ const ProductDetails = () => {
     );
 
     if (missingRequiredAddons.length > 0) {
-      Swal.fire({
-        icon: "warning",
-        title: "إضافات مطلوبة",
-        text: `يرجى اختيار ${missingRequiredAddons
+      toast.warning(
+        `يرجى اختيار ${missingRequiredAddons
           .map((addon) => addon.title)
           .join(" و ")}`,
-        timer: 2000,
-        showConfirmButton: false,
-      });
+        {
+          position: "top-right",
+          autoClose: 2000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          theme: "light",
+          rtl: true,
+        }
+      );
       return;
     }
 
-    const existingCart = JSON.parse(localStorage.getItem("cart")) || [];
     const cartItem = {
       ...product,
       quantity,
-      selectedAddons,
+      selectedAddons: { ...selectedAddons },
       totalPrice: calculateTotalPrice(),
+      timestamp: new Date().getTime(),
     };
 
-    const existingItemIndex = existingCart.findIndex(
+    const existingItemIndex = cart.findIndex(
       (item) =>
         item.id === product.id &&
         JSON.stringify(item.selectedAddons) === JSON.stringify(selectedAddons)
     );
 
+    let updatedCart;
+
     if (existingItemIndex !== -1) {
-      existingCart[existingItemIndex].quantity += quantity;
-      existingCart[existingItemIndex].totalPrice =
-        existingCart[existingItemIndex].quantity *
+      updatedCart = [...cart];
+      updatedCart[existingItemIndex].quantity += quantity;
+      updatedCart[existingItemIndex].totalPrice =
+        updatedCart[existingItemIndex].quantity *
         (product.price +
           Object.values(selectedAddons).reduce((sum, optionIds) => {
             optionIds.forEach((optionId) => {
@@ -319,21 +333,26 @@ const ProductDetails = () => {
             return sum;
           }, 0));
     } else {
-      existingCart.push(cartItem);
+      updatedCart = [...cart, cartItem];
     }
 
-    localStorage.setItem("cart", JSON.stringify(existingCart));
-    setCart(existingCart);
+    setCart(updatedCart);
 
-    Swal.fire({
-      icon: "success",
-      title: "تم الإضافة إلى السلة!",
-      text: `تم إضافة ${toArabicNumbers(quantity)} ${
-        product.name
-      } إلى سلة التسوق`,
-      timer: 1500,
-      showConfirmButton: false,
-    });
+    toast.success(
+      `تم إضافة ${toArabicNumbers(quantity)} ${product.name} إلى سلة التسوق`,
+      {
+        position: "top-right",
+        autoClose: 1500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        theme: "light",
+        rtl: true,
+      }
+    );
+
+    setQuantity(1);
   };
 
   const handleEditProduct = () => {
@@ -409,6 +428,10 @@ const ProductDetails = () => {
     return arabicRegex.test(text);
   };
 
+  const navigateToCart = () => {
+    navigate("/cart", { state: { cartItems: cart } });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-4">
@@ -437,6 +460,37 @@ const ProductDetails = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 transition-colors duration-300">
+      {/* Toast Container */}
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={true}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+        style={{ zIndex: 9999 }}
+      />
+
+      {cartCount > 0 && (
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white rounded-full p-3 sm:p-4 shadow-2xl z-40 cursor-pointer hover:scale-110 transition-transform duration-200"
+          onClick={navigateToCart}
+        >
+          <div className="relative">
+            <FaShoppingCart className="w-4 h-4 sm:w-6 sm:h-6" />
+            <span className="absolute -top-2 -right-2 bg-white text-[#E41E26] rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center text-xs font-bold">
+              {cartCount}
+            </span>
+          </div>
+        </motion.div>
+      )}
+
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 md:py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           <motion.div
