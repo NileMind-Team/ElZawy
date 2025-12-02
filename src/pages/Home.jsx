@@ -914,6 +914,18 @@ const Home = () => {
                   className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 cursor-pointer group w-full relative ${
                     !product.isActive ? "opacity-70" : ""
                   } ${productsLoading ? "opacity-50" : ""}`}
+                  // عند الضغط على أي مكان في العنصر (ما عدا الأزرار) يتم فتح التفاصيل
+                  onClick={(e) => {
+                    // التحقق إذا كان الضغط على زر من الأزرار المعينة
+                    const isButtonClick =
+                      e.target.closest('button') ||
+                      e.target.closest('.no-product-details');
+                    
+                    // فقط إذا لم يكن ضغط على زر، افتح تفاصيل المنتج
+                    if (!isButtonClick && !productsLoading) {
+                      handleProductDetails(product);
+                    }
+                  }}
                 >
                   <div
                     className={`absolute top-2 right-2 z-10 px-2 py-1 rounded-full text-xs font-semibold ${
@@ -931,7 +943,7 @@ const Home = () => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => handleToggleActive(product.id, e)}
-                        className={`p-2 rounded-lg shadow-lg transition-colors flex items-center gap-1 text-xs ${
+                        className={`p-2 rounded-lg shadow-lg transition-colors flex items-center gap-1 text-xs no-product-details ${
                           product.isActive
                             ? "bg-yellow-500 text-white hover:bg-yellow-600"
                             : "bg-green-500 text-white hover:bg-green-600"
@@ -947,7 +959,7 @@ const Home = () => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => handleEditProduct(product, e)}
-                        className="bg-blue-500 text-white p-2 rounded-lg shadow-lg hover:bg-blue-600 transition-colors"
+                        className="bg-blue-500 text-white p-2 rounded-lg shadow-lg hover:bg-blue-600 transition-colors no-product-details"
                       >
                         <FaEdit size={12} />
                       </motion.button>
@@ -955,7 +967,7 @@ const Home = () => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => handleDeleteProduct(product.id, e)}
-                        className="bg-red-500 text-white p-2 rounded-lg shadow-lg hover:bg-red-600 transition-colors"
+                        className="bg-red-500 text-white p-2 rounded-lg shadow-lg hover:bg-red-600 transition-colors no-product-details"
                       >
                         <FaTrash size={12} />
                       </motion.button>
@@ -992,7 +1004,7 @@ const Home = () => {
                         whileHover={{ scale: 1.2 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={(e) => handleToggleFavorite(product, e)}
-                        className={`p-2 rounded-full transition-colors ${
+                        className={`p-2 rounded-full transition-colors no-product-details ${
                           isProductInFavorites(product.id)
                             ? "text-red-500 bg-red-50 dark:bg-red-900/20"
                             : "text-gray-400 bg-gray-50 dark:bg-gray-700 hover:text-red-500"
@@ -1012,7 +1024,7 @@ const Home = () => {
                         whileTap={{ scale: 0.95 }}
                         onClick={(e) => handleAddToCart(product, e)}
                         disabled={!product.isActive || productsLoading}
-                        className={`flex-1 py-2 sm:py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm ${
+                        className={`flex-1 py-2 sm:py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm no-product-details ${
                           product.isActive && !productsLoading
                             ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white"
                             : "bg-gray-400 text-gray-200 cursor-not-allowed"
@@ -1029,11 +1041,12 @@ const Home = () => {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() =>
-                          !productsLoading && handleProductDetails(product)
-                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          !productsLoading && handleProductDetails(product);
+                        }}
                         disabled={productsLoading}
-                        className={`flex-1 py-2 sm:py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm ${
+                        className={`flex-1 py-2 sm:py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm no-product-details ${
                           !productsLoading
                             ? "bg-gradient-to-r from-gray-600 to-gray-800 text-white"
                             : "bg-gray-400 text-gray-200 cursor-not-allowed"
@@ -1059,7 +1072,7 @@ const Home = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleAddNewProduct}
-            className="bg-green-500 text-white rounded-full p-3 sm:p-4 shadow-2xl hover:bg-green-600 transition-colors duration-200"
+            className="bg-green-500 text-white rounded-full p-3 sm:p-4 shadow-2xl hover:bg-green-600 transition-colors duration-200 no-product-details"
           >
             <FaPlus className="w-4 h-4 sm:w-6 sm:h-6" />
           </motion.button>
@@ -1070,7 +1083,7 @@ const Home = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleOpenCategoriesManager}
-            className="bg-purple-500 text-white rounded-full p-3 sm:p-4 shadow-2xl hover:bg-purple-600 transition-colors duration-200"
+            className="bg-purple-500 text-white rounded-full p-3 sm:p-4 shadow-2xl hover:bg-purple-600 transition-colors duration-200 no-product-details"
           >
             <FaList className="w-4 h-4 sm:w-6 sm:h-6" />
           </motion.button>
@@ -1118,7 +1131,7 @@ const Home = () => {
                     </div>
                     <button
                       onClick={handleCloseCategoriesManager}
-                      className="bg-white/20 backdrop-blur-sm rounded-full p-2 sm:p-3 text-white hover:bg-white/30 transition-all duration-200 hover:scale-110"
+                      className="bg-white/20 backdrop-blur-sm rounded-full p-2 sm:p-3 text-white hover:bg-white/30 transition-all duration-200 hover:scale-110 no-product-details"
                     >
                       <FaTimes size={16} className="sm:w-5" />
                     </button>
@@ -1211,7 +1224,7 @@ const Home = () => {
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={handleAddCategory}
-                        className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:shadow-xl transition-all flex items-center gap-2 sm:gap-3 text-sm sm:text-base shadow-lg"
+                        className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:shadow-xl transition-all flex items-center gap-2 sm:gap-3 text-sm sm:text-base shadow-lg no-product-details"
                       >
                         <FaPlus />
                         إضافة تصنيف جديد
@@ -1319,7 +1332,7 @@ const Home = () => {
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
                                   onClick={() => setEditingCategory(null)}
-                                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all text-sm sm:text-base"
+                                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all text-sm sm:text-base no-product-details"
                                 >
                                   إلغاء التعديل
                                 </motion.button>
@@ -1327,7 +1340,7 @@ const Home = () => {
                                   whileHover={{ scale: 1.02, y: -2 }}
                                   whileTap={{ scale: 0.98 }}
                                   onClick={handleSaveCategory}
-                                  className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold hover:shadow-lg transition-all flex items-center gap-2 text-sm sm:text-base shadow-lg"
+                                  className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold hover:shadow-lg transition-all flex items-center gap-2 text-sm sm:text-base shadow-lg no-product-details"
                                 >
                                   <FaSave />
                                   حفظ التغييرات
@@ -1401,7 +1414,7 @@ const Home = () => {
                                           e
                                         )
                                       }
-                                      className={`p-2 sm:p-3 rounded-xl transition-all shadow-md ${
+                                      className={`p-2 sm:p-3 rounded-xl transition-all shadow-md no-product-details ${
                                         category.isActive
                                           ? "bg-yellow-500 hover:bg-yellow-600 text-white"
                                           : "bg-green-500 hover:bg-green-600 text-white"
@@ -1430,7 +1443,7 @@ const Home = () => {
                                       onClick={() =>
                                         handleEditCategory(category)
                                       }
-                                      className="bg-blue-500 text-white p-2 sm:p-3 rounded-xl hover:bg-blue-600 transition-all shadow-md"
+                                      className="bg-blue-500 text-white p-2 sm:p-3 rounded-xl hover:bg-blue-600 transition-all shadow-md no-product-details"
                                       title="تعديل التصنيف"
                                     >
                                       <FaEdit
@@ -1444,7 +1457,7 @@ const Home = () => {
                                       onClick={() =>
                                         handleDeleteCategory(category.id)
                                       }
-                                      className="bg-red-500 text-white p-2 sm:p-3 rounded-xl hover:bg-red-600 transition-all shadow-md"
+                                      className="bg-red-500 text-white p-2 sm:p-3 rounded-xl hover:bg-red-600 transition-all shadow-md no-product-details"
                                       title="حذف التصنيف"
                                     >
                                       <FaTrash
@@ -1472,7 +1485,7 @@ const Home = () => {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white rounded-full p-3 sm:p-4 shadow-2xl z-40 cursor-pointer hover:scale-110 transition-transform duration-200"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white rounded-full p-3 sm:p-4 shadow-2xl z-40 cursor-pointer hover:scale-110 transition-transform duration-200 no-product-details"
           onClick={() => navigate("/cart")}
         >
           <div className="relative">
