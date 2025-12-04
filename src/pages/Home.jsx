@@ -970,7 +970,7 @@ const Home = () => {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -5 }}
-                  className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 cursor-pointer group w-full relative ${
+                  className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 border border-gray-100 dark:border-gray-700 cursor-pointer group w-full relative min-h-[180px] ${
                     !product.isActive ? "opacity-70" : ""
                   } ${productsLoading ? "opacity-50" : ""}`}
                   onClick={(e) => {
@@ -1048,100 +1048,210 @@ const Home = () => {
                     </div>
                   )}
 
-                  <div className="relative h-40 sm:h-48 overflow-hidden">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
-
-                  <div className="p-3 sm:p-4">
-                    <h3
-                      className="font-bold text-base sm:text-lg text-gray-800 dark:text-gray-200 mb-2 group-hover:text-[#E41E26] transition-colors line-clamp-1"
-                      dir={isArabic(product.name) ? "rtl" : "ltr"}
-                    >
-                      {product.name}
-                    </h3>
-                    <p
-                      className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed"
-                      dir={isArabic(product.description) ? "rtl" : "ltr"}
-                    >
-                      {product.description}
-                    </p>
-
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        {product.itemOffer && product.itemOffer.isEnabled ? (
-                          <>
-                            <div className="text-gray-400 dark:text-gray-500 text-sm line-through">
-                              {product.price} ج.م
-                            </div>
-                            <div className="text-[#E41E26] font-bold text-lg sm:text-xl">
-                              {product.finalPrice.toFixed(2)} ج.م
-                            </div>
-                          </>
-                        ) : (
-                          <div className="text-[#E41E26] font-bold text-lg sm:text-xl">
-                            {product.price} ج.م
+                  <div className="sm:hidden">
+                    <div className="p-3">
+                      <div className="flex">
+                        <div className="w-28 flex-shrink-0 ml-3">
+                          <div className="relative h-32 w-full overflow-hidden rounded-xl">
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                            />
                           </div>
-                        )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <h3
+                            className="font-bold text-sm text-gray-800 dark:text-gray-200 group-hover:text-[#E41E26] transition-colors line-clamp-2 mb-2"
+                            dir={isArabic(product.name) ? "rtl" : "ltr"}
+                          >
+                            {product.name}
+                          </h3>
+
+                          <p
+                            className="text-gray-600 dark:text-gray-400 text-xs mb-2 line-clamp-2 leading-relaxed"
+                            dir={isArabic(product.description) ? "rtl" : "ltr"}
+                          >
+                            {product.description}
+                          </p>
+
+                          <div className="flex items-center gap-1 mb-3">
+                            {product.itemOffer &&
+                            product.itemOffer.isEnabled ? (
+                              <>
+                                <div className="text-gray-400 dark:text-gray-500 text-xs line-through">
+                                  {product.price} ج.م
+                                </div>
+                                <div className="text-[#E41E26] font-bold text-sm">
+                                  {product.finalPrice.toFixed(2)} ج.م
+                                </div>
+                              </>
+                            ) : (
+                              <div className="text-[#E41E26] font-bold text-sm">
+                                {product.price} ج.م
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <motion.button
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={(e) => handleToggleFavorite(product, e)}
-                        className={`p-2 rounded-full transition-colors no-product-details ${
-                          isProductInFavorites(product.id)
-                            ? "text-red-500 bg-red-50 dark:bg-red-900/20"
-                            : "text-gray-400 bg-gray-50 dark:bg-gray-700 hover:text-red-500"
-                        }`}
-                      >
-                        {isProductInFavorites(product.id) ? (
-                          <FaHeart size={18} />
-                        ) : (
-                          <FaRegHeart size={18} />
-                        )}
-                      </motion.button>
                     </div>
 
-                    <div className="flex gap-2 mt-3 sm:mt-4">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => handleAddToCart(product, e)}
-                        disabled={!product.isActive || productsLoading}
-                        className={`flex-1 py-2 sm:py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm no-product-details ${
-                          product.isActive && !productsLoading
-                            ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white"
-                            : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                        }`}
-                      >
-                        <FaShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                        <span className="xs:hidden">
-                          {product.isActive && !productsLoading
-                            ? "أضف إلى السلة"
-                            : "غير متوفر"}
-                        </span>
-                      </motion.button>
+                    <div className="px-3 pb-3">
+                      <div className="flex gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => handleAddToCart(product, e)}
+                          disabled={!product.isActive || productsLoading}
+                          className={`flex-1 py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 text-xs no-product-details ${
+                            product.isActive && !productsLoading
+                              ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white"
+                              : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                          }`}
+                        >
+                          <FaShoppingCart className="w-3.5 h-3.5" />
+                          <span>
+                            {product.isActive && !productsLoading
+                              ? "أضف إلى السلة"
+                              : "غير متوفر"}
+                          </span>
+                        </motion.button>
 
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          !productsLoading && handleProductDetails(product);
-                        }}
-                        disabled={productsLoading}
-                        className={`flex-1 py-2 sm:py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm no-product-details ${
-                          !productsLoading
-                            ? "bg-gradient-to-r from-gray-600 to-gray-800 text-white"
-                            : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                        }`}
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            !productsLoading && handleProductDetails(product);
+                          }}
+                          disabled={productsLoading}
+                          className={`flex-1 py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 text-xs no-product-details ${
+                            !productsLoading
+                              ? "bg-gradient-to-r from-gray-600 to-gray-800 text-white"
+                              : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                          }`}
+                        >
+                          <FaEye className="w-3.5 h-3.5" />
+                          <span>عرض التفاصيل</span>
+                        </motion.button>
+
+                        <motion.button
+                          whileHover={{ scale: 1.2 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => handleToggleFavorite(product, e)}
+                          className={`p-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center text-xs no-product-details ${
+                            isProductInFavorites(product.id)
+                              ? "text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30"
+                              : "text-gray-400 bg-gray-50 dark:bg-gray-700 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-600"
+                          }`}
+                        >
+                          {isProductInFavorites(product.id) ? (
+                            <FaHeart size={16} />
+                          ) : (
+                            <FaRegHeart size={16} />
+                          )}
+                        </motion.button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="hidden sm:block">
+                    <div className="relative h-40 sm:h-48 overflow-hidden">
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                      />
+                    </div>
+
+                    <div className="p-3 sm:p-4">
+                      <h3
+                        className="font-bold text-base sm:text-lg text-gray-800 dark:text-gray-200 mb-2 group-hover:text-[#E41E26] transition-colors line-clamp-1"
+                        dir={isArabic(product.name) ? "rtl" : "ltr"}
                       >
-                        <FaEye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                        <span className="xs:hidden">عرض التفاصيل</span>
-                      </motion.button>
+                        {product.name}
+                      </h3>
+                      <p
+                        className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed"
+                        dir={isArabic(product.description) ? "rtl" : "ltr"}
+                      >
+                        {product.description}
+                      </p>
+
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          {product.itemOffer && product.itemOffer.isEnabled ? (
+                            <>
+                              <div className="text-gray-400 dark:text-gray-500 text-sm line-through">
+                                {product.price} ج.م
+                              </div>
+                              <div className="text-[#E41E26] font-bold text-lg sm:text-xl">
+                                {product.finalPrice.toFixed(2)} ج.م
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-[#E41E26] font-bold text-lg sm:text-xl">
+                              {product.price} ج.م
+                            </div>
+                          )}
+                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.2 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={(e) => handleToggleFavorite(product, e)}
+                          className={`p-2 rounded-full transition-colors no-product-details ${
+                            isProductInFavorites(product.id)
+                              ? "text-red-500 bg-red-50 dark:bg-red-900/20"
+                              : "text-gray-400 bg-gray-50 dark:bg-gray-700 hover:text-red-500"
+                          }`}
+                        >
+                          {isProductInFavorites(product.id) ? (
+                            <FaHeart size={18} />
+                          ) : (
+                            <FaRegHeart size={18} />
+                          )}
+                        </motion.button>
+                      </div>
+
+                      <div className="flex gap-2 mt-3 sm:mt-4">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => handleAddToCart(product, e)}
+                          disabled={!product.isActive || productsLoading}
+                          className={`flex-1 py-2 sm:py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm no-product-details ${
+                            product.isActive && !productsLoading
+                              ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white"
+                              : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                          }`}
+                        >
+                          <FaShoppingCart className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          <span className="xs:hidden">
+                            {product.isActive && !productsLoading
+                              ? "أضف إلى السلة"
+                              : "غير متوفر"}
+                          </span>
+                        </motion.button>
+
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            !productsLoading && handleProductDetails(product);
+                          }}
+                          disabled={productsLoading}
+                          className={`flex-1 py-2 sm:py-2.5 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm no-product-details ${
+                            !productsLoading
+                              ? "bg-gradient-to-r from-gray-600 to-gray-800 text-white"
+                              : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                          }`}
+                        >
+                          <FaEye className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          <span className="xs:hidden">عرض التفاصيل</span>
+                        </motion.button>
+                      </div>
                     </div>
                   </div>
                 </motion.div>
