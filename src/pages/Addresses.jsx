@@ -37,6 +37,162 @@ const defaultCenter = {
 
 const libraries = ["places"];
 
+const translateAddressErrorMessage = (errorData) => {
+  if (!errorData) return "حدث خطأ غير معروف";
+
+  if (errorData.errors && typeof errorData.errors === "object") {
+    const errorMessages = [];
+
+    if (errorData.errors.PhoneNumber) {
+      errorData.errors.PhoneNumber.forEach((msg) => {
+        if (msg.includes("must start with 010, 011, 012, or 015")) {
+          errorMessages.push("رقم الهاتف يجب أن يبدأ بـ 010، 011، 012، أو 015");
+        } else if (msg.includes("must be 11 digits long")) {
+          errorMessages.push("رقم الهاتف يجب أن يكون 11 رقمًا");
+        } else if (msg.includes("Invalid phone number")) {
+          errorMessages.push("رقم الهاتف غير صالح");
+        } else {
+          errorMessages.push(msg);
+        }
+      });
+    }
+
+    if (errorData.errors.CityId) {
+      errorData.errors.CityId.forEach((msg) => {
+        if (msg.includes("required")) {
+          errorMessages.push("المدينة مطلوبة");
+        } else {
+          errorMessages.push(msg);
+        }
+      });
+    }
+
+    if (errorData.errors.StreetName) {
+      errorData.errors.StreetName.forEach((msg) => {
+        if (msg.includes("required")) {
+          errorMessages.push("اسم الشارع مطلوب");
+        } else {
+          errorMessages.push(msg);
+        }
+      });
+    }
+
+    if (errorData.errors.BuildingNumber) {
+      errorData.errors.BuildingNumber.forEach((msg) => {
+        if (msg.includes("required")) {
+          errorMessages.push("رقم المبنى مطلوب");
+        } else if (msg.includes("greater than 0")) {
+          errorMessages.push("رقم المبنى يجب أن يكون أكبر من صفر");
+        } else {
+          errorMessages.push(msg);
+        }
+      });
+    }
+
+    if (errorData.errors.FloorNumber) {
+      errorData.errors.FloorNumber.forEach((msg) => {
+        if (msg.includes("required")) {
+          errorMessages.push("رقم الدور مطلوب");
+        } else if (msg.includes("greater than 0")) {
+          errorMessages.push("رقم الدور يجب أن يكون أكبر من صفر");
+        } else {
+          errorMessages.push(msg);
+        }
+      });
+    }
+
+    if (errorData.errors.FlatNumber) {
+      errorData.errors.FlatNumber.forEach((msg) => {
+        if (msg.includes("required")) {
+          errorMessages.push("رقم الشقة مطلوب");
+        } else if (msg.includes("greater than 0")) {
+          errorMessages.push("رقم الشقة يجب أن يكون أكبر من صفر");
+        } else {
+          errorMessages.push(msg);
+        }
+      });
+    }
+
+    if (errorData.errors.DetailedDescription) {
+      errorData.errors.DetailedDescription.forEach((msg) => {
+        if (msg.includes("required")) {
+          errorMessages.push("التفاصيل الإضافية مطلوبة");
+        } else {
+          errorMessages.push(msg);
+        }
+      });
+    }
+
+    Object.keys(errorData.errors).forEach((key) => {
+      if (
+        ![
+          "PhoneNumber",
+          "CityId",
+          "StreetName",
+          "BuildingNumber",
+          "FloorNumber",
+          "FlatNumber",
+          "DetailedDescription",
+        ].includes(key)
+      ) {
+        errorData.errors[key].forEach((msg) => {
+          errorMessages.push(msg);
+        });
+      }
+    });
+
+    if (errorMessages.length > 0) {
+      const htmlMessages = errorMessages.map(
+        (msg) =>
+          `<div style="direction: rtl; text-align: right; margin-bottom: 8px; padding-right: 15px; position: relative;">
+           ${msg}
+           <span style="position: absolute; right: 0; top: 0;">-</span>
+         </div>`
+      );
+      return htmlMessages.join("");
+    }
+  }
+
+  if (typeof errorData.message === "string") {
+    const msg = errorData.message.toLowerCase();
+    if (msg.includes("invalid") || msg.includes("credentials")) {
+      return "بيانات غير صحيحة";
+    }
+    if (msg.includes("network") || msg.includes("internet")) {
+      return "يرجى التحقق من اتصالك بالإنترنت";
+    }
+    if (msg.includes("timeout") || msg.includes("time out")) {
+      return "انتهت المهلة، يرجى المحاولة مرة أخرى";
+    }
+    return errorData.message;
+  }
+
+  return "حدث خطأ غير متوقع";
+};
+
+const showAddressErrorAlert = (errorData) => {
+  const translatedMessage = translateAddressErrorMessage(errorData);
+
+  Swal.fire({
+    title: "حدث خطأ",
+    html: translatedMessage,
+    icon: "error",
+    confirmButtonText: "حاول مرة أخرى",
+    timer: 2500,
+    showConfirmButton: false,
+  });
+};
+
+const showAddressSuccessAlert = (title, text) => {
+  Swal.fire({
+    title: title,
+    text: text,
+    icon: "success",
+    showConfirmButton: false,
+    timer: 2500,
+  });
+};
+
 export default function Addresses() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -123,11 +279,7 @@ export default function Addresses() {
       }
     } catch (err) {
       console.error("Failed to fetch addresses", err);
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "فشل في تحميل العناوين",
-      });
+      showAddressErrorAlert(err.response?.data);
     } finally {
       setIsLoading(false);
     }
@@ -141,11 +293,7 @@ export default function Addresses() {
       }
     } catch (err) {
       console.error("Failed to fetch cities", err);
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "فشل في تحميل المدن",
-      });
+      showAddressErrorAlert(err.response?.data);
     }
   };
 
@@ -190,13 +338,10 @@ export default function Addresses() {
       locationUrl: embedUrl,
     }));
 
-    Swal.fire({
-      icon: "success",
-      title: "تم اختيار الموقع",
-      text: "تم إضافة رابط الخريطة تلقائياً",
-      timer: 2000,
-      showConfirmButton: false,
-    });
+    showAddressSuccessAlert(
+      "تم اختيار الموقع",
+      "تم إضافة رابط الخريطة تلقائياً"
+    );
   }, []);
 
   const handleSubmit = async (e) => {
@@ -228,13 +373,7 @@ export default function Addresses() {
               addr.id === editingId ? { ...addr, ...formattedData } : addr
             )
           );
-          Swal.fire({
-            icon: "success",
-            title: "تم تحديث العنوان",
-            text: "تم تحديث عنوانك بنجاح",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+          showAddressSuccessAlert("تم تحديث العنوان", "تم تحديث عنوانك بنجاح");
         }
       } else {
         const res = await axiosInstance.post(
@@ -243,23 +382,16 @@ export default function Addresses() {
         );
         if (res.status === 200) {
           fetchAddresses();
-          Swal.fire({
-            icon: "success",
-            title: "تم إضافة العنوان",
-            text: "تم إضافة عنوانك الجديد بنجاح",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+          showAddressSuccessAlert(
+            "تم إضافة العنوان",
+            "تم إضافة عنوانك الجديد بنجاح"
+          );
         }
       }
 
       resetForm();
     } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: err.response?.data?.message || "فشل في حفظ العنوان",
-      });
+      showAddressErrorAlert(err.response?.data);
     }
   };
 
@@ -297,24 +429,16 @@ export default function Addresses() {
       cancelButtonColor: "#6B7280",
       confirmButtonText: "نعم، احذفه!",
       cancelButtonText: "إلغاء",
+      background: "#0f172a",
+      color: "#e2e8f0",
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
           await axiosInstance.delete(`/api/Locations/Delete/${id}`);
           setAddresses(addresses.filter((addr) => addr.id !== id));
-          Swal.fire({
-            title: "تم الحذف!",
-            text: "تم حذف عنوانك",
-            icon: "success",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+          showAddressSuccessAlert("تم الحذف!", "تم حذف عنوانك");
         } catch (err) {
-          Swal.fire({
-            icon: "error",
-            title: "خطأ",
-            text: "فشل في حذف العنوان",
-          });
+          showAddressErrorAlert(err.response?.data);
         }
       }
     });
@@ -330,23 +454,18 @@ export default function Addresses() {
         }))
       );
 
-      Swal.fire({
-        icon: "success",
-        title: "تم تحديث العنوان الافتراضي",
-        text: "تم تغيير عنوانك الافتراضي",
-        timer: 1500,
-        showConfirmButton: false,
-      }).then(() => {
-        if (location.state?.fromCart) {
+      showAddressSuccessAlert(
+        "تم تحديث العنوان الافتراضي",
+        "تم تغيير عنوانك الافتراضي"
+      );
+
+      if (location.state?.fromCart) {
+        setTimeout(() => {
           navigate("/cart", { state: { fromAddresses: true } });
-        }
-      });
+        }, 2500);
+      }
     } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "فشل في تعيين العنوان الافتراضي",
-      });
+      showAddressErrorAlert(err.response?.data);
     }
   };
 
@@ -413,20 +532,14 @@ export default function Addresses() {
   const confirmLocation = () => {
     if (selectedLocation) {
       closeMapModal();
-      Swal.fire({
-        icon: "success",
-        title: "تم تأكيد الموقع",
-        text: "تم حفظ موقعك بنجاح",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      showAddressSuccessAlert("تم تأكيد الموقع", "تم حفظ موقعك بنجاح");
     } else {
       Swal.fire({
         icon: "warning",
         title: "تحذير",
         text: "يرجى اختيار موقع من الخريطة أولاً",
-        timer: 2000,
         showConfirmButton: false,
+        timer: 2000,
       });
     }
   };
@@ -576,13 +689,7 @@ export default function Addresses() {
                     onLoad={() => setMapLoaded(true)}
                     onError={() => {
                       setMapLoaded(false);
-                      Swal.fire({
-                        icon: "error",
-                        title: "خطأ في تحميل الخريطة",
-                        text: "يرجى المحاولة مرة أخرى",
-                        timer: 3000,
-                        showConfirmButton: false,
-                      });
+                      showAddressErrorAlert("خطأ في تحميل الخريطة");
                     }}
                   >
                     {mapLoaded && (
