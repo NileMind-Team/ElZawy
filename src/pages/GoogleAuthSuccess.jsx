@@ -1,8 +1,8 @@
-import { useEffect, useRef } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { useDispatch } from "react-redux";
 import { loginUser } from "../redux/slices/loginSlice";
+import { useEffect, useRef } from "react";
 
 export default function GoogleAuthSuccess() {
   const { getToken, isLoaded } = useAuth();

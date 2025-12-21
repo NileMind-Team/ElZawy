@@ -134,6 +134,7 @@ export default function LoginForm({
     await signIn.authenticateWithRedirect({
       strategy: "oauth_google",
       redirectUrl: "/google-auth-success",
+      redirectUrlComplete: "/google-auth-success",
     });
   };
 
@@ -241,4 +242,3 @@ export default function LoginForm({
     </>
   );
 }
-
