@@ -22,6 +22,7 @@ import {
   FaChevronRight,
   FaSyncAlt,
   FaPrint,
+  FaStore,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import axiosInstance from "../api/axiosInstance";
@@ -55,6 +56,10 @@ export default function MyOrders() {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const statusDropdownRef = useRef(null);
+  const [branches, setBranches] = useState([]);
+  const [selectedBranchId, setSelectedBranchId] = useState("");
+  const [loadingBranches, setLoadingBranches] = useState(false);
+  const [isAdminOrRestaurant, setIsAdminOrRestaurant] = useState(false);
 
   const addTwoHoursToDate = (dateString) => {
     const date = new Date(dateString);
@@ -109,6 +114,18 @@ export default function MyOrders() {
     return order.totalWithFee || 0;
   };
 
+  const formatDateForApi = (dateString, isStart = true) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    date.setHours(date.getHours() + 2);
+
+    if (isStart) {
+      return date.toISOString().slice(0, 10) + "T00:00:00.000Z";
+    } else {
+      return date.toISOString().slice(0, 10) + "T23:59:59.999Z";
+    }
+  };
+
   const buildFiltersArray = () => {
     const filtersArray = [];
 
@@ -128,11 +145,38 @@ export default function MyOrders() {
       });
     }
 
-    if (dateRange.start && dateRange.end) {
+    if (dateRange.start || dateRange.end) {
+      if (dateRange.start && dateRange.end) {
+        const startDate = formatDateForApi(dateRange.start, true);
+        const endDate = formatDateForApi(dateRange.end, false);
+        filtersArray.push({
+          propertyName: "createdAt",
+          propertyValue: `${startDate},${endDate}`,
+          range: true,
+        });
+      } else if (dateRange.start) {
+        const startDate = formatDateForApi(dateRange.start, true);
+        const endDate = formatDateForApi(dateRange.start, false);
+        filtersArray.push({
+          propertyName: "createdAt",
+          propertyValue: `${startDate},${endDate}`,
+          range: true,
+        });
+      } else if (dateRange.end) {
+        const endDate = formatDateForApi(dateRange.end, false);
+        filtersArray.push({
+          propertyName: "createdAt",
+          propertyValue: `${endDate},${endDate}`,
+          range: true,
+        });
+      }
+    }
+
+    if (selectedBranchId) {
       filtersArray.push({
-        propertyName: "createdAt",
-        propertyValue: dateRange.start,
-        range: true,
+        propertyName: "branchId",
+        propertyValue: selectedBranchId,
+        range: false,
       });
     }
 
@@ -164,13 +208,6 @@ export default function MyOrders() {
 
       let url = "/api/Orders/GetAllWithPagination";
       let params = {};
-
-      if (dateRange.start) {
-        params.startRange = dateRange.start;
-      }
-      if (dateRange.end) {
-        params.endRange = dateRange.end;
-      }
 
       if (!isAdminOrRestaurantOrBranch) {
         url = "/api/Orders/GetAllForUser";
@@ -455,6 +492,7 @@ export default function MyOrders() {
         const token = localStorage.getItem("token");
         if (!token) {
           setIsAdminOrRestaurantOrBranch(false);
+          setIsAdminOrRestaurant(false);
           setLoading(false);
           setIsInitialLoad(false);
           return;
@@ -475,10 +513,15 @@ export default function MyOrders() {
           userRoles.includes("Restaurant") ||
           userRoles.includes("Branch");
 
+        const hasAdminOrRestaurantRole =
+          userRoles.includes("Admin") || userRoles.includes("Restaurant");
+
         setIsAdminOrRestaurantOrBranch(hasAdminOrRestaurantOrBranchRole);
+        setIsAdminOrRestaurant(hasAdminOrRestaurantRole);
       } catch (error) {
         console.error("Error fetching user profile:", error);
         setIsAdminOrRestaurantOrBranch(false);
+        setIsAdminOrRestaurant(false);
       } finally {
         setLoading(false);
         setIsInitialLoad(false);
@@ -520,12 +563,44 @@ export default function MyOrders() {
   }, [isAdminOrRestaurantOrBranch]);
 
   useEffect(() => {
+    if (isAdminOrRestaurant) {
+      const fetchBranches = async () => {
+        try {
+          setLoadingBranches(true);
+          const token = localStorage.getItem("token");
+
+          if (!token) {
+            setBranches([]);
+            return;
+          }
+
+          const response = await axiosInstance.get("/api/Branches/GetList", {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          setBranches(response.data || []);
+        } catch (error) {
+          console.error("Error fetching branches:", error);
+          setBranches([]);
+        } finally {
+          setLoadingBranches(false);
+        }
+      };
+
+      fetchBranches();
+    }
+  }, [isAdminOrRestaurant]);
+
+  useEffect(() => {
     fetchOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     filter,
     dateRange,
     selectedUserId,
+    selectedBranchId,
     isAdminOrRestaurantOrBranch,
     isInitialLoad,
     currentPage,
@@ -549,7 +624,14 @@ export default function MyOrders() {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isInitialLoad, selectedOrder]);
+  }, [
+    isInitialLoad,
+    selectedOrder,
+    filter,
+    dateRange,
+    selectedUserId,
+    selectedBranchId,
+  ]);
 
   useEffect(() => {
     if (selectedOrder) {
@@ -572,7 +654,14 @@ export default function MyOrders() {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOrder, isInitialLoad]);
+  }, [
+    selectedOrder,
+    isInitialLoad,
+    filter,
+    dateRange,
+    selectedUserId,
+    selectedBranchId,
+  ]);
 
   const mapStatus = (apiStatus) => {
     const statusMap = {
@@ -757,20 +846,14 @@ export default function MyOrders() {
       ...prev,
       [type]: value,
     }));
-  };
-
-  const clearDateRange = () => {
-    setDateRange({ start: "", end: "" });
-  };
-
-  const clearUserFilter = () => {
-    setSelectedUserId("");
+    setCurrentPage(1);
   };
 
   const clearAllFilters = () => {
     setFilter("all");
     setDateRange({ start: "", end: "" });
     setSelectedUserId("");
+    setSelectedBranchId("");
     setCurrentPage(1);
   };
 
@@ -896,10 +979,10 @@ export default function MyOrders() {
             className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl p-4 sm:p-6 mb-6 sm:mb-8 relative z-30 dark:bg-gray-800/90"
           >
             <div className="flex flex-col gap-4">
-              {/* Status and User Filters in Same Row */}
-              <div className="flex flex-col sm:flex-row gap-4">
+              {/* Status, User and Branch Filters */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Status Filter - Always shown */}
-                <div className="flex-1">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     الحالة
                   </label>
@@ -970,7 +1053,7 @@ export default function MyOrders() {
 
                 {/* User Filter - Only for admin users */}
                 {isAdminOrRestaurantOrBranch && (
-                  <div className="flex-1">
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       المستخدم
                     </label>
@@ -1073,6 +1156,91 @@ export default function MyOrders() {
                     </div>
                   </div>
                 )}
+
+                {/* Branch Filter - Only for Admin and Restaurant roles */}
+                {isAdminOrRestaurant && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      الفرع
+                    </label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setOpenDropdown(
+                            openDropdown === "branch" ? null : "branch"
+                          )
+                        }
+                        className="w-full flex items-center justify-between border border-gray-200 bg-white rounded-xl px-4 py-3 text-black focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-sm sm:text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                      >
+                        <span className="flex items-center gap-2">
+                          <FaStore className="text-[#E41E26]" />
+                          {selectedBranchId
+                            ? branches.find((b) => b.id === selectedBranchId)
+                                ?.name || "فرع غير معروف"
+                            : "جميع الفروع"}
+                        </span>
+                        <motion.div
+                          animate={{
+                            rotate: openDropdown === "branch" ? 180 : 0,
+                          }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <FaChevronDown className="text-[#E41E26]" />
+                        </motion.div>
+                      </button>
+
+                      <AnimatePresence>
+                        {openDropdown === "branch" && (
+                          <motion.ul
+                            initial={{ opacity: 0, y: -5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute z-50 mt-2 w-full bg-white border border-gray-200 shadow-2xl rounded-xl overflow-hidden max-h-48 overflow-y-auto dark:bg-gray-700 dark:border-gray-600"
+                          >
+                            <li
+                              onClick={() => {
+                                setSelectedBranchId("");
+                                setCurrentPage(1);
+                                setOpenDropdown(null);
+                              }}
+                              className="px-4 py-3 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] cursor-pointer text-gray-700 transition-all text-sm sm:text-base border-b border-gray-100 dark:hover:from-gray-600 dark:hover:to-gray-500 dark:text-gray-300 dark:border-gray-600"
+                            >
+                              جميع الفروع
+                            </li>
+                            {loadingBranches ? (
+                              <li className="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                                جاري تحميل الفروع...
+                              </li>
+                            ) : (
+                              branches.map((branch) => (
+                                <li
+                                  key={branch.id}
+                                  onClick={() => {
+                                    setSelectedBranchId(branch.id.toString());
+                                    setCurrentPage(1);
+                                    setOpenDropdown(null);
+                                  }}
+                                  className="px-4 py-3 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] cursor-pointer text-gray-700 transition-all text-sm sm:text-base border-b border-gray-100 last:border-b-0 dark:hover:from-gray-600 dark:hover:to-gray-500 dark:text-gray-300 dark:border-gray-600"
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#E41E26] to-[#FDB913] flex items-center justify-center text-white text-xs font-bold">
+                                      {branch.name.charAt(0)}
+                                    </div>
+                                    <div className="font-medium">
+                                      {branch.name}
+                                    </div>
+                                  </div>
+                                </li>
+                              ))
+                            )}
+                          </motion.ul>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Date Range Filter - Modified for mobile */}
@@ -1089,7 +1257,6 @@ export default function MyOrders() {
                         value={dateRange.start}
                         onChange={(e) => {
                           handleDateRangeChange("start", e.target.value);
-                          setCurrentPage(1);
                         }}
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-black focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-sm sm:text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
@@ -1103,7 +1270,6 @@ export default function MyOrders() {
                         value={dateRange.end}
                         onChange={(e) => {
                           handleDateRangeChange("end", e.target.value);
-                          setCurrentPage(1);
                         }}
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-black focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-sm sm:text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
@@ -1120,7 +1286,6 @@ export default function MyOrders() {
                         value={dateRange.start}
                         onChange={(e) => {
                           handleDateRangeChange("start", e.target.value);
-                          setCurrentPage(1);
                         }}
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-black focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-sm sm:text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
@@ -1134,49 +1299,25 @@ export default function MyOrders() {
                         value={dateRange.end}
                         onChange={(e) => {
                           handleDateRangeChange("end", e.target.value);
-                          setCurrentPage(1);
                         }}
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-black focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-sm sm:text-base dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                       />
                     </div>
                   </div>
 
-                  {/* Clear Buttons */}
-                  <div className="flex gap-2 pt-2 sm:pt-0">
+                  <div className="flex pt-2 sm:pt-0">
                     {(dateRange.start ||
                       dateRange.end ||
                       (isAdminOrRestaurantOrBranch && selectedUserId) ||
+                      (isAdminOrRestaurant && selectedBranchId) ||
                       filter !== "all") && (
-                      <>
-                        {(dateRange.start || dateRange.end) && (
-                          <button
-                            onClick={() => {
-                              clearDateRange();
-                              setCurrentPage(1);
-                            }}
-                            className="px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 text-sm sm:text-base whitespace-nowrap"
-                          >
-                            مسح التواريخ
-                          </button>
-                        )}
-                        {isAdminOrRestaurantOrBranch && selectedUserId && (
-                          <button
-                            onClick={() => {
-                              clearUserFilter();
-                              setCurrentPage(1);
-                            }}
-                            className="px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 text-sm sm:text-base whitespace-nowrap"
-                          >
-                            مسح المستخدم
-                          </button>
-                        )}
-                        <button
-                          onClick={clearAllFilters}
-                          className="px-4 py-3 bg-[#E41E26] text-white rounded-xl hover:bg-[#c91c23] transition-colors duration-200 text-sm sm:text-base whitespace-nowrap"
-                        >
-                          مسح الكل
-                        </button>
-                      </>
+                      <button
+                        onClick={clearAllFilters}
+                        className="w-full sm:w-auto px-4 py-3 bg-[#E41E26] text-white rounded-xl hover:bg-[#c91c23] transition-colors duration-200 text-sm sm:text-base whitespace-nowrap flex items-center justify-center gap-2"
+                      >
+                        <FaTrash className="w-3 h-3 sm:w-4 sm:h-4" />
+                        مسح الكل
+                      </button>
                     )}
                   </div>
                 </div>
@@ -1242,6 +1383,18 @@ export default function MyOrders() {
                                   </span>
                                 </div>
                               )}
+                              {isAdminOrRestaurant &&
+                                order.deliveryFee?.branchId && (
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <FaStore className="text-gray-400 dark:text-gray-500 w-3 h-3" />
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                      {branches.find(
+                                        (b) =>
+                                          b.id === order.deliveryFee?.branchId
+                                      )?.name || "فرع غير معروف"}
+                                    </span>
+                                  </div>
+                                )}
                             </div>
                             <div className="flex-shrink-0">
                               <div
@@ -1364,7 +1517,8 @@ export default function MyOrders() {
                   {filter !== "all" ||
                   dateRange.start ||
                   dateRange.end ||
-                  selectedUserId
+                  selectedUserId ||
+                  selectedBranchId
                     ? "حاول تعديل معايير التصفية"
                     : "لم تقم بوضع أي طلبات بعد"}
                 </p>
@@ -1744,6 +1898,44 @@ export default function MyOrders() {
                         </div>
                       </div>
 
+                      {/* Branch Information for Admin/Restaurant */}
+                      {isAdminOrRestaurant &&
+                        orderDetails.deliveryFee?.branchId && (
+                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5">
+                            <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2 text-base sm:text-lg">
+                              <FaStore className="text-[#E41E26] flex-shrink-0" />
+                              معلومات الفرع
+                            </h3>
+                            <div className="space-y-2 sm:space-y-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E41E26] to-[#FDB913] flex items-center justify-center text-white font-bold">
+                                  {branches
+                                    .find(
+                                      (b) =>
+                                        b.id ===
+                                        orderDetails.deliveryFee?.branchId
+                                    )
+                                    ?.name?.charAt(0) || "ف"}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-gray-800 dark:text-gray-200">
+                                    {branches.find(
+                                      (b) =>
+                                        b.id ===
+                                        orderDetails.deliveryFee?.branchId
+                                    )?.name || "فرع غير معروف"}
+                                  </p>
+                                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                    منطقة التوصيل:{" "}
+                                    {orderDetails.deliveryFee?.areaName ||
+                                      "غير محدد"}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
                       {/* Order Items */}
                       {orderDetails.items && orderDetails.items.length > 0 && (
                         <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-5">
@@ -1767,7 +1959,9 @@ export default function MyOrders() {
                               const basePrice =
                                 item.menuItemBasePriceSnapshotAtOrder > 0
                                   ? item.menuItemBasePriceSnapshotAtOrder
-                                  : item.menuItem?.basePrice || 0;
+                                  : item.menuItem
+                                  ? item.menuItem.basePrice
+                                  : 0;
                               const totalPrice =
                                 item.totalPrice < 0
                                   ? Math.abs(item.totalPrice)

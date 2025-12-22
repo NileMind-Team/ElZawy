@@ -284,11 +284,11 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
           >
             <img
               src={darkMode ? logoDark : logo}
-              alt="NileFood logo"
+              alt="Chicken One logo"
               className="w-14 h-12 object-contain"
             />
             <h1 className="hidden md:block text-xl lg:text-2xl font-bold bg-gradient-to-r from-[#E41E26] to-[#FDB913] bg-clip-text text-transparent dark:from-[#FDB913] dark:to-[#E41E26]">
-              NileFood
+              Chicken One
             </h1>
           </Link>
         </motion.div>
@@ -370,7 +370,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                         >
                           انضم إلى{" "}
                           <span className="font-semibold text-gray-800 dark:text-gray-200">
-                            NileFood
+                            Chicken One
                           </span>
                         </p>
                         <p
@@ -623,6 +623,96 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                             <span className="text-lg">إدارة الكوبونات</span>
                           </button>
                         </motion.div> */}
+
+                        <motion.div
+                          whileHover={{ scale: 1.02, x: -4 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <button
+                            onClick={handleItemOffersClick}
+                            className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
+                            dir="rtl"
+                          >
+                            <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                              <FaPercent className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
+                            </div>
+                            <span className="text-lg">إدارة الخصومات</span>
+                          </button>
+                        </motion.div>
+
+                        <motion.div
+                          whileHover={{ scale: 1.02, x: -4 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <button
+                            onClick={handleCitiesClick}
+                            className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
+                            dir="rtl"
+                          >
+                            <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                              <FaCity className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
+                            </div>
+                            <span className="text-lg">إدارة المدن</span>
+                          </button>
+                        </motion.div>
+
+                        <motion.div
+                          whileHover={{ scale: 1.02, x: -4 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <button
+                            onClick={handleReportsClick}
+                            className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
+                            dir="rtl"
+                          >
+                            <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                              <FaChartBar className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
+                            </div>
+                            <span className="text-lg">تقارير المبيعات</span>
+                          </button>
+                        </motion.div>
+                      </div>
+                    </>
+                  )}
+
+                  {isRestaurant && (
+                    <>
+                      <div className="border-t border-gray-200 dark:border-gray-700 my-4 pt-4">
+                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-2 mb-2 text-right">
+                          إدارة المطعم
+                        </p>
+
+                        <motion.div
+                          whileHover={{ scale: 1.02, x: -4 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <button
+                            onClick={handleAdminUsersClick}
+                            className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
+                            dir="rtl"
+                          >
+                            <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                              <FaUsers className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
+                            </div>
+                            <span className="text-lg">إدارة المستخدمين</span>
+                          </button>
+                        </motion.div>
+
+                        <motion.div
+                          whileHover={{ scale: 1.02, x: -4 }}
+                          whileTap={{ scale: 0.98 }}
+                        >
+                          <button
+                            onClick={handleDeliveryCostClick}
+                            className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
+                            dir="rtl"
+                          >
+                            <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                              <FaMoneyBillWave className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
+                            </div>
+                            <span className="text-lg">تكاليف التوصيل</span>
+                          </button>
+                        </motion.div>
 
                         <motion.div
                           whileHover={{ scale: 1.02, x: -4 }}

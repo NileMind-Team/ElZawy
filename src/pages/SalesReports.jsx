@@ -28,7 +28,7 @@ import {
 import Swal from "sweetalert2";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { format } from "date-fns";
+import { format, startOfDay, endOfDay, addHours } from "date-fns";
 import axiosInstance from "../api/axiosInstance";
 
 const fetchOrders = async (
@@ -45,12 +45,12 @@ const fetchOrders = async (
     };
 
     if (startDate && endDate) {
-      const startDateStr = format(startDate, "yyyy-MM-dd");
-      const endDateStr = format(endDate, "yyyy-MM-dd");
+      const startDateISO = addHours(startOfDay(startDate), 2).toISOString();
+      const endDateISO = addHours(endOfDay(endDate), 2).toISOString();
 
       requestBody.filters.push({
         propertyName: "createdAt",
-        propertyValue: `${startDateStr},${endDateStr}`,
+        propertyValue: `${startDateISO},${endDateISO}`,
         range: true,
       });
     }
@@ -80,61 +80,36 @@ const fetchOrders = async (
   }
 };
 
-const fetchAllOrdersForStats = async (startDate, endDate) => {
+const fetchAllOrdersForPrint = async (startDate, endDate) => {
   try {
-    let allOrders = [];
-    let currentPage = 1;
-    let hasMorePages = true;
-    const pageSize = 50;
-
-    while (hasMorePages) {
-      const requestBody = {
-        pageNumber: currentPage,
-        pageSize: pageSize,
-        filters: [],
+    if (!startDate || !endDate) {
+      return {
+        orders: [],
+        totalPrice: 0,
       };
-
-      if (startDate && endDate) {
-        const startDateStr = format(startDate, "yyyy-MM-dd");
-        const endDateStr = format(endDate, "yyyy-MM-dd");
-
-        requestBody.filters.push({
-          propertyName: "createdAt",
-          propertyValue: `${startDateStr},${endDateStr}`,
-          range: true,
-        });
-      }
-
-      const response = await axiosInstance.post(
-        "/api/Orders/GetAllWithPagination",
-        requestBody
-      );
-
-      if (
-        !response.data ||
-        !response.data.data ||
-        response.data.data.length === 0
-      ) {
-        break;
-      }
-
-      allOrders = [...allOrders, ...response.data.data];
-
-      if (currentPage >= response.data.totalPages) {
-        hasMorePages = false;
-      } else {
-        currentPage++;
-      }
-
-      if (allOrders.length >= 1000) {
-        break;
-      }
     }
 
-    console.log(`تم جلب ${allOrders.length} طلب للإحصائيات`);
-    return allOrders;
+    const startDateStr = format(startDate, "yyyy-MM-dd");
+    const endDateStr = format(endDate, "yyyy-MM-dd");
+
+    console.log(`Fetching print orders from ${startDateStr} to ${endDateStr}`);
+
+    const response = await axiosInstance.get("/api/Orders/GetAll", {
+      params: {
+        startRange: startDateStr,
+        endRange: endDateStr,
+      },
+    });
+
+    const orders = response.data || [];
+    console.log(`تم جلب ${orders.length} طلب للطباعة`);
+
+    return {
+      orders: orders,
+      totalPrice: 0,
+    };
   } catch (error) {
-    console.error("Error fetching all orders for stats:", error);
+    console.error("Error fetching all orders for print:", error);
     throw error;
   }
 };
@@ -159,7 +134,7 @@ const fetchUsers = async () => {
   }
 };
 
-const calculateSummary = (allOrders, startDate, endDate) => {
+const calculateSummary = (allOrders, startDate, endDate, totalPrice = 0) => {
   if (!allOrders || allOrders.length === 0) {
     return {
       totalSales: 0,
@@ -177,17 +152,18 @@ const calculateSummary = (allOrders, startDate, endDate) => {
     };
   }
 
-  const totalSales = allOrders.reduce(
-    (sum, order) => sum + order.totalWithFee,
-    0
-  );
+  const totalSales =
+    totalPrice > 0
+      ? totalPrice
+      : allOrders.reduce((sum, order) => sum + (order.totalWithFee || 0), 0);
+
   const totalOrders = allOrders.length;
 
   const deliveryOrders = allOrders.filter(
-    (order) => order.deliveryFee.fee > 0
+    (order) => order.deliveryFee?.fee > 0
   ).length;
   const pickupOrders = allOrders.filter(
-    (order) => order.deliveryFee.fee === 0
+    (order) => order.deliveryFee?.fee === 0
   ).length;
 
   const productSales = {};
@@ -233,6 +209,40 @@ const calculateSummary = (allOrders, startDate, endDate) => {
           )}`
         : "لم يتم تحديد فترة",
   };
+};
+
+const toArabicNumbers = (num) => {
+  if (num === null || num === undefined) return "٠";
+
+  const arabicDigits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+  return num
+    .toString()
+    .replace(/\d/g, (digit) => arabicDigits[parseInt(digit)]);
+};
+
+const formatCurrencyArabic = (amount) => {
+  if (amount === null || amount === undefined || isNaN(amount)) {
+    return "٠٫٠٠ ج.م";
+  }
+
+  const numberStr = Number(amount).toFixed(2);
+  const [wholePart, decimalPart] = numberStr.split(".");
+  const arabicWhole = toArabicNumbers(wholePart);
+  const arabicDecimal = toArabicNumbers(decimalPart);
+  const withCommas = arabicWhole.replace(/\B(?=(\d{3})+(?!\d))/g, "٬");
+
+  return `${withCommas}.${arabicDecimal} ج.م`;
+};
+
+const formatNumberArabic = (number) => {
+  if (number === null || number === undefined || isNaN(number)) {
+    return "٠";
+  }
+
+  const num = Math.round(number);
+  const arabicNum = toArabicNumbers(num);
+
+  return arabicNum.replace(/\B(?=(\d{3})+(?!\d))/g, "٬");
 };
 
 const OrderDetailsModal = ({ order, onClose, users }) => {
@@ -663,6 +673,8 @@ const SalesReports = () => {
   // eslint-disable-next-line no-unused-vars
   const [totalItems, setTotalItems] = useState(0);
   const [allOrdersForStats, setAllOrdersForStats] = useState([]);
+  // eslint-disable-next-line no-unused-vars
+  const [totalPriceFromResponse, setTotalPriceFromResponse] = useState(0);
 
   useEffect(() => {
     setSummary({
@@ -726,16 +738,22 @@ const SalesReports = () => {
       setTotalPages(response.totalPages);
       setTotalItems(response.totalItems);
       setCurrentPage(response.pageNumber);
+      setTotalPriceFromResponse(response.totalPrice || 0);
 
       let allOrders = [];
       if (isFilterAction) {
-        allOrders = await fetchAllOrdersForStats(startDate, endDate);
+        allOrders = orders;
         setAllOrdersForStats(allOrders);
       } else {
         allOrders = allOrdersForStats;
       }
 
-      const summaryData = calculateSummary(allOrders, startDate, endDate);
+      const summaryData = calculateSummary(
+        allOrders,
+        startDate,
+        endDate,
+        response.totalPrice || 0
+      );
       setSummary(summaryData);
 
       if (isFilterAction) {
@@ -783,6 +801,7 @@ const SalesReports = () => {
       setCurrentPage(1);
       setTotalItems(0);
       setAllOrdersForStats([]);
+      setTotalPriceFromResponse(0);
     } finally {
       setLoading(false);
     }
@@ -951,43 +970,58 @@ const SalesReports = () => {
   };
 
   const handlePrint = async () => {
-    return new Promise((resolve, reject) => {
-      try {
-        setIsPrinting(true);
+    try {
+      setIsPrinting(true);
 
-        const allOrders =
-          allOrdersForStats.length > 0 ? allOrdersForStats : reportData;
-
-        if (!allOrders || allOrders.length === 0) {
-          Swal.fire({
-            icon: "warning",
-            title: "لا توجد بيانات",
-            text: "لا توجد بيانات لعرضها في التقرير",
-            timer: 2000,
-            showConfirmButton: false,
-            background: "#fff",
-            color: "#333",
-          });
-          setIsPrinting(false);
-          return;
-        }
-
-        const printSummary = calculateSummary(allOrders, startDate, endDate);
-
+      if (!startDate || !endDate) {
         Swal.fire({
-          title: "جاري الطباعة",
-          text: `يتم تحضير ${allOrders.length} طلب للطباعة...`,
-          icon: "info",
-          timer: 500,
+          icon: "warning",
+          title: "تاريخ غير مكتمل",
+          text: "يرجى تحديد تاريخ البداية والنهاية أولاً",
+          timer: 2000,
           showConfirmButton: false,
-        }).then(() => {
+        });
+        setIsPrinting(false);
+        return;
+      }
+
+      Swal.fire({
+        title: "جاري الطباعة",
+        text: `يتم تحضير التقرير للطباعة...`,
+        icon: "info",
+        timer: 500,
+        showConfirmButton: false,
+      }).then(async () => {
+        try {
+          const printData = await fetchAllOrdersForPrint(startDate, endDate);
+          const allOrders = printData.orders || [];
+
+          if (allOrders.length === 0) {
+            Swal.fire({
+              icon: "warning",
+              title: "لا توجد بيانات",
+              text: "لا توجد بيانات لعرضها في التقرير",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+            setIsPrinting(false);
+            return;
+          }
+
+          const printSummary = calculateSummary(
+            allOrders,
+            startDate,
+            endDate,
+            summary?.totalSales || 0
+          );
+
           const printContent = `
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تقرير المبيعات - NileFood</title>
+<title>تقرير المبيعات - Chicken One</title>
 <style>
   @media print {
     @page { margin: 0; size: A4 portrait; }
@@ -1177,7 +1211,7 @@ const SalesReports = () => {
 <body>
 
 <div class="print-header">
-  <h1>تقرير المبيعات - NileFood</h1>
+  <h1>تقرير المبيعات - Chicken One</h1>
   <p>نظام إدارة المطاعم</p>
 </div>
 
@@ -1193,25 +1227,25 @@ const SalesReports = () => {
       ? `<div>إلى: ${new Date(endDate).toLocaleDateString("ar-EG")}</div>`
       : ""
   }
-  <div>عدد السجلات: ${allOrders.length}</div>
+  <div>عدد السجلات: ${formatNumberArabic(allOrders.length)}</div>
 </div>
 
 <div class="stats-container">
   <div class="stat-card">
     <h3>إجمالي المبيعات</h3>
-    <p>${formatCurrency(printSummary.totalSales || 0)}</p>
+    <p>${formatCurrencyArabic(printSummary.totalSales || 0)}</p>
   </div>
   <div class="stat-card">
     <h3>إجمالي الطلبات</h3>
-    <p>${printSummary.totalOrders || 0}</p>
+    <p>${formatNumberArabic(printSummary.totalOrders || 0)}</p>
   </div>
   <div class="stat-card">
     <h3>طلبات التوصيل</h3>
-    <p>${printSummary.deliveryOrders || 0}</p>
+    <p>${formatNumberArabic(printSummary.deliveryOrders || 0)}</p>
   </div>
   <div class="stat-card">
     <h3>طلبات الاستلام</h3>
-    <p>${printSummary.pickupOrders || 0}</p>
+    <p>${formatNumberArabic(printSummary.pickupOrders || 0)}</p>
   </div>
 </div>
 
@@ -1237,17 +1271,25 @@ ${
     </thead>
     <tbody>
       ${allOrders
-        .map((order) => {
+        .map((order, index) => {
           const userName = findUserName(order.userId);
           const statusClass = getPrintStatusClass(order.status);
           const orderTypeClass = `order-type-${
             order.deliveryFee?.fee > 0 ? "delivery" : "pickup"
           }`;
+          const orderNumberArabic = order.orderNumber
+            ? order.orderNumber.replace(/\d/g, (d) => toArabicNumbers(d))
+            : "";
+          const phoneArabic = order.location?.phoneNumber
+            ? order.location.phoneNumber.replace(/\d/g, (d) =>
+                toArabicNumbers(d)
+              )
+            : "غير متوفر";
           return `
           <tr>
-            <td class="customer-name">${order.orderNumber}</td>
+            <td class="customer-name">${orderNumberArabic}</td>
             <td>${userName}</td>
-            <td>${order.location?.phoneNumber || "غير متوفر"}</td>
+            <td>${phoneArabic}</td>
             <td class="${orderTypeClass}">${
             order.deliveryFee?.fee > 0 ? "توصيل" : "استلام"
           }</td>
@@ -1255,7 +1297,7 @@ ${
             <td><span class="status-badge ${statusClass}">${getStatusLabel(
             order.status
           )}</span></td>
-            <td class="total-amount">${formatCurrency(
+            <td class="total-amount">${formatCurrencyArabic(
               order.totalWithFee || 0
             )}</td>
           </tr>
@@ -1264,7 +1306,7 @@ ${
         .join("")}
       <tr style="background-color: #f0f0f0 !important; font-weight: bold;">
         <td colspan="6" style="text-align: left; padding-right: 20px;">المجموع الكلي:</td>
-        <td class="total-amount" style="text-align: center;">${formatCurrency(
+        <td class="total-amount" style="text-align: center;">${formatCurrencyArabic(
           printSummary.totalSales || 0
         )}</td>
       </tr>
@@ -1294,10 +1336,12 @@ ${
         .map(
           (product, index) => `
         <tr>
-          <td style="text-align: center;">${index + 1}</td>
+          <td style="text-align: center;">${toArabicNumbers(index + 1)}</td>
           <td style="text-align: center;">${product.name}</td>
-          <td style="text-align: center;">${product.quantity}</td>
-          <td class="total-amount" style="text-align: center;">${formatCurrency(
+          <td style="text-align: center;">${formatNumberArabic(
+            product.quantity
+          )}</td>
+          <td class="total-amount" style="text-align: center;">${formatCurrencyArabic(
             product.revenue
           )}</td>
         </tr>
@@ -1312,8 +1356,11 @@ ${
 }
 
 <div class="print-footer">
-  <p>تم الإنشاء في: ${format(new Date(), "yyyy/MM/dd HH:mm")}</p>
-  <p>NileFood © ${new Date().getFullYear()}</p>
+  <p>تم الإنشاء في: ${format(new Date(), "yyyy/MM/dd HH:mm").replace(
+    /\d/g,
+    (d) => toArabicNumbers(d)
+  )}</p>
+  <p>Chicken One © ${toArabicNumbers(new Date().getFullYear())}</p>
 </div>
 
 </body>
@@ -1334,29 +1381,32 @@ ${
           printWindow.document.close();
 
           printWindow.onload = () => {
-            try {
-              setTimeout(() => {
-                printWindow.focus();
-                printWindow.print();
+            setTimeout(() => {
+              printWindow.focus();
+              printWindow.print();
 
-                setTimeout(() => {
-                  document.body.removeChild(printFrame);
-                  setIsPrinting(false);
-                  resolve();
-                }, 1000);
-              }, 500);
-            } catch (err) {
-              document.body.removeChild(printFrame);
-              setIsPrinting(false);
-              reject(err);
-            }
+              setTimeout(() => {
+                document.body.removeChild(printFrame);
+                setIsPrinting(false);
+              }, 1000);
+            }, 500);
           };
-        });
-      } catch (error) {
-        setIsPrinting(false);
-        reject(error);
-      }
-    });
+        } catch (error) {
+          console.error("Error in print process:", error);
+          Swal.fire({
+            icon: "error",
+            title: "خطأ",
+            text: "فشل في تحميل بيانات الطباعة",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+          setIsPrinting(false);
+        }
+      });
+    } catch (error) {
+      console.error("Error in handlePrint:", error);
+      setIsPrinting(false);
+    }
   };
 
   const handleDateFilter = () => {
