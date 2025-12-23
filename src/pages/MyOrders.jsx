@@ -1179,8 +1179,9 @@ export default function MyOrders() {
                         <span className="flex items-center gap-2">
                           <FaStore className="text-[#E41E26]" />
                           {selectedBranchId
-                            ? branches.find((b) => b.id === selectedBranchId)
-                                ?.name || "فرع غير معروف"
+                            ? branches.find(
+                                (b) => b.id.toString() === selectedBranchId
+                              )?.name || "فرع غير معروف"
                             : "جميع الفروع"}
                         </span>
                         <motion.div
