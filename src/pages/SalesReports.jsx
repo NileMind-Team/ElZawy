@@ -313,6 +313,31 @@ const OrderDetailsModal = ({ order, onClose, users }) => {
     }
   };
 
+  // دالة لحساب السعر النهائي لكل منتج (بعد الاضافات وخصم المنتج)
+  const calculateItemFinalPrice = (item) => {
+    if (!item) return 0;
+
+    // السعر الأساسي للمنتج
+    const basePrice = item.menuItem?.basePrice || item.basePriceAtOrder || 0;
+
+    // خصم المنتج (إن وجد)
+    const itemDiscount = item.totalDiscount || 0;
+
+    // اجمالي الاضافات
+    const optionsTotal =
+      item.options?.reduce(
+        (sum, option) => sum + (option.optionPriceAtOrder || 0),
+        0
+      ) || 0;
+
+    // حساب السعر النهائي للمنتج الواحد
+    const itemPriceBeforeDiscount =
+      (basePrice + optionsTotal) * (item.quantity || 1);
+    const itemFinalPrice = itemPriceBeforeDiscount - itemDiscount;
+
+    return Math.max(itemFinalPrice, 0); // التأكد من عدم ظهور سعر سالب
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <motion.div
@@ -435,151 +460,180 @@ const OrderDetailsModal = ({ order, onClose, users }) => {
             </div>
             {order.items && order.items.length > 0 ? (
               <div className="space-y-4">
-                {order.items.map((item, index) => (
-                  <div
-                    key={index}
-                    className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-lg transition-shadow duration-200"
-                  >
-                    <div className="flex flex-col md:flex-row gap-4">
-                      {(item.menuItem?.imageUrl ||
-                        item.menuItemImageUrlSnapshotAtOrder) && (
-                        <div className="md:w-1/4">
-                          <div className="relative w-full h-48 md:h-40 rounded-lg overflow-hidden">
-                            <img
-                              src={`${BASE_URL}/${
-                                item.menuItem?.imageUrl ||
-                                item.menuItemImageUrlSnapshotAtOrder
-                              }`}
-                              alt={
-                                item.menuItem?.name ||
-                                item.menuItemNameSnapshotAtOrder ||
-                                "صورة المنتج"
-                              }
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.target.src =
-                                  "https://via.placeholder.com/300x200?text=No+Image";
-                              }}
-                            />
-                          </div>
-                        </div>
-                      )}
+                {order.items.map((item, index) => {
+                  // حساب السعر النهائي للمنتج
+                  const itemFinalPrice = calculateItemFinalPrice(item);
 
-                      <div
-                        className={`${
-                          item.menuItem?.imageUrl ||
-                          item.menuItemImageUrlSnapshotAtOrder
-                            ? "md:w-3/4"
-                            : "w-full"
-                        }`}
-                      >
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                          <div className="md:col-span-2">
-                            <p className="font-bold text-lg text-gray-800 dark:text-white mb-1">
-                              {item.menuItem?.name ||
-                                item.menuItemNameSnapshotAtOrder ||
-                                "منتج غير معروف"}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                              {item.menuItem?.description?.substring(0, 100) ||
-                                item.menuItemDescriptionAtOrder?.substring(
-                                  0,
-                                  100
-                                ) ||
-                                "لا يوجد وصف"}
-                              {(item.menuItem?.description?.length > 100 ||
-                                item.menuItemDescriptionAtOrder?.length >
-                                  100) &&
-                                "..."}
-                            </p>
-                          </div>
-
-                          <div className="text-center">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                              الكمية
-                            </p>
-                            <p className="font-bold text-lg text-gray-800 dark:text-white">
-                              {item.quantity || 1}
-                            </p>
-                          </div>
-
-                          <div className="text-center">
-                            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                              السعر الأساسي
-                            </p>
-                            <p className="font-bold text-lg text-green-600 dark:text-green-400">
-                              {item.menuItem?.basePrice?.toFixed(2) || "0.00"}{" "}
-                              ج.م
-                            </p>
-                          </div>
-                        </div>
-
-                        {item.options && item.options.length > 0 && (
-                          <div className="mt-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3">
-                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              الاضافات المختارة:
-                            </p>
-                            <div className="space-y-2">
-                              {item.options.map((option, optionIndex) => (
-                                <div
-                                  key={optionIndex}
-                                  className="flex justify-between items-center bg-white dark:bg-gray-800 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700"
-                                >
-                                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                                    {option.optionNameAtOrder ||
-                                      `إضافة ${optionIndex + 1}`}
-                                  </span>
-                                  <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                                    +
-                                    {option.optionPriceAtOrder?.toFixed(2) ||
-                                      "0.00"}{" "}
-                                    ج.م
-                                  </span>
-                                </div>
-                              ))}
-                              <div className="flex justify-between items-center pt-2 border-t border-gray-300 dark:border-gray-600">
-                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                  إجمالي الاضافات:
-                                </span>
-                                <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                                  {item.options
-                                    .reduce(
-                                      (sum, option) =>
-                                        sum + (option.optionPriceAtOrder || 0),
-                                      0
-                                    )
-                                    .toFixed(2)}{" "}
-                                  ج.م
-                                </span>
-                              </div>
+                  return (
+                    <div
+                      key={index}
+                      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-lg transition-shadow duration-200"
+                    >
+                      <div className="flex flex-col md:flex-row gap-4">
+                        {(item.menuItem?.imageUrl ||
+                          item.menuItemImageUrlSnapshotAtOrder) && (
+                          <div className="md:w-1/4">
+                            <div className="relative w-full h-48 md:h-40 rounded-lg overflow-hidden">
+                              <img
+                                src={`${BASE_URL}/${
+                                  item.menuItem?.imageUrl ||
+                                  item.menuItemImageUrlSnapshotAtOrder
+                                }`}
+                                alt={
+                                  item.menuItem?.name ||
+                                  item.menuItemNameSnapshotAtOrder ||
+                                  "صورة المنتج"
+                                }
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.target.src =
+                                    "https://via.placeholder.com/300x200?text=No+Image";
+                                }}
+                              />
                             </div>
                           </div>
                         )}
 
-                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                                الخصم
+                        <div
+                          className={`${
+                            item.menuItem?.imageUrl ||
+                            item.menuItemImageUrlSnapshotAtOrder
+                              ? "md:w-3/4"
+                              : "w-full"
+                          }`}
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div className="md:col-span-2">
+                              <p className="font-bold text-lg text-gray-800 dark:text-white mb-1">
+                                {item.menuItem?.name ||
+                                  item.menuItemNameSnapshotAtOrder ||
+                                  "منتج غير معروف"}
                               </p>
-                              <p className="font-bold text-red-600 dark:text-red-400">
-                                {item.totalDiscount?.toFixed(2) || "0.00"} ج.م
+                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                {item.menuItem?.description?.substring(
+                                  0,
+                                  100
+                                ) ||
+                                  item.menuItemDescriptionAtOrder?.substring(
+                                    0,
+                                    100
+                                  ) ||
+                                  "لا يوجد وصف"}
+                                {(item.menuItem?.description?.length > 100 ||
+                                  item.menuItemDescriptionAtOrder?.length >
+                                    100) &&
+                                  "..."}
                               </p>
                             </div>
-                            <div>
+
+                            <div className="text-center">
                               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                                الإجمالي
+                                الكمية
                               </p>
-                              <p className="font-bold text-lg text-[#E41E26] dark:text-[#FDB913]">
-                                {item.totalPrice?.toFixed(2) || "0.00"} ج.م
+                              <p className="font-bold text-lg text-gray-800 dark:text-white">
+                                {item.quantity || 1}
                               </p>
+                            </div>
+
+                            <div className="text-center">
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                                السعر الأساسي
+                              </p>
+                              <p className="font-bold text-lg text-green-600 dark:text-green-400">
+                                {item.menuItem?.basePrice?.toFixed(2) || "0.00"}{" "}
+                                ج.م
+                              </p>
+                            </div>
+                          </div>
+
+                          {item.options && item.options.length > 0 && (
+                            <div className="mt-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg p-3">
+                              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                الاضافات المختارة:
+                              </p>
+                              <div className="space-y-2">
+                                {item.options.map((option, optionIndex) => (
+                                  <div
+                                    key={optionIndex}
+                                    className="flex justify-between items-center bg-white dark:bg-gray-800 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700"
+                                  >
+                                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                                      {option.optionNameAtOrder ||
+                                        `إضافة ${optionIndex + 1}`}
+                                    </span>
+                                    <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                                      +
+                                      {option.optionPriceAtOrder?.toFixed(2) ||
+                                        "0.00"}{" "}
+                                      ج.م
+                                    </span>
+                                  </div>
+                                ))}
+                                <div className="flex justify-between items-center pt-2 border-t border-gray-300 dark:border-gray-600">
+                                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    إجمالي الاضافات:
+                                  </span>
+                                  <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                                    {item.options
+                                      .reduce(
+                                        (sum, option) =>
+                                          sum +
+                                          (option.optionPriceAtOrder || 0),
+                                        0
+                                      )
+                                      .toFixed(2)}{" "}
+                                    ج.م
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              <div className="text-center">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                  السعر
+                                </p>
+                                <p className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                                  {(
+                                    ((item.menuItem?.basePrice || 0) +
+                                      (item.options?.reduce(
+                                        (sum, option) =>
+                                          sum +
+                                          (option.optionPriceAtOrder || 0),
+                                        0
+                                      ) || 0)) *
+                                    (item.quantity || 1)
+                                  ).toFixed(2)}{" "}
+                                  ج.م
+                                </p>
+                              </div>
+
+                              <div className="text-center">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                  خصم المنتج
+                                </p>
+                                <p className="text-sm font-bold text-red-600 dark:text-red-400">
+                                  {item.totalDiscount?.toFixed(2) || "0.00"} ج.م
+                                </p>
+                              </div>
+
+                              <div className="text-center col-span-2">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                  الإجمالي النهائي للمنتج
+                                </p>
+                                <p className="text-lg font-bold text-[#E41E26] dark:text-[#FDB913]">
+                                  {itemFinalPrice.toFixed(2)} ج.م
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8 bg-gray-50 dark:bg-gray-700/50 rounded-xl">

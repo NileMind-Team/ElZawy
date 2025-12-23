@@ -70,6 +70,34 @@ export default function MyOrders() {
     return date;
   };
 
+  // دالة لحساب السعر النهائي لكل منتج (بعد الاضافات وخصم المنتج)
+  const calculateItemFinalPrice = (item) => {
+    if (!item) return 0;
+
+    // السعر الأساسي للمنتج
+    const basePrice =
+      item.menuItemBasePriceSnapshotAtOrder > 0
+        ? item.menuItemBasePriceSnapshotAtOrder
+        : item.menuItem?.basePrice || item.basePriceAtOrder || 0;
+
+    // اجمالي الاضافات
+    const optionsTotal =
+      item.options?.reduce(
+        (sum, option) => sum + (option.optionPriceAtOrder || 0),
+        0
+      ) || 0;
+
+    // خصم المنتج (إن وجد)
+    const itemDiscount = item.totalDiscount || 0;
+
+    // حساب السعر النهائي للمنتج الواحد
+    const itemPriceBeforeDiscount =
+      (basePrice + optionsTotal) * (item.quantity || 1);
+    const itemFinalPrice = itemPriceBeforeDiscount - itemDiscount;
+
+    return Math.max(itemFinalPrice, 0); // التأكد من عدم ظهور سعر سالب
+  };
+
   const calculatePricesFromItems = (items) => {
     if (!items || items.length === 0) {
       return {
@@ -1949,6 +1977,9 @@ export default function MyOrders() {
                           </h3>
                           <div className="space-y-3 sm:space-y-4">
                             {orderDetails.items.map((item, index) => {
+                              const itemFinalPrice =
+                                calculateItemFinalPrice(item);
+
                               const imageUrl =
                                 item.menuItemImageUrlSnapshotAtOrder ||
                                 item.menuItem?.imageUrl;
@@ -1966,6 +1997,7 @@ export default function MyOrders() {
                                   : item.menuItem
                                   ? item.menuItem.basePrice
                                   : 0;
+                              // eslint-disable-next-line no-unused-vars
                               const totalPrice =
                                 item.totalPrice < 0
                                   ? Math.abs(item.totalPrice)
@@ -1980,6 +2012,10 @@ export default function MyOrders() {
                               }
 
                               const itemDiscount = item.totalDiscount || 0;
+
+                              const basePriceWithAdditions =
+                                (basePrice + itemAdditions) *
+                                (item.quantity || 1);
 
                               return (
                                 <div
@@ -2020,7 +2056,7 @@ export default function MyOrders() {
                                     </div>
                                     <div className="text-right flex-shrink-0">
                                       <p className="font-bold text-gray-800 dark:text-gray-200 text-sm sm:text-base">
-                                        ج.م {totalPrice?.toFixed(2) || "0.00"}
+                                        ج.م {itemFinalPrice.toFixed(2)}
                                       </p>
                                       <p className="text-xs text-gray-500 dark:text-gray-400 hidden xs:block">
                                         الأساسي: ج.م {basePrice.toFixed(2)} لكل
@@ -2114,19 +2150,29 @@ export default function MyOrders() {
                                       <div className="flex items-center gap-2">
                                         <FaInfoCircle className="text-gray-400 dark:text-gray-500 w-3 h-3" />
                                         <span className="text-gray-600 dark:text-gray-400">
+                                          السعر + الإضافات:
+                                        </span>
+                                        <span className="font-medium text-blue-600 dark:text-blue-400">
+                                          ج.م{" "}
+                                          {basePriceWithAdditions.toFixed(2)}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <FaInfoCircle className="text-gray-400 dark:text-gray-500 w-3 h-3" />
+                                        <span className="text-gray-600 dark:text-gray-400">
                                           الخصم:
                                         </span>
                                         <span className="font-medium text-green-600 dark:text-green-400">
                                           -ج.م {itemDiscount.toFixed(2)}
                                         </span>
                                       </div>
-                                      <div className="flex items-center gap-2">
-                                        <FaInfoCircle className="text-gray-400 dark:text-gray-500 w-3 h-3" />
+                                      <div className="col-span-full flex items-center gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                                        <FaInfoCircle className="text-[#E41E26] w-3 h-3" />
                                         <span className="text-gray-600 dark:text-gray-400">
-                                          السعر النهائي:
+                                          السعر النهائي (بعد الخصم والاضافات):
                                         </span>
                                         <span className="font-bold text-[#E41E26]">
-                                          ج.م {totalPrice?.toFixed(2) || "0.00"}
+                                          ج.م {itemFinalPrice.toFixed(2)}
                                         </span>
                                       </div>
                                     </div>
