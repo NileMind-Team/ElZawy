@@ -240,16 +240,13 @@ const adjustTimeFromAPI = (dateString) => {
   return date;
 };
 
-// دالة للتحقق إذا كانت الشاشة صغيرة (موبايل)
 const isMobileScreen = () => {
-  return window.innerWidth < 768; // أقل من 768px تعتبر شاشة موبايل
+  return window.innerWidth < 768;
 };
 
-// دالة لعرض الرسائل بناءً على نوع الشاشة
 const showMessage = (type, title, text, options = {}) => {
   const { showButtons = false, ...otherOptions } = options;
 
-  // إذا كانت الشاشة كبيرة أو الرسالة تحتوي على أزرار، استخدم Swal
   if (!isMobileScreen() || showButtons) {
     const swalOptions = {
       icon: type,
@@ -267,7 +264,6 @@ const showMessage = (type, title, text, options = {}) => {
 
     Swal.fire(swalOptions);
   } else {
-    // إذا كانت الشاشة صغيرة، استخدم toast
     const toastOptions = {
       position: "top-right",
       autoClose: otherOptions.timer || 2000,
@@ -688,7 +684,6 @@ export default function ItemOffersManagement() {
   };
 
   const handleDelete = async (id) => {
-    // رسالة الحذف تحتوي على أزرار، لذا نستخدم Swal دائمًا
     Swal.fire({
       title: "هل أنت متأكد؟",
       text: "لن تتمكن من التراجع عن هذا الإجراء!",

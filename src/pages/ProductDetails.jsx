@@ -65,7 +65,6 @@ const ProductDetails = () => {
   };
 
   const showMessage = (type, title, text, options = {}) => {
-    // إذا كانت الرسالة تحتوي على أزرار (مثل رسائل التأكيد)، استخدم Swal في جميع الحالات
     const hasButtons =
       options.showConfirmButton === true ||
       (options.showCancelButton !== undefined && options.showCancelButton);
@@ -92,7 +91,6 @@ const ProductDetails = () => {
       return;
     }
 
-    // إذا كان المستخدم على موبايل والرسالة لا تحتوي على أزرار، استخدم toast
     if (isMobile() && !options.forceSwal) {
       const toastOptions = {
         position: "top-right",
@@ -143,7 +141,6 @@ const ProductDetails = () => {
           toast(text, toastOptions);
       }
     } else {
-      // على الشاشات الكبيرة، استخدم Swal
       Swal.fire({
         icon: type,
         title: title,

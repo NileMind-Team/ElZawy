@@ -198,9 +198,7 @@ const showAddressErrorAlert = (errorData) => {
 };
 
 const showAddressSuccessAlert = (message) => {
-  // التحقق مما إذا كانت الشاشة صغيرة (موبايل)
   if (window.innerWidth < 768) {
-    // استخدام Toast للشاشات الصغيرة
     toast.success(message, {
       position: "top-right",
       autoClose: 2500,
@@ -218,7 +216,6 @@ const showAddressSuccessAlert = (message) => {
       },
     });
   } else {
-    // استخدام SweetAlert2 للشاشات الكبيرة
     Swal.fire({
       title: "تم بنجاح",
       text: message,
@@ -530,7 +527,6 @@ export default function Addresses() {
   };
 
   const handleDelete = (id) => {
-    // استخدام SweetAlert2 للرسائل التي تحتوي على أزرار (حتى في الموبايل)
     Swal.fire({
       title: "هل أنت متأكد؟",
       text: "لن تتمكن من التراجع عن هذا!",
@@ -642,7 +638,6 @@ export default function Addresses() {
       closeMapModal();
       showAddressSuccessAlert("تم تأكيد الموقع: تم حفظ موقعك بنجاح");
     } else {
-      // استخدام SweetAlert2 للرسائل التي تحتوي على أزرار
       Swal.fire({
         icon: "warning",
         title: "تحذير",

@@ -26,6 +26,8 @@ import {
   FaSlidersH,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../api/axiosInstance";
 
 const ProductForm = () => {
@@ -57,7 +59,7 @@ const ProductForm = () => {
     Image: "",
     Description: "",
     IsActive: true,
-    ShowInSlider: false, // تم إضافة هذا الحقل
+    ShowInSlider: false,
     // availabilityType: "always",
     Calories: "",
     PreparationTimeStart: "",
@@ -101,6 +103,109 @@ const ProductForm = () => {
   const isArabic = (text) => {
     const arabicRegex = /[\u0600-\u06FF]/;
     return arabicRegex.test(text);
+  };
+
+  const translateErrorMessage = (errorData) => {
+    if (!errorData) return "حدث خطأ غير معروف";
+
+    if (errorData.errors && typeof errorData.errors === "object") {
+      const errorMessages = [];
+
+      Object.keys(errorData.errors).forEach((key) => {
+        errorData.errors[key].forEach((msg) => {
+          if (msg.includes("required")) {
+            errorMessages.push(`${key} مطلوب`);
+          } else if (msg.includes("greater than 0")) {
+            errorMessages.push(`${key} يجب أن يكون أكبر من صفر`);
+          } else if (msg.includes("invalid")) {
+            errorMessages.push(`${key} غير صالح`);
+          } else {
+            errorMessages.push(msg);
+          }
+        });
+      });
+
+      if (errorMessages.length > 0) {
+        return errorMessages.join("، ");
+      }
+    }
+
+    if (typeof errorData.message === "string") {
+      const msg = errorData.message.toLowerCase();
+      if (msg.includes("invalid") || msg.includes("credentials")) {
+        return "بيانات غير صحيحة";
+      }
+      if (msg.includes("network") || msg.includes("internet")) {
+        return "يرجى التحقق من اتصالك بالإنترنت";
+      }
+      if (msg.includes("timeout") || msg.includes("time out")) {
+        return "انتهت المهلة، يرجى المحاولة مرة أخرى";
+      }
+      return errorData.message;
+    }
+
+    return "حدث خطأ غير متوقع";
+  };
+
+  const showErrorAlert = (title, message) => {
+    const translatedMessage = translateErrorMessage(message);
+
+    if (window.innerWidth < 768) {
+      toast.error(translatedMessage || title, {
+        position: "top-right",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          width: "70%",
+          margin: "10px",
+          borderRadius: "8px",
+          textAlign: "right",
+          fontSize: "14px",
+          direction: "rtl",
+        },
+      });
+    } else {
+      Swal.fire({
+        title: title || "حدث خطأ",
+        text: translatedMessage,
+        icon: "error",
+        confirmButtonText: "حاول مرة أخرى",
+        timer: 2500,
+        showConfirmButton: false,
+      });
+    }
+  };
+
+  const showSuccessAlert = (title, message) => {
+    if (window.innerWidth < 768) {
+      toast.success(message || title, {
+        position: "top-right",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          width: "70%",
+          margin: "10px",
+          borderRadius: "8px",
+          textAlign: "right",
+          fontSize: "14px",
+          direction: "rtl",
+        },
+      });
+    } else {
+      Swal.fire({
+        title: title || "تم بنجاح",
+        text: message,
+        icon: "success",
+        showConfirmButton: false,
+        timer: 2500,
+      });
+    }
   };
 
   const downloadImageFromUrl = async (url) => {
@@ -179,23 +284,18 @@ const ProductForm = () => {
       setHasImageChanged(true);
       setImageUrl("");
 
-      Swal.fire({
-        icon: "success",
-        title: "تم تحميل الصورة!",
-        text: `تم تحميل الصورة بنجاح (${formatBytes(file.size)})`,
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      showSuccessAlert(
+        "تم تحميل الصورة!",
+        `تم تحميل الصورة بنجاح (${formatBytes(file.size)})`
+      );
 
       return file;
     } catch (error) {
       console.error("Error downloading image:", error);
-      Swal.fire({
-        icon: "error",
-        title: "خطأ في تحميل الصورة",
-        text: error.message || "فشل في تحميل الصورة من الرابط المقدم",
-        confirmButtonColor: "#E41E26",
-      });
+      showErrorAlert(
+        "خطأ في تحميل الصورة",
+        error.message || "فشل في تحميل الصورة من الرابط المقدم"
+      );
       return null;
     } finally {
       setIsDownloadingImage(false);
@@ -242,16 +342,12 @@ const ProductForm = () => {
         setOptionTypes(response.data);
       } catch (error) {
         console.error("Error fetching option types:", error);
-        Swal.fire({
-          icon: "error",
-          title: "خطأ",
-          text: "فشل في تحميل أنواع الاضافات",
-          confirmButtonColor: "#E41E26",
-        });
+        showErrorAlert("خطأ", "فشل في تحميل أنواع الاضافات");
       }
     };
 
     fetchOptionTypes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const addMenuItemOption = () => {
@@ -366,13 +462,7 @@ const ProductForm = () => {
 
   const handleSaveOptionType = async () => {
     if (!editingOptionType.name.trim()) {
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "اسم نوع الإضافة مطلوب",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      showErrorAlert("خطأ", "اسم نوع الإضافة مطلوب");
       return;
     }
 
@@ -393,34 +483,16 @@ const ProductForm = () => {
       );
 
       setEditingOptionType(null);
-      Swal.fire({
-        icon: "success",
-        title: "تم التحديث!",
-        text: "تم تحديث نوع الإضافة بنجاح",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      showSuccessAlert("تم التحديث!", "تم تحديث نوع الإضافة بنجاح");
     } catch (error) {
       console.error("Error updating option type:", error);
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "فشل في تحديث نوع الإضافة",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      showErrorAlert("خطأ", "فشل في تحديث نوع الإضافة");
     }
   };
 
   const handleAddOptionType = async () => {
     if (!newOptionType.name.trim()) {
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "اسم نوع الإضافة مطلوب",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      showErrorAlert("خطأ", "اسم نوع الإضافة مطلوب");
       return;
     }
 
@@ -443,22 +515,10 @@ const ProductForm = () => {
         isSelectionRequired: false,
       });
 
-      Swal.fire({
-        icon: "success",
-        title: "تم الإضافة!",
-        text: "تم إضافة نوع الإضافة الجديد بنجاح",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      showSuccessAlert("تم الإضافة!", "تم إضافة نوع الإضافة الجديد بنجاح");
     } catch (error) {
       console.error("Error adding option type:", error);
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "فشل في إضافة نوع الإضافة",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      showErrorAlert("خطأ", "فشل في إضافة نوع الإضافة");
     }
   };
 
@@ -483,22 +543,10 @@ const ProductForm = () => {
             optionTypes.filter((type) => type.id !== optionTypeId)
           );
 
-          Swal.fire({
-            title: "تم الحذف!",
-            text: "تم حذف نوع الإضافة بنجاح",
-            icon: "success",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+          showSuccessAlert("تم الحذف!", "تم حذف نوع الإضافة بنجاح");
         } catch (error) {
           console.error("Error deleting option type:", error);
-          Swal.fire({
-            icon: "error",
-            title: "خطأ",
-            text: "فشل في حذف نوع الإضافة",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+          showErrorAlert("خطأ", "فشل في حذف نوع الإضافة");
         }
       }
     });
@@ -531,8 +579,8 @@ const ProductForm = () => {
           Description: product.description || "",
           IsActive: product.isActive !== undefined ? product.isActive : true,
           ShowInSlider:
-            product.showInSlider !== undefined ? product.showInSlider : false, // تم إضافة هذا الحقل
-          // availabilityType: availabilityType, // تم تعليق هذا الحقل
+            product.showInSlider !== undefined ? product.showInSlider : false,
+          // availabilityType: availabilityType,
           Calories: product.calories || "",
           PreparationTimeStart: product.preparationTimeStart || "",
           PreparationTimeEnd: product.preparationTimeEnd || "",
@@ -570,12 +618,7 @@ const ProductForm = () => {
         */
       } catch (error) {
         console.error("Error fetching product data:", error);
-        Swal.fire({
-          icon: "error",
-          title: "خطأ",
-          text: "فشل في تحميل بيانات المنتج",
-          confirmButtonColor: "#E41E26",
-        });
+        showErrorAlert("خطأ", "فشل في تحميل بيانات المنتج");
       } finally {
         setIsLoadingProduct(false);
       }
@@ -599,7 +642,7 @@ const ProductForm = () => {
       formData.BasePrice !== initialFormData.BasePrice ||
       formData.Description !== initialFormData.Description ||
       formData.IsActive !== initialFormData.IsActive ||
-      formData.ShowInSlider !== initialFormData.ShowInSlider || // تم إضافة هذا الحقل
+      formData.ShowInSlider !== initialFormData.ShowInSlider ||
       // formData.availabilityType !== initialFormData.availabilityType ||
       formData.Calories !== initialFormData.Calories ||
       formData.PreparationTimeStart !== initialFormData.PreparationTimeStart ||
@@ -628,18 +671,14 @@ const ProductForm = () => {
         setCategories(response.data);
       } catch (error) {
         console.error("Error fetching categories:", error);
-        Swal.fire({
-          icon: "error",
-          title: "خطأ",
-          text: "فشل في تحميل الفئات",
-          confirmButtonColor: "#E41E26",
-        });
+        showErrorAlert("خطأ", "فشل في تحميل الفئات");
       } finally {
         setIsLoadingCategories(false);
       }
     };
 
     fetchCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleInputChange = (e) => {
@@ -727,14 +766,10 @@ const ProductForm = () => {
     if (file) {
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        Swal.fire({
-          icon: "error",
-          title: "حجم الملف كبير",
-          text: `حجم الصورة (${formatBytes(
-            file.size
-          )}) يتجاوز الحد الأقصى (5MB)`,
-          confirmButtonColor: "#E41E26",
-        });
+        showErrorAlert(
+          "حجم الملف كبير",
+          `حجم الصورة (${formatBytes(file.size)}) يتجاوز الحد الأقصى (5MB)`
+        );
         return;
       }
 
@@ -750,12 +785,10 @@ const ProductForm = () => {
 
       if (!allowedTypes.includes(file.type.toLowerCase())) {
         const fileType = file.type.split("/")[1] || "غير معروف";
-        Swal.fire({
-          icon: "error",
-          title: "نوع ملف غير مدعوم",
-          text: `صيغة الملف (${fileType}) غير مدعومة. الصيغ المدعومة: JPG, JPEG, PNG, JFIF, HEIF/HEIC, WebP`,
-          confirmButtonColor: "#E41E26",
-        });
+        showErrorAlert(
+          "نوع ملف غير مدعوم",
+          `صيغة الملف (${fileType}) غير مدعومة. الصيغ المدعومة: JPG, JPEG, PNG, JFIF, HEIF/HEIC, WebP`
+        );
         return;
       }
 
@@ -824,12 +857,7 @@ const ProductForm = () => {
       !formData.Description ||
       (!isEditing && !formData.Image)
     ) {
-      Swal.fire({
-        icon: "error",
-        title: "معلومات ناقصة",
-        text: "يرجى ملء جميع الحقول المطلوبة",
-        confirmButtonColor: "#E41E26",
-      });
+      showErrorAlert("معلومات ناقصة", "يرجى ملء جميع الحقول المطلوبة");
       setIsLoading(false);
       return;
     }
@@ -840,12 +868,10 @@ const ProductForm = () => {
       parseInt(formData.PreparationTimeStart) >=
         parseInt(formData.PreparationTimeEnd)
     ) {
-      Swal.fire({
-        icon: "error",
-        title: "وقت تحضير غير صحيح",
-        text: "وقت البدء يجب أن يكون أقل من وقت الانتهاء في وقت التحضير",
-        confirmButtonColor: "#E41E26",
-      });
+      showErrorAlert(
+        "وقت تحضير غير صحيح",
+        "وقت البدء يجب أن يكون أقل من وقت الانتهاء في وقت التحضير"
+      );
       setIsLoading(false);
       return;
     }
@@ -857,12 +883,7 @@ const ProductForm = () => {
       );
 
       if (invalidSchedules.length > 0) {
-        Swal.fire({
-          icon: "error",
-          title: "معلومات ناقصة",
-          text: "يرجى ملء جميع الحقول المطلوبة في الجداول الزمنية",
-          confirmButtonColor: "#E41E26",
-        });
+        showErrorAlert("معلومات ناقصة", "يرجى ملء جميع الحقول المطلوبة في الجداول الزمنية");
         setIsLoading(false);
         return;
       }
@@ -875,12 +896,10 @@ const ProductForm = () => {
         const scheduleNumbers = invalidTimeSchedules
           .map((s) => s.index)
           .join("، ");
-        Swal.fire({
-          icon: "error",
-          title: "وقت غير صحيح",
-          text: `وقت الانتهاء يجب أن يكون بعد وقت البدء في الجدول ${scheduleNumbers}`,
-          confirmButtonColor: "#E41E26",
-        });
+        showErrorAlert(
+          "وقت غير صحيح",
+          `وقت الانتهاء يجب أن يكون بعد وقت البدء في الجدول ${scheduleNumbers}`
+        );
         setIsLoading(false);
         return;
       }
@@ -910,12 +929,10 @@ const ProductForm = () => {
       });
 
       if (invalidOptions.length > 0) {
-        Swal.fire({
-          icon: "error",
-          title: "خطأ في الإضافات",
-          text: invalidOptions.slice(0, 3).join("\n"),
-          confirmButtonColor: "#E41E26",
-        });
+        showErrorAlert(
+          "خطأ في الإضافات",
+          invalidOptions.slice(0, 3).join("\n")
+        );
         setIsLoading(false);
         return;
       }
@@ -931,7 +948,7 @@ const ProductForm = () => {
       );
       formDataToSend.append("CategoryId", formData.CategoryId.toString());
       formDataToSend.append("IsActive", formData.IsActive.toString());
-      formDataToSend.append("ShowInSlider", formData.ShowInSlider.toString()); // تم إضافة هذا الحقل
+      formDataToSend.append("ShowInSlider", formData.ShowInSlider.toString());
 
       if (formData.Calories) {
         formDataToSend.append("Calories", formData.Calories.toString());
@@ -1013,12 +1030,10 @@ const ProductForm = () => {
             formDataToSend.append("Image", blob, filename);
           } catch (error) {
             console.error("Error converting old image URL to file:", error);
-            Swal.fire({
-              icon: "error",
-              title: "خطأ في الصورة",
-              text: "فشل في تحميل الصورة القديمة. يرجى إعادة رفع الصورة.",
-              confirmButtonColor: "#E41E26",
-            });
+            showErrorAlert(
+              "خطأ في الصورة",
+              "فشل في تحميل الصورة القديمة. يرجى إعادة رفع الصورة."
+            );
             setIsLoading(false);
             return;
           }
@@ -1033,12 +1048,10 @@ const ProductForm = () => {
           if (file) {
             formDataToSend.append("Image", file);
           } else {
-            Swal.fire({
-              icon: "error",
-              title: "خطأ في الصورة",
-              text: "يرجى تحميل الصورة من الرابط أولاً أو استخدام صورة أخرى",
-              confirmButtonColor: "#E41E26",
-            });
+            showErrorAlert(
+              "خطأ في الصورة",
+              "يرجى تحميل الصورة من الرابط أولاً أو استخدام صورة أخرى"
+            );
             setIsLoading(false);
             return;
           }
@@ -1057,23 +1070,15 @@ const ProductForm = () => {
       });
 
       if (response.status === 200 || response.status === 204) {
-        Swal.fire({
-          icon: "success",
-          title: isEditing ? "تم تحديث المنتج!" : "تم إضافة المنتج!",
-          text: `${formData.Name} تم ${isEditing ? "تحديثه" : "إضافته"} بنجاح`,
-          timer: 2000,
-          showConfirmButton: false,
-        });
+        showSuccessAlert(
+          isEditing ? "تم تحديث المنتج!" : "تم إضافة المنتج!",
+          `${formData.Name} تم ${isEditing ? "تحديثه" : "إضافته"} بنجاح`
+        );
         navigate("/");
       }
     } catch (error) {
       console.error("Error saving product:", error);
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "فشل في حفظ المنتج. يرجى المحاولة مرة أخرى.",
-        confirmButtonColor: "#E41E26",
-      });
+      showErrorAlert("خطأ", "فشل في حفظ المنتج. يرجى المحاولة مرة أخرى.");
     } finally {
       setIsLoading(false);
     }

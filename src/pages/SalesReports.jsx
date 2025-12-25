@@ -26,10 +26,60 @@ import {
   FaChevronRight,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format, startOfDay, endOfDay, addHours } from "date-fns";
 import axiosInstance from "../api/axiosInstance";
+
+const showSalesMobileSuccessToast = (message) => {
+  if (window.innerWidth < 768) {
+    toast.success(message, {
+      position: "top-right",
+      autoClose: 2500,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      style: {
+        width: "70%",
+        margin: "10px",
+        borderRadius: "8px",
+        textAlign: "right",
+        fontSize: "14px",
+        direction: "rtl",
+      },
+    });
+  }
+};
+
+const showSalesMobileAlertToast = (message, type = "info") => {
+  if (window.innerWidth < 768) {
+    const toastFunc =
+      type === "error"
+        ? toast.error
+        : type === "warning"
+        ? toast.warning
+        : toast.info;
+    toastFunc(message, {
+      position: "top-right",
+      autoClose: 2500,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      style: {
+        width: "70%",
+        margin: "10px",
+        borderRadius: "8px",
+        textAlign: "right",
+        fontSize: "14px",
+        direction: "rtl",
+      },
+    });
+  }
+};
 
 const fetchOrders = async (
   startDate,
@@ -758,28 +808,42 @@ const SalesReports = () => {
   const fetchReportData = async (page = 1, isFilterAction = false) => {
     if (!startDate || !endDate) {
       if (isFilterAction) {
-        Swal.fire({
-          icon: "warning",
-          title: "تاريخ غير مكتمل",
-          text: "يرجى تحديد تاريخ البداية والنهاية أولاً",
-          timer: 3000,
-          showConfirmButton: false,
-          background: "#fff",
-          color: "#333",
-        });
+        if (window.innerWidth < 768) {
+          showSalesMobileAlertToast(
+            "يرجى تحديد تاريخ البداية والنهاية أولاً",
+            "warning"
+          );
+        } else {
+          Swal.fire({
+            icon: "warning",
+            title: "تاريخ غير مكتمل",
+            text: "يرجى تحديد تاريخ البداية والنهاية أولاً",
+            timer: 3000,
+            showConfirmButton: false,
+            background: "#fff",
+            color: "#333",
+          });
+        }
       }
       return;
     }
 
     if (startDate > endDate) {
       if (isFilterAction) {
-        Swal.fire({
-          icon: "error",
-          title: "خطأ في التاريخ",
-          text: "تاريخ البداية يجب أن يكون قبل تاريخ النهاية",
-          timer: 3000,
-          showConfirmButton: false,
-        });
+        if (window.innerWidth < 768) {
+          showSalesMobileAlertToast(
+            "تاريخ البداية يجب أن يكون قبل تاريخ النهاية",
+            "error"
+          );
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "خطأ في التاريخ",
+            text: "تاريخ البداية يجب أن يكون قبل تاريخ النهاية",
+            timer: 3000,
+            showConfirmButton: false,
+          });
+        }
       }
       return;
     }
@@ -812,12 +876,16 @@ const SalesReports = () => {
 
       if (isFilterAction) {
         setTimeout(() => {
-          Swal.fire({
-            icon: "success",
-            title: "تم تطبيق الفلترة بنجاح",
-            timer: 1500,
-            showConfirmButton: false,
-          });
+          if (window.innerWidth < 768) {
+            showSalesMobileSuccessToast("تم تطبيق الفلترة بنجاح");
+          } else {
+            Swal.fire({
+              icon: "success",
+              title: "تم تطبيق الفلترة بنجاح",
+              timer: 1500,
+              showConfirmButton: false,
+            });
+          }
         }, 500);
       }
     } catch (error) {
@@ -828,13 +896,17 @@ const SalesReports = () => {
           ? "لا توجد بيانات في الفترة المحددة"
           : "فشل في تحميل بيانات التقرير";
 
-      Swal.fire({
-        icon: "info",
-        title: "لا توجد بيانات",
-        text: errorMessage,
-        timer: 2500,
-        showConfirmButton: false,
-      });
+      if (window.innerWidth < 768) {
+        showSalesMobileAlertToast(errorMessage, "info");
+      } else {
+        Swal.fire({
+          icon: "info",
+          title: "لا توجد بيانات",
+          text: errorMessage,
+          timer: 2500,
+          showConfirmButton: false,
+        });
+      }
 
       setReportData([]);
       setSummary({
@@ -868,13 +940,17 @@ const SalesReports = () => {
       setOrderDetails(details);
       setSelectedOrder(details);
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "فشل في تحميل تفاصيل الطلب",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      if (window.innerWidth < 768) {
+        showSalesMobileAlertToast("فشل في تحميل تفاصيل الطلب", "error");
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "خطأ",
+          text: "فشل في تحميل تفاصيل الطلب",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      }
     } finally {
       setLoadingDetails(false);
     }
@@ -1028,13 +1104,20 @@ const SalesReports = () => {
       setIsPrinting(true);
 
       if (!startDate || !endDate) {
-        Swal.fire({
-          icon: "warning",
-          title: "تاريخ غير مكتمل",
-          text: "يرجى تحديد تاريخ البداية والنهاية أولاً",
-          timer: 2000,
-          showConfirmButton: false,
-        });
+        if (window.innerWidth < 768) {
+          showSalesMobileAlertToast(
+            "يرجى تحديد تاريخ البداية والنهاية أولاً",
+            "warning"
+          );
+        } else {
+          Swal.fire({
+            icon: "warning",
+            title: "تاريخ غير مكتمل",
+            text: "يرجى تحديد تاريخ البداية والنهاية أولاً",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
         setIsPrinting(false);
         return;
       }
@@ -1043,21 +1126,28 @@ const SalesReports = () => {
         title: "جاري الطباعة",
         text: `يتم تحضير التقرير للطباعة...`,
         icon: "info",
-        timer: 500,
         showConfirmButton: false,
+        timer: 500,
       }).then(async () => {
         try {
           const printData = await fetchAllOrdersForPrint(startDate, endDate);
           const allOrders = printData.orders || [];
 
           if (allOrders.length === 0) {
-            Swal.fire({
-              icon: "warning",
-              title: "لا توجد بيانات",
-              text: "لا توجد بيانات لعرضها في التقرير",
-              timer: 2000,
-              showConfirmButton: false,
-            });
+            if (window.innerWidth < 768) {
+              showSalesMobileAlertToast(
+                "لا توجد بيانات لعرضها في التقرير",
+                "warning"
+              );
+            } else {
+              Swal.fire({
+                icon: "warning",
+                title: "لا توجد بيانات",
+                text: "لا توجد بيانات لعرضها في التقرير",
+                timer: 2000,
+                showConfirmButton: false,
+              });
+            }
             setIsPrinting(false);
             return;
           }
@@ -1442,18 +1532,25 @@ ${
               setTimeout(() => {
                 document.body.removeChild(printFrame);
                 setIsPrinting(false);
+                if (window.innerWidth < 768) {
+                  showSalesMobileSuccessToast("تم تحضير التقرير للطباعة");
+                }
               }, 1000);
             }, 500);
           };
         } catch (error) {
           console.error("Error in print process:", error);
-          Swal.fire({
-            icon: "error",
-            title: "خطأ",
-            text: "فشل في تحميل بيانات الطباعة",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+          if (window.innerWidth < 768) {
+            showSalesMobileAlertToast("فشل في تحميل بيانات الطباعة", "error");
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "خطأ",
+              text: "فشل في تحميل بيانات الطباعة",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          }
           setIsPrinting(false);
         }
       });

@@ -65,7 +65,6 @@ const Home = () => {
 
   // Function to show notification based on device and content
   const showNotification = (type, title, text, options = {}) => {
-    // Always use Swal for notifications with buttons
     if (options.showConfirmButton || options.showCancelButton) {
       Swal.fire({
         icon: type,
@@ -83,7 +82,6 @@ const Home = () => {
       return;
     }
 
-    // Use toast for simple notifications on mobile only
     if (isMobile()) {
       const toastOptions = {
         position: "top-right",
@@ -96,8 +94,8 @@ const Home = () => {
         rtl: true,
         style: {
           width: "70%",
-          margin: "10px auto",
           borderRadius: "12px",
+          margin: "10px",
           fontSize: "14px",
           fontWeight: "500",
           boxShadow: "0 10px 25px rgba(0, 0, 0, 0.15)",
@@ -286,7 +284,7 @@ const Home = () => {
     };
 
     fetchCategories();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

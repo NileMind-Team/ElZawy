@@ -460,7 +460,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                 damping: 30,
                 stiffness: 300,
               }}
-              className="fixed top-0 right-0 h-full w-72 sm:w-80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-2xl border-l border-[#E41E26]/20 dark:border-gray-700 z-[70] overflow-y-auto transition-colors duration-300"
+              className="fixed top-0 right-0 h-full w-full max-w-xs bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl shadow-2xl border-l border-[#E41E26]/20 dark:border-gray-700 z-[70] overflow-y-auto transition-colors duration-300"
             >
               <div className="relative p-6 border-b border-gray-100 dark:border-gray-700 bg-gradient-to-r from-[#fff8e7] to-[#ffe5b4] dark:from-gray-800 dark:to-gray-700">
                 <motion.button
@@ -484,8 +484,8 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                         {getInitial(userData.firstName)}
                       </div>
                     )}
-                    <div>
-                      <p className="font-bold text-gray-800 dark:text-gray-200 text-lg">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-gray-800 dark:text-gray-200 text-lg truncate">
                         {userData.firstName} {userData.lastName}
                       </p>
                       <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
@@ -499,7 +499,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                             dir="rtl"
                           >
                             <FaUserShield className="text-[#E41E26] dark:text-[#FDB913] text-xs" />
-                            <span className="text-xs text-[#E41E26] dark:text-[#FDB913] font-semibold">
+                            <span className="text-xs text-[#E41E26] dark:text-[#FDB913] font-semibold truncate">
                               مدير
                             </span>
                           </div>
@@ -511,7 +511,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                             dir="rtl"
                           >
                             <FaStore className="text-green-600 dark:text-green-400 text-xs" />
-                            <span className="text-xs text-green-600 dark:text-green-400 font-semibold">
+                            <span className="text-xs text-green-600 dark:text-green-400 font-semibold truncate">
                               مطعم
                             </span>
                           </div>
@@ -523,7 +523,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                             dir="rtl"
                           >
                             <FaCodeBranch className="text-blue-600 dark:text-blue-400 text-xs" />
-                            <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
+                            <span className="text-xs text-blue-600 dark:text-blue-400 font-semibold truncate">
                               فرع
                             </span>
                           </div>
@@ -535,7 +535,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                             dir="rtl"
                           >
                             <FaUserCircle className="text-purple-600 dark:text-purple-400 text-xs" />
-                            <span className="text-xs text-purple-600 dark:text-purple-400 font-semibold">
+                            <span className="text-xs text-purple-600 dark:text-purple-400 font-semibold truncate">
                               مستخدم
                             </span>
                           </div>
@@ -557,16 +557,16 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                       className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
                       dir="rtl"
                     >
-                      <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                      <div className="flex-shrink-0 p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
                         <FaHome className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
                       </div>
-                      <span className="text-lg">الصفحة الرئيسية</span>
+                      <span className="text-lg truncate">الصفحة الرئيسية</span>
                     </button>
                   </motion.div>
 
                   {hasAdminAccess && adminMenuItems.length > 0 && (
                     <div className="border-t border-gray-200 dark:border-gray-700 my-4 pt-4">
-                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-2 mb-2 text-right">
+                      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider px-2 mb-2 text-right truncate">
                         {hasRole("Admin") ? "لوحة الإدارة" : "إدارة المطعم"}
                       </p>
 
@@ -582,7 +582,7 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                             dir="rtl"
                           >
                             <div
-                              className="p-2 rounded-lg"
+                              className="flex-shrink-0 p-2 rounded-lg"
                               style={{
                                 backgroundColor: `${item.color}10`,
                                 color: item.color,
@@ -590,7 +590,9 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                             >
                               <item.icon className="text-lg" />
                             </div>
-                            <span className="text-lg">{item.label}</span>
+                            <span className="text-lg truncate">
+                              {item.label}
+                            </span>
                           </button>
                         </motion.div>
                       ))}
@@ -606,10 +608,10 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                       className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
                       dir="rtl"
                     >
-                      <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                      <div className="flex-shrink-0 p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
                         <FaUser className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
                       </div>
-                      <span className="text-lg">ملفي الشخصي</span>
+                      <span className="text-lg truncate">ملفي الشخصي</span>
                     </button>
                   </motion.div>
 
@@ -622,10 +624,10 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                       className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
                       dir="rtl"
                     >
-                      <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                      <div className="flex-shrink-0 p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
                         <FaClipboardList className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
                       </div>
-                      <span className="text-lg">طلباتي</span>
+                      <span className="text-lg truncate">طلباتي</span>
                     </button>
                   </motion.div>
 
@@ -638,10 +640,10 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                       className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
                       dir="rtl"
                     >
-                      <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                      <div className="flex-shrink-0 p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
                         <FaShoppingCart className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
                       </div>
-                      <span className="text-lg">عربة التسوق</span>
+                      <span className="text-lg truncate">عربة التسوق</span>
                     </button>
                   </motion.div>
 
@@ -654,10 +656,10 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                       className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
                       dir="rtl"
                     >
-                      <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                      <div className="flex-shrink-0 p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
                         <FaHeart className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
                       </div>
-                      <span className="text-lg">المفضلة</span>
+                      <span className="text-lg truncate">المفضلة</span>
                     </button>
                   </motion.div>
 
@@ -670,10 +672,10 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                       className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
                       dir="rtl"
                     >
-                      <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                      <div className="flex-shrink-0 p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
                         <FaMapMarkerAlt className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
                       </div>
-                      <span className="text-lg">عناويني</span>
+                      <span className="text-lg truncate">عناويني</span>
                     </button>
                   </motion.div>
 
@@ -686,10 +688,10 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                       className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
                       dir="rtl"
                     >
-                      <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                      <div className="flex-shrink-0 p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
                         <FaStar className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
                       </div>
-                      <span className="text-lg">تقييماتي</span>
+                      <span className="text-lg truncate">تقييماتي</span>
                     </button>
                   </motion.div>
 
@@ -702,10 +704,10 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                       className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:from-gray-700 dark:hover:to-gray-600 transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#FDB913]/30 dark:hover:border-gray-500"
                       dir="rtl"
                     >
-                      <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                      <div className="flex-shrink-0 p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
                         <FaMap className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
                       </div>
-                      <span className="text-lg">فروعنا</span>
+                      <span className="text-lg truncate">فروعنا</span>
                     </button>
                   </motion.div>
 
@@ -719,10 +721,10 @@ const Navbar = ({ darkMode, toggleDarkMode }) => {
                         className="w-full text-right flex items-center gap-4 px-2 py-2 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-[#E41E26] dark:hover:text-[#FDB913] transition-all duration-200 font-medium rounded-xl border border-transparent hover:border-[#E41E26]/30 dark:hover:border-[#FDB913]/30"
                         dir="rtl"
                       >
-                        <div className="p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
+                        <div className="flex-shrink-0 p-2 bg-[#E41E26]/10 dark:bg-[#FDB913]/20 rounded-lg">
                           <FaSignOutAlt className="text-[#E41E26] dark:text-[#FDB913] text-lg" />
                         </div>
-                        <span className="text-lg">تسجيل الخروج</span>
+                        <span className="text-lg truncate">تسجيل الخروج</span>
                       </button>
                     </motion.div>
                   </div>

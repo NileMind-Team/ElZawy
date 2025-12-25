@@ -14,6 +14,8 @@ import {
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import axiosInstance from "../api/axiosInstance";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function Reviews() {
   const navigate = useNavigate();
@@ -30,12 +32,89 @@ export default function Reviews() {
     comment: "",
   });
 
+  const showMobileMessage = (type, title, text) => {
+    if (window.innerWidth < 768) {
+      if (type === "success") {
+        toast.success(text, {
+          position: "top-right",
+          autoClose: 2500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          style: {
+            width: "70%",
+            margin: "10px",
+            borderRadius: "8px",
+            textAlign: "right",
+            fontSize: "14px",
+            direction: "rtl",
+          },
+        });
+      } else if (type === "error") {
+        toast.error(text, {
+          position: "top-right",
+          autoClose: 2500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          style: {
+            width: "70%",
+            margin: "10px",
+            borderRadius: "8px",
+            textAlign: "right",
+            fontSize: "14px",
+            direction: "rtl",
+          },
+        });
+      } else if (type === "info") {
+        toast.info(text, {
+          position: "top-right",
+          autoClose: 2500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          style: {
+            width: "70%",
+            margin: "10px",
+            borderRadius: "8px",
+            textAlign: "right",
+            fontSize: "14px",
+            direction: "rtl",
+          },
+        });
+      } else if (type === "warning") {
+        toast.warning(text, {
+          position: "top-right",
+          autoClose: 2500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          style: {
+            width: "70%",
+            margin: "10px",
+            borderRadius: "8px",
+            textAlign: "right",
+            fontSize: "14px",
+            direction: "rtl",
+          },
+        });
+      }
+      return true;
+    }
+    return false;
+  };
+
   const toggleDropdown = (menu) =>
     setOpenDropdown(openDropdown === menu ? null : menu);
 
   useEffect(() => {
     fetchReviews();
     fetchBranches();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchReviews = async () => {
@@ -68,11 +147,20 @@ export default function Reviews() {
       }
     } catch (err) {
       console.error("Failed to fetch reviews", err);
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "فشل في تحميل التقييمات.",
-      });
+
+      const isMobile = showMobileMessage(
+        "error",
+        "خطأ",
+        "فشل في تحميل التقييمات."
+      );
+
+      if (!isMobile) {
+        Swal.fire({
+          icon: "error",
+          title: "خطأ",
+          text: "فشل في تحميل التقييمات.",
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -116,36 +204,62 @@ export default function Reviews() {
         );
         if (res.status === 200 || res.status === 204) {
           await fetchReviews();
-          Swal.fire({
-            icon: "success",
-            title: "تم تحديث التقييم",
-            text: "تم تحديث تقييمك بنجاح.",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+
+          const isMobile = showMobileMessage(
+            "success",
+            "تم تحديث التقييم",
+            "تم تحديث تقييمك بنجاح."
+          );
+
+          if (!isMobile) {
+            Swal.fire({
+              icon: "success",
+              title: "تم تحديث التقييم",
+              text: "تم تحديث تقييمك بنجاح.",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          }
         }
       } else {
         // Add new review
         const res = await axiosInstance.post("/api/Reviews/Add", formData);
         if (res.status === 200 || res.status === 201) {
           await fetchReviews();
-          Swal.fire({
-            icon: "success",
-            title: "تم إضافة التقييم",
-            text: "تم إضافة تقييمك بنجاح.",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+
+          const isMobile = showMobileMessage(
+            "success",
+            "تم إضافة التقييم",
+            "تم إضافة تقييمك بنجاح."
+          );
+
+          if (!isMobile) {
+            Swal.fire({
+              icon: "success",
+              title: "تم إضافة التقييم",
+              text: "تم إضافة تقييمك بنجاح.",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          }
         }
       }
 
       resetForm();
     } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: err.response?.data?.message || "فشل في حفظ التقييم.",
-      });
+      const isMobile = showMobileMessage(
+        "error",
+        "خطأ",
+        err.response?.data?.message || "فشل في حفظ التقييم."
+      );
+
+      if (!isMobile) {
+        Swal.fire({
+          icon: "error",
+          title: "خطأ",
+          text: err.response?.data?.message || "فشل في حفظ التقييم.",
+        });
+      }
     }
   };
 
@@ -181,19 +295,36 @@ export default function Reviews() {
         try {
           await axiosInstance.delete(`/api/Reviews/Delete/${id}`);
           await fetchReviews();
-          Swal.fire({
-            title: "تم الحذف!",
-            text: "تم حذف تقييمك بنجاح.",
-            icon: "success",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+
+          const isMobile = showMobileMessage(
+            "success",
+            "تم الحذف",
+            "تم حذف تقييمك بنجاح."
+          );
+
+          if (!isMobile) {
+            Swal.fire({
+              title: "تم الحذف!",
+              text: "تم حذف تقييمك بنجاح.",
+              icon: "success",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+          }
         } catch (err) {
-          Swal.fire({
-            icon: "error",
-            title: "خطأ",
-            text: "فشل في حذف التقييم.",
-          });
+          const isMobile = showMobileMessage(
+            "error",
+            "خطأ",
+            "فشل في حذف التقييم."
+          );
+
+          if (!isMobile) {
+            Swal.fire({
+              icon: "error",
+              title: "خطأ",
+              text: "فشل في حذف التقييم.",
+            });
+          }
         }
       }
     });

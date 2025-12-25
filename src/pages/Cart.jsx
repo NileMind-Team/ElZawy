@@ -626,7 +626,7 @@ export default function Cart() {
         });
       }
     }
-  };
+  }; 
 
   const closeProductDetailsModal = () => {
     setShowProductDetailsModal(false);

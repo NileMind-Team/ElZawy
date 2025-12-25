@@ -5,6 +5,8 @@ import { registerUser } from "../redux/slices/registerSlice";
 import { useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 import Swal from "sweetalert2";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import ErrorTranslator from "../utils/ErrorTranslator";
 import AuthLayout from "../components/auth/AuthLayout";
 import WelcomeAnimation from "../components/auth/WelcomeAnimation";
@@ -12,6 +14,63 @@ import WaitingConfirmation from "../components/auth/WaitingConfirmation";
 import ForgotPasswordForm from "../components/auth/ForgotPasswordForm";
 import LoginForm from "../components/auth/LoginForm";
 import RegisterForm from "../components/auth/RegisterForm";
+
+const showAuthMobileSuccessToast = (message) => {
+  if (window.innerWidth < 768) {
+    toast.success(message, {
+      position: "top-right",
+      autoClose: 2500,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      style: {
+        width: "70%",
+        margin: "10px",
+        borderRadius: "8px",
+        textAlign: "right",
+        fontSize: "14px",
+        direction: "rtl",
+      },
+    });
+  }
+};
+
+const showAuthMobileAlertToast = (message, type = "info") => {
+  if (window.innerWidth < 768) {
+    const toastFunc =
+      type === "error"
+        ? toast.error
+        : type === "warning"
+        ? toast.warning
+        : toast.info;
+    toastFunc(message, {
+      position: "top-right",
+      autoClose: 2500,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      style: {
+        width: "70%",
+        margin: "10px",
+        borderRadius: "8px",
+        textAlign: "right",
+        fontSize: "14px",
+        direction: "rtl",
+      },
+    });
+  }
+};
+
+const showAuthMobileErrorHtml = (htmlContent) => {
+  if (window.innerWidth < 768) {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = htmlContent;
+    const textContent = tempDiv.textContent || tempDiv.innerText || "حدث خطأ";
+    showAuthMobileAlertToast(textContent, "error");
+  }
+};
 
 export default function AuthPage() {
   const dispatch = useDispatch();
@@ -92,16 +151,23 @@ export default function AuthPage() {
     if (error) {
       window.history.replaceState(null, "", "/auth");
 
-      Swal.fire({
-        icon: "error",
-        title: "تعذر تسجيل الدخول",
-        text: translateGoogleError(error),
-        showConfirmButton: false,
-        timer: 2500,
-        didClose: () => {
+      if (window.innerWidth < 768) {
+        showAuthMobileAlertToast(translateGoogleError(error), "error");
+        setTimeout(() => {
           navigate("/login");
-        },
-      });
+        }, 2500);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "تعذر تسجيل الدخول",
+          text: translateGoogleError(error),
+          showConfirmButton: false,
+          timer: 2500,
+          didClose: () => {
+            navigate("/login");
+          },
+        });
+      }
 
       return;
     }
@@ -123,16 +189,26 @@ export default function AuthPage() {
             }, 3000);
           }
         } catch (err) {
-          Swal.fire({
-            icon: "error",
-            title: "خطأ في تسجيل الدخول",
-            text: "حدث خطأ أثناء تسجيل الدخول باستخدام Google",
-            showConfirmButton: false,
-            timer: 2500,
-            didClose: () => {
+          if (window.innerWidth < 768) {
+            showAuthMobileAlertToast(
+              "حدث خطأ أثناء تسجيل الدخول باستخدام Google",
+              "error"
+            );
+            setTimeout(() => {
               navigate("/login");
-            },
-          });
+            }, 2500);
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "خطأ في تسجيل الدخول",
+              text: "حدث خطأ أثناء تسجيل الدخول باستخدام Google",
+              showConfirmButton: false,
+              timer: 2500,
+              didClose: () => {
+                navigate("/login");
+              },
+            });
+          }
         }
       };
 
@@ -190,13 +266,17 @@ export default function AuthPage() {
 
       const errorMessage = ErrorTranslator.translate(error);
 
-      Swal.fire({
-        icon: "error",
-        title: "خطأ في تسجيل الدخول",
-        html: errorMessage,
-        showConfirmButton: false,
-        timer: 2500,
-      });
+      if (window.innerWidth < 768) {
+        showAuthMobileErrorHtml(errorMessage);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "خطأ في تسجيل الدخول",
+          html: errorMessage,
+          showConfirmButton: false,
+          timer: 2500,
+        });
+      }
     }
   };
 
@@ -209,12 +289,20 @@ export default function AuthPage() {
       window.location.href = googleAuthUrl;
     } catch (error) {
       console.error("Google login redirect error:", error);
-      Swal.fire({
-        icon: "error",
-        title: "خطأ في الاتصال",
-        text: "حدث خطأ أثناء التوجيه إلى Google. يرجى المحاولة مرة أخرى.",
-        confirmButtonText: "حاول مرة أخرى",
-      });
+
+      if (window.innerWidth < 768) {
+        showAuthMobileAlertToast(
+          "حدث خطأ أثناء التوجيه إلى Google. يرجى المحاولة مرة أخرى.",
+          "error"
+        );
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "خطأ في الاتصال",
+          text: "حدث خطأ أثناء التوجيه إلى Google. يرجى المحاولة مرة أخرى.",
+          confirmButtonText: "حاول مرة أخرى",
+        });
+      }
     }
   };
 
@@ -251,41 +339,57 @@ export default function AuthPage() {
         setUserEmail(registerData.email);
         setResendDisabled(true);
         setTimer(60);
-        Swal.fire({
-          icon: "success",
-          title: "تم إنشاء الحساب",
-          text: "تم إنشاء حسابك بنجاح! يرجى تأكيد بريدك الإلكتروني للمتابعة.",
-          showConfirmButton: false,
-          timer: 2500,
-        });
+
+        if (window.innerWidth < 768) {
+          showAuthMobileSuccessToast(
+            "تم إنشاء حسابك بنجاح! يرجى تأكيد بريدك الإلكتروني للمتابعة."
+          );
+        } else {
+          Swal.fire({
+            icon: "success",
+            title: "تم إنشاء الحساب",
+            text: "تم إنشاء حسابك بنجاح! يرجى تأكيد بريدك الإلكتروني للمتابعة.",
+            showConfirmButton: false,
+            timer: 2500,
+          });
+        }
       } else {
         const errorResponse =
           resultAction.payload || resultAction.error?.response?.data || null;
 
         const errorMessage = ErrorTranslator.translate(errorResponse);
 
+        if (window.innerWidth < 768) {
+          showAuthMobileErrorHtml(errorMessage);
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "خطأ في التسجيل",
+            html: errorMessage,
+            showConfirmButton: false,
+            timer: 2500,
+          });
+        }
+      }
+    } catch (err) {
+      if (window.innerWidth < 768) {
+        showAuthMobileAlertToast("حدث خطأ غير متوقع.", "error");
+      } else {
         Swal.fire({
           icon: "error",
           title: "خطأ في التسجيل",
-          html: errorMessage,
+          text: "حدث خطأ غير متوقع.",
           showConfirmButton: false,
           timer: 2500,
         });
       }
-    } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "خطأ في التسجيل",
-        text: "حدث خطأ غير متوقع.",
-        showConfirmButton: false,
-        timer: 2500,
-      });
     }
   };
 
   // Forget password handler
   const handleForgetPassword = async (e) => {
     e.preventDefault();
+
     Swal.fire({
       title: "جاري إرسال رمز إعادة التعيين...",
       didOpen: () => {
@@ -308,26 +412,37 @@ export default function AuthPage() {
       setResendDisabled(true);
       setTimer(60);
 
-      Swal.fire({
-        icon: "info",
-        title: "تم إرسال رمز إعادة التعيين",
-        text: "لقد أرسلنا رمز إعادة التعيين إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد لإعادة تعيين كلمة المرور.",
-        showConfirmButton: false,
-        timer: 2500,
-      });
+      if (window.innerWidth < 768) {
+        showAuthMobileAlertToast(
+          "لقد أرسلنا رمز إعادة التعيين إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد لإعادة تعيين كلمة المرور.",
+          "info"
+        );
+      } else {
+        Swal.fire({
+          icon: "info",
+          title: "تم إرسال رمز إعادة التعيين",
+          text: "لقد أرسلنا رمز إعادة التعيين إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد لإعادة تعيين كلمة المرور.",
+          showConfirmButton: false,
+          timer: 2500,
+        });
+      }
     } catch (err) {
       Swal.close();
 
       const errorData = err.response?.data;
       const translatedMessage = ErrorTranslator.translate(errorData);
 
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        html: translatedMessage,
-        showConfirmButton: false,
-        timer: 2500,
-      });
+      if (window.innerWidth < 768) {
+        showAuthMobileErrorHtml(translatedMessage);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "خطأ",
+          html: translatedMessage,
+          showConfirmButton: false,
+          timer: 2500,
+        });
+      }
     }
   };
 
@@ -336,26 +451,38 @@ export default function AuthPage() {
       await axiosInstance.post("/api/Auth/ResendConfirmationEmail", {
         email: forgetMode ? forgetEmail : registerData.email,
       });
-      Swal.fire({
-        icon: "success",
-        title: "تم إعادة إرسال البريد الإلكتروني",
-        text: "تم إرسال بريد تأكيد جديد إلى صندوق الوارد الخاص بك.",
-        showConfirmButton: false,
-        timer: 2500,
-      });
+
+      if (window.innerWidth < 768) {
+        showAuthMobileSuccessToast(
+          "تم إرسال بريد تأكيد جديد إلى صندوق الوارد الخاص بك."
+        );
+      } else {
+        Swal.fire({
+          icon: "success",
+          title: "تم إعادة إرسال البريد الإلكتروني",
+          text: "تم إرسال بريد تأكيد جديد إلى صندوق الوارد الخاص بك.",
+          showConfirmButton: false,
+          timer: 2500,
+        });
+      }
+
       setResendDisabled(true);
       setTimer(60);
     } catch (err) {
       const errorData = err.response?.data;
       const translatedMessage = ErrorTranslator.translate(errorData);
 
-      Swal.fire({
-        icon: "error",
-        title: "فشل في إعادة الإرسال",
-        text: translatedMessage,
-        showConfirmButton: false,
-        timer: 2500,
-      });
+      if (window.innerWidth < 768) {
+        showAuthMobileErrorHtml(translatedMessage);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "فشل في إعادة الإرسال",
+          text: translatedMessage,
+          showConfirmButton: false,
+          timer: 2500,
+        });
+      }
     }
   };
 
@@ -388,13 +515,21 @@ export default function AuthPage() {
           );
           if (res.status === 200) {
             Swal.close();
-            Swal.fire({
-              icon: "success",
-              title: "تم تأكيد البريد الإلكتروني",
-              text: "تم تأكيد بريدك الإلكتروني. يمكنك الآن تسجيل الدخول.",
-              showConfirmButton: false,
-              timer: 2500,
-            });
+
+            if (window.innerWidth < 768) {
+              showAuthMobileSuccessToast(
+                "تم تأكيد بريدك الإلكتروني. يمكنك الآن تسجيل الدخول."
+              );
+            } else {
+              Swal.fire({
+                icon: "success",
+                title: "تم تأكيد البريد الإلكتروني",
+                text: "تم تأكيد بريدك الإلكتروني. يمكنك الآن تسجيل الدخول.",
+                showConfirmButton: false,
+                timer: 2500,
+              });
+            }
+
             setWaitingForConfirmation(false);
             clearInterval(interval);
             setActiveTab("login");

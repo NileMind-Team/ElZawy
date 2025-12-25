@@ -253,7 +253,6 @@ export default function CitiesManagement() {
     name: "",
   });
 
-  // Check user role from API endpoint using axios
   useEffect(() => {
     const checkUserRole = async () => {
       try {
@@ -298,7 +297,6 @@ export default function CitiesManagement() {
     checkUserRole();
   }, [navigate]);
 
-  // Fetch cities from API
   const fetchCities = async () => {
     setDataLoading(true);
     try {
@@ -346,7 +344,6 @@ export default function CitiesManagement() {
         // Update existing city
         await axiosInstance.put(`/api/Cities/Update/${editingId}`, formData);
 
-        // Refresh data after successful update
         await fetchCities();
 
         showMessage("success", "تم التحديث", "تم تحديث المدينة بنجاح", {
@@ -354,10 +351,8 @@ export default function CitiesManagement() {
           showConfirmButton: false,
         });
       } else {
-        // Add new city
         await axiosInstance.post("/api/Cities/Add", formData);
 
-        // Refresh data after successful add
         await fetchCities();
 
         showMessage("success", "تم الإضافة", "تم إضافة المدينة بنجاح", {
@@ -392,7 +387,6 @@ export default function CitiesManagement() {
     setIsAdding(true);
   };
 
-  // Check if required field is filled
   const isFormValid = () => {
     return formData.name.trim() !== "";
   };

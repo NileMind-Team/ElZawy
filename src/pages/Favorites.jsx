@@ -26,9 +26,7 @@ const Favorites = () => {
     return window.innerWidth <= 768;
   };
 
-  // Function to show notification based on device and content
   const showNotification = (type, title, text, options = {}) => {
-    // Always use Swal for notifications with buttons
     if (options.showConfirmButton || options.showCancelButton) {
       Swal.fire({
         icon: type,
@@ -46,7 +44,6 @@ const Favorites = () => {
       return;
     }
 
-    // Use toast for simple notifications on mobile only
     if (isMobile()) {
       const toastOptions = {
         position: "top-right",

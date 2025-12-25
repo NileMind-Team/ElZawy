@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import axiosInstance from "../api/axiosInstance";
 import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 import { translateErrorMessageAdminUser } from "../utils/ErrorTranslator";
 
 export const useUsers = () => {
@@ -11,6 +12,67 @@ export const useUsers = () => {
   const [currentUser, setCurrentUser] = useState(null);
   const [availableRoles, setAvailableRoles] = useState([]);
   const [assigningRole, setAssigningRole] = useState(null);
+
+  const showErrorAlert = (title, message) => {
+    if (window.innerWidth < 768) {
+      toast.error(message || title, {
+        position: "top-right",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          width: "70%",
+          margin: "10px",
+          borderRadius: "8px",
+          textAlign: "right",
+          fontSize: "14px",
+          direction: "rtl",
+        },
+      });
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: title || "حدث خطأ",
+        text: message,
+        confirmButtonColor: "#E41E26",
+        background: "#ffffff",
+        color: "#000000",
+      });
+    }
+  };
+
+  const showSuccessAlert = (title, message) => {
+    if (window.innerWidth < 768) {
+      toast.success(message || title, {
+        position: "top-right",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          width: "70%",
+          margin: "10px",
+          borderRadius: "8px",
+          textAlign: "right",
+          fontSize: "14px",
+          direction: "rtl",
+        },
+      });
+    } else {
+      Swal.fire({
+        icon: "success",
+        title: title || "تم بنجاح",
+        text: message,
+        showConfirmButton: false,
+        timer: 2500,
+        background: "#ffffff",
+        color: "#000000",
+      });
+    }
+  };
 
   const checkAdminAndFetchUsers = useCallback(async () => {
     try {
@@ -48,6 +110,7 @@ export const useUsers = () => {
     } finally {
       setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchRoles = async () => {
@@ -70,14 +133,7 @@ export const useUsers = () => {
       }
     } catch (err) {
       console.error("فشل في جلب المستخدمين", err);
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "فشل في جلب بيانات المستخدمين.",
-        background: "#ffffff",
-        color: "#000000",
-        confirmButtonColor: "#E41E26",
-      });
+      showErrorAlert("خطأ", "فشل في جلب بيانات المستخدمين.");
     }
   };
 
@@ -95,28 +151,15 @@ export const useUsers = () => {
 
       setUsers(updatedUsers);
 
-      Swal.fire({
-        icon: "success",
-        title: "تم تعيين الصلاحية",
-        text: `تم تعيين الصلاحية ${roleName} بنجاح.`,
-        showConfirmButton: false,
-        timer: 2500,
-        background: "#ffffff",
-        color: "#000000",
-      });
+      showSuccessAlert(
+        "تم تعيين الصلاحية",
+        `تم تعيين الصلاحية ${roleName} بنجاح.`
+      );
 
       setAssigningRole(null);
     } catch (err) {
       const errorMsg = err.response?.data?.message || "فشل في تعيين الصلاحية.";
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: errorMsg,
-        background: "#ffffff",
-        color: "#000000",
-        showConfirmButton: false,
-        timer: 2500,
-      });
+      showErrorAlert("خطأ", errorMsg);
     }
   };
 
@@ -140,7 +183,6 @@ export const useUsers = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          // استخدام الـ endpoint الجديد
           await axiosInstance.put(`/api/Users/ChangeUserStatus/${user.id}`);
 
           const updatedUsers = users.map((u) =>
@@ -148,25 +190,12 @@ export const useUsers = () => {
           );
           setUsers(updatedUsers);
 
-          Swal.fire({
-            title: `${action === "تفعيل" ? "تم التفعيل" : "تم التعطيل"}!`,
-            text: `تم ${action} المستخدم بنجاح.`,
-            icon: "success",
-            timer: 2500,
-            showConfirmButton: false,
-            background: "#ffffff",
-            color: "#000000",
-          });
+          showSuccessAlert(
+            `${action === "تفعيل" ? "تم التفعيل" : "تم التعطيل"}!`,
+            `تم ${action} المستخدم بنجاح.`
+          );
         } catch (err) {
-          Swal.fire({
-            icon: "error",
-            title: "خطأ",
-            text: `فشل في ${action} المستخدم.`,
-            background: "#ffffff",
-            color: "#000000",
-            showConfirmButton: false,
-            timer: 2500,
-          });
+          showErrorAlert("خطأ", `فشل في ${action} المستخدم.`);
         }
       }
     });
@@ -177,15 +206,10 @@ export const useUsers = () => {
       const res = await axiosInstance.post("/api/Users/Add", formData);
       if (res.status === 200 || res.status === 201) {
         await fetchUsers();
-        Swal.fire({
-          icon: "success",
-          title: "تمت إضافة المستخدم",
-          text: "تمت إضافة المستخدم الجديد بنجاح.",
-          showConfirmButton: false,
-          timer: 2500,
-          background: "#ffffff",
-          color: "#000000",
-        });
+        showSuccessAlert(
+          "تمت إضافة المستخدم",
+          "تمت إضافة المستخدم الجديد بنجاح."
+        );
         onSuccess?.();
         return { success: true };
       }
@@ -202,35 +226,47 @@ export const useUsers = () => {
           });
         });
 
-        Swal.fire({
-          icon: "error",
-          title: "خطأ في البيانات",
-          html: errorMessages
-            .map(
-              (msg) =>
-                `<div style="text-align: right; direction: rtl; margin-bottom: 8px; padding-right: 15px; position: relative;">
-             ${msg}
-             <span style="position: absolute; right: 0; top: 0;"></span>
-           </div>`
-            )
-            .join(""),
-          background: "#ffffff",
-          color: "#000000",
-          showConfirmButton: false,
-          timer: 2500,
-        });
+        if (window.innerWidth < 768) {
+          const shortMessage = errorMessages.slice(0, 3).join("، ");
+          toast.error(shortMessage, {
+            position: "top-right",
+            autoClose: 2500,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            style: {
+              width: "70%",
+              margin: "10px",
+              borderRadius: "8px",
+              textAlign: "right",
+              fontSize: "14px",
+              direction: "rtl",
+            },
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "خطأ في البيانات",
+            html: errorMessages
+              .map(
+                (msg) =>
+                  `<div style="text-align: right; direction: rtl; margin-bottom: 8px; padding-right: 15px; position: relative;">
+               ${msg}
+               <span style="position: absolute; right: 0; top: 0;"></span>
+             </div>`
+              )
+              .join(""),
+            background: "#ffffff",
+            color: "#000000",
+            showConfirmButton: false,
+            timer: 2500,
+          });
+        }
         return { success: false, errors: translatedErrors };
       } else {
         const errorMsg = err.response?.data?.message || "فشل في حفظ المستخدم.";
-        Swal.fire({
-          icon: "error",
-          title: "خطأ",
-          text: errorMsg,
-          background: "#ffffff",
-          color: "#000000",
-          showConfirmButton: false,
-          timer: 2500,
-        });
+        showErrorAlert("خطأ", errorMsg);
         return { success: false };
       }
     }

@@ -37,12 +37,10 @@ const Branches = () => {
   const [selectedBranchForMap, setSelectedBranchForMap] = useState(null);
   const [showReviews, setShowReviews] = useState({});
 
-  // تحديد إذا كان المستخدم على جهاز محمول
   const isMobile = () => {
     return window.innerWidth < 768;
   };
 
-  // دالة لعرض الرسائل - نفس النظام الموجود في MyOrders
   const showMessage = (type, title, text, options = {}) => {
     if (isMobile() && !options.forceSwal) {
       const toastOptions = {
@@ -123,7 +121,6 @@ const Branches = () => {
       } catch (error) {
         console.error("Error fetching data:", error);
 
-        // استخدام showMessage الجديدة بدلاً من Swal مباشرة
         showMessage("error", "خطأ", "فشل في تحميل بيانات الفروع", {
           timer: 2000,
           showConfirmButton: false,

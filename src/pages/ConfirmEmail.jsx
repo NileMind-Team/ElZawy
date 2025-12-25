@@ -15,10 +15,8 @@ export default function ConfirmEmail() {
   const [message, setMessage] = useState("");
   const hasConfirmed = useRef(false);
 
-  // دالة لعرض رسائل النجاح والفشل على الموبايل باستخدام toast
   const showMobileMessage = (type, title, text) => {
     if (window.innerWidth < 768) {
-      // عرض رسائل النجاح والفشل العادية (بدون أزرار) باستخدام toast
       if (type === "success") {
         toast.success(text, {
           position: "top-right",
@@ -82,8 +80,6 @@ export default function ConfirmEmail() {
     const decodedCode = code ? decodeURIComponent(code) : null;
 
     if (!userId || !decodedCode) {
-      // للشاشات الكبيرة: Swal عادي
-      // للشاشات الصغيرة: Toast للرسائل بدون أزرار
       const isMobile = showMobileMessage(
         "error",
         "رابط غير صالح",
@@ -119,7 +115,6 @@ export default function ConfirmEmail() {
         setMessage(res.data.message || "تم تأكيد بريدك الإلكتروني بنجاح.");
         setSuccess(true);
 
-        // استخدام toast للموبايل بدلاً من Swal
         const isMobile = showMobileMessage(
           "success",
           "تم تأكيد البريد الإلكتروني",
@@ -173,7 +168,6 @@ export default function ConfirmEmail() {
           setMessage(errorDescription);
           setSuccess(false);
 
-          // استخدام toast للموبايل للرسائل بدون أزرار
           const isMobile = showMobileMessage(
             "error",
             "فشل تأكيد البريد الإلكتروني",

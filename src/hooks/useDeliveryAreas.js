@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 import axiosInstance from "../api/axiosInstance";
 import { translateErrorMessage } from "../utils/ErrorTranslator";
 
@@ -28,7 +29,65 @@ export default function useDeliveryAreas() {
     isActive: true,
   });
 
-  // Check user role from API endpoint using axios
+  const showErrorAlert = (title, message) => {
+    if (window.innerWidth < 768) {
+      toast.error(message || title, {
+        position: "top-right",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          width: "70%",
+          margin: "10px",
+          borderRadius: "8px",
+          textAlign: "right",
+          fontSize: "14px",
+          direction: "rtl",
+        },
+      });
+    } else {
+      Swal.fire({
+        title: title || "حدث خطأ",
+        text: message,
+        icon: "error",
+        confirmButtonText: "حاول مرة أخرى",
+        timer: 2500,
+        showConfirmButton: false,
+      });
+    }
+  };
+
+  const showSuccessAlert = (title, message) => {
+    if (window.innerWidth < 768) {
+      toast.success(message || title, {
+        position: "top-right",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          width: "70%",
+          margin: "10px",
+          borderRadius: "8px",
+          textAlign: "right",
+          fontSize: "14px",
+          direction: "rtl",
+        },
+      });
+    } else {
+      Swal.fire({
+        title: title || "تم بنجاح",
+        text: message,
+        icon: "success",
+        showConfirmButton: false,
+        timer: 2500,
+      });
+    }
+  };
+
   useEffect(() => {
     const checkUserRole = async () => {
       try {
@@ -88,18 +147,14 @@ export default function useDeliveryAreas() {
         await fetchDeliveryAreas(branchesResponse.data);
       } catch (error) {
         console.error("Error fetching data:", error);
-        Swal.fire({
-          icon: "error",
-          title: "خطأ",
-          text: "فشل في تحميل البيانات",
-        });
+        showErrorAlert("خطأ", "فشل في تحميل البيانات");
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdminOrRestaurantOrBranch]);
 
   // Function to fetch delivery areas
@@ -130,11 +185,7 @@ export default function useDeliveryAreas() {
         setFilteredAreas(transformedAreas);
       } catch (error) {
         console.error("Error fetching delivery areas:", error);
-        Swal.fire({
-          icon: "error",
-          title: "خطأ",
-          text: "فشل في تحميل مناطق التوصيل",
-        });
+        showErrorAlert("خطأ", "فشل في تحميل مناطق التوصيل");
       }
     },
     [branches]
@@ -170,13 +221,7 @@ export default function useDeliveryAreas() {
       !formData.estimatedTimeMin ||
       !formData.estimatedTimeMax
     ) {
-      Swal.fire({
-        icon: "error",
-        title: "معلومات ناقصة",
-        text: "يرجى ملء جميع الحقول المطلوبة",
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      showErrorAlert("معلومات ناقصة", "يرجى ملء جميع الحقول المطلوبة");
       return;
     }
 
@@ -198,13 +243,7 @@ export default function useDeliveryAreas() {
         );
         if (res.status === 200 || res.status === 204) {
           await fetchDeliveryAreas();
-          Swal.fire({
-            icon: "success",
-            title: "تم التحديث",
-            text: "تم تحديث منطقة التوصيل بنجاح",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+          showSuccessAlert("تم التحديث", "تم تحديث منطقة التوصيل بنجاح");
         }
       } else {
         // Add new area
@@ -214,13 +253,7 @@ export default function useDeliveryAreas() {
         );
         if (res.status === 200 || res.status === 201) {
           await fetchDeliveryAreas();
-          Swal.fire({
-            icon: "success",
-            title: "تم الإضافة",
-            text: "تم إضافة منطقة توصيل جديدة بنجاح",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+          showSuccessAlert("تم الإضافة", "تم إضافة منطقة توصيل جديدة بنجاح");
         }
       }
 
@@ -228,13 +261,7 @@ export default function useDeliveryAreas() {
     } catch (err) {
       const translatedMessage = translateErrorMessage(err.response?.data, true);
 
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        html: translatedMessage,
-        timer: 2000,
-        showConfirmButton: false,
-      });
+      showErrorAlert("خطأ", translatedMessage);
     }
   };
 
@@ -266,19 +293,9 @@ export default function useDeliveryAreas() {
         try {
           await axiosInstance.delete(`/api/DeliveryFees/Delete/${id}`);
           await fetchDeliveryAreas();
-          Swal.fire({
-            title: "تم الحذف!",
-            text: "تم حذف منطقة التوصيل",
-            icon: "success",
-            timer: 2000,
-            showConfirmButton: false,
-          });
+          showSuccessAlert("تم الحذف!", "تم حذف منطقة التوصيل");
         } catch (err) {
-          Swal.fire({
-            icon: "error",
-            title: "خطأ",
-            text: "فشل في حذف منطقة التوصيل",
-          });
+          showErrorAlert("خطأ", "فشل في حذف منطقة التوصيل");
         }
       }
     });
@@ -291,19 +308,9 @@ export default function useDeliveryAreas() {
       await axiosInstance.put(`/api/DeliveryFees/ChangeActiveStatus/${id}`);
       await fetchDeliveryAreas();
 
-      Swal.fire({
-        icon: "success",
-        title: "تم تحديث الحالة!",
-        text: "تم تحديث حالة منطقة التوصيل",
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      showSuccessAlert("تم تحديث الحالة!", "تم تحديث حالة منطقة التوصيل");
     } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "خطأ",
-        text: "فشل في تحديث حالة منطقة التوصيل",
-      });
+      showErrorAlert("خطأ", "فشل في تحديث حالة منطقة التوصيل");
     }
   };
 

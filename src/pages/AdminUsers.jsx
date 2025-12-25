@@ -12,6 +12,7 @@ import {
   FaUserTag,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { toast } from "react-toastify";
 import { useUsers } from "../hooks/useUsers";
 import Header from "../components/adminUsers/Header";
 import SearchBar from "../components/adminUsers/SearchBar";
@@ -52,6 +53,38 @@ export default function AdminUsers() {
     isCurrentUser,
   } = useUsers();
 
+  const showWarningAlert = (title, message) => {
+    if (window.innerWidth < 768) {
+      toast.warning(message || title, {
+        position: "top-right",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          width: "70%",
+          margin: "10px",
+          borderRadius: "8px",
+          textAlign: "right",
+          fontSize: "14px",
+          direction: "rtl",
+        },
+      });
+    } else {
+      Swal.fire({
+        icon: "warning",
+        title: title || "تحذير",
+        text: message,
+        confirmButtonColor: "#E41E26",
+        background: "#ffffff",
+        color: "#000000",
+        showConfirmButton: false,
+        timer: 2500,
+      });
+    }
+  };
+
   useEffect(() => {
     const initialize = async () => {
       const hasAccess = await checkAdminAndFetchUsers();
@@ -80,16 +113,7 @@ export default function AdminUsers() {
     setFormErrors({});
 
     if (!isFormValid()) {
-      Swal.fire({
-        icon: "warning",
-        title: "نموذج غير مكتمل",
-        text: "يرجى ملء جميع الحقول المطلوبة.",
-        confirmButtonColor: "#E41E26",
-        background: "#ffffff",
-        color: "#000000",
-        showConfirmButton: false,
-        timer: 2500,
-      });
+      showWarningAlert("نموذج غير مكتمل", "يرجى ملء جميع الحقول المطلوبة.");
       return;
     }
 

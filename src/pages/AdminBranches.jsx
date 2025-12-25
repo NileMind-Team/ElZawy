@@ -9,20 +9,17 @@ import Header from "../components/adminUsers/Header";
 import BranchCard from "../components/adminBranchs/BranchCard";
 import SearchBar from "../components/adminUsers/SearchBar";
 import BranchForm from "../components/adminBranchs/BranchForm";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { translateErrorMessageAdminBranches } from "../utils/ErrorTranslator";
 
-const showErrorAlert = (errorMessages) => {
+const convertErrorObjectToText = (errorMessages) => {
   if (!errorMessages || typeof errorMessages !== "object") {
-    Swal.fire({
-      icon: "error",
-      title: "خطأ",
-      html: `<div style="text-align: right; direction: rtl; margin-bottom: 8px; padding-right: 15px; position: relative; font-weight: semibold;">
-              <span style="position: absolute; right: 0; top: 0;">-</span>
-              حدث خطأ غير معروف
-            </div>`,
-      timer: 2500,
-      showConfirmButton: false,
-    });
-    return;
+    return "حدث خطأ غير معروف";
+  }
+
+  if (Array.isArray(errorMessages)) {
+    return errorMessages.join("، ");
   }
 
   const allMessages = [];
@@ -33,45 +30,164 @@ const showErrorAlert = (errorMessages) => {
       messages.forEach((msg) => {
         allMessages.push(msg);
       });
+    } else if (typeof messages === "string") {
+      allMessages.push(messages);
     }
   });
 
   if (allMessages.length === 0) {
+    return "حدث خطأ غير معروف";
+  }
+
+  return allMessages.join("، ");
+};
+
+const showMobileMessage = (type, title, text) => {
+  if (window.innerWidth < 768) {
+    const message = text || title;
+
+    if (type === "success") {
+      toast.success(message, {
+        position: "top-right",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          width: "70%",
+          margin: "10px",
+          borderRadius: "8px",
+          textAlign: "right",
+          fontSize: "14px",
+          direction: "rtl",
+        },
+      });
+    } else if (type === "error") {
+      toast.error(message, {
+        position: "top-right",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          width: "70%",
+          margin: "10px",
+          borderRadius: "8px",
+          textAlign: "right",
+          fontSize: "14px",
+          direction: "rtl",
+        },
+      });
+    } else if (type === "info") {
+      toast.info(message, {
+        position: "top-right",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          width: "70%",
+          margin: "10px",
+          borderRadius: "8px",
+          textAlign: "right",
+          fontSize: "14px",
+          direction: "rtl",
+        },
+      });
+    } else if (type === "warning") {
+      toast.warning(message, {
+        position: "top-right",
+        autoClose: 2500,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        style: {
+          width: "70%",
+          margin: "10px",
+          borderRadius: "8px",
+          textAlign: "right",
+          fontSize: "14px",
+          direction: "rtl",
+        },
+      });
+    }
+    return true;
+  }
+  return false;
+};
+
+const showErrorAlert = (errorMessages) => {
+  const errorText = convertErrorObjectToText(errorMessages);
+
+  const isMobile = showMobileMessage("error", "خطأ", errorText);
+
+  if (!isMobile) {
+    if (!errorMessages || typeof errorMessages !== "object") {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        html: `<div style="text-align: right; direction: rtl; margin-bottom: 8px; padding-right: 15px; position: relative; font-weight: semibold;">
+                <span style="position: absolute; right: 0; top: 0;">-</span>
+                حدث خطأ غير معروف
+              </div>`,
+        timer: 2500,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    const allMessages = [];
+
+    Object.keys(errorMessages).forEach((field) => {
+      const messages = errorMessages[field];
+      if (Array.isArray(messages)) {
+        messages.forEach((msg) => {
+          allMessages.push(msg);
+        });
+      }
+    });
+
+    if (allMessages.length === 0) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ",
+        html: `<div style="text-align: right; direction: rtl; margin-bottom: 8px; padding-right: 15px; position: relative; font-weight: semibold;">
+                <span style="position: absolute; right: 0; top: 0;">-</span>
+                حدث خطأ غير معروف
+              </div>`,
+        timer: 2500,
+        showConfirmButton: false,
+      });
+      return;
+    }
+
+    const htmlMessages = allMessages.map(
+      (msg) => `
+      <div style="
+        direction: rtl;
+        text-align: right;
+        margin-bottom: 8px;
+        padding-right: 15px;
+        position: relative;
+        font-weight: semibold;
+      ">
+        <span style="position: absolute; right: 0; top: 0;">-</span>
+        ${msg}
+      </div>`
+    );
+
     Swal.fire({
       icon: "error",
-      title: "خطأ",
-      html: `<div style="text-align: right; direction: rtl; margin-bottom: 8px; padding-right: 15px; position: relative; font-weight: semibold;">
-              <span style="position: absolute; right: 0; top: 0;">-</span>
-              حدث خطأ غير معروف
-            </div>`,
+      title: "خطأ في البيانات",
+      html: htmlMessages.join(""),
       timer: 2500,
       showConfirmButton: false,
     });
-    return;
   }
-
-  const htmlMessages = allMessages.map(
-    (msg) => `
-    <div style="
-      direction: rtl;
-      text-align: right;
-      margin-bottom: 8px;
-      padding-right: 15px;
-      position: relative;
-      font-weight: semibold;
-    ">
-      <span style="position: absolute; right: 0; top: 0;">-</span>
-      ${msg}
-    </div>`
-  );
-
-  Swal.fire({
-    icon: "error",
-    title: "خطأ في البيانات",
-    html: htmlMessages.join(""),
-    timer: 2500,
-    showConfirmButton: false,
-  });
 };
 
 export default function AdminBranches() {
@@ -129,32 +245,56 @@ export default function AdminBranches() {
         const userRoles = profileRes.data.roles;
 
         if (!userRoles || !userRoles.includes("Admin")) {
-          Swal.fire({
-            icon: "error",
-            title: "تم الرفض",
-            text: "ليس لديك صلاحية للوصول إلى هذه الصفحة.",
-            confirmButtonColor: "#E41E26",
-            timer: 2500,
-            showConfirmButton: false,
-          }).then(() => {
+          const isMobile = showMobileMessage(
+            "error",
+            "تم الرفض",
+            "ليس لديك صلاحية للوصول إلى هذه الصفحة."
+          );
+
+          if (!isMobile) {
+            Swal.fire({
+              icon: "error",
+              title: "تم الرفض",
+              text: "ليس لديك صلاحية للوصول إلى هذه الصفحة.",
+              confirmButtonColor: "#E41E26",
+              timer: 2500,
+              showConfirmButton: false,
+            });
+          }
+
+          setTimeout(() => {
             navigate("/");
-          });
+          }, 2500);
           return;
         }
 
         setIsAdmin(true);
       } catch (err) {
         console.error("Failed to verify admin access", err);
-        Swal.fire({
-          icon: "error",
-          title: "تم الرفض",
-          text: "فشل في التحقق من صلاحياتك.",
-          confirmButtonColor: "#E41E26",
-          timer: 2500,
-          showConfirmButton: false,
-        }).then(() => {
+
+        const errorObj = translateErrorMessageAdminBranches(err.response?.data);
+        const errorText = convertErrorObjectToText(errorObj);
+
+        const isMobile = showMobileMessage(
+          "error",
+          "تم الرفض",
+          errorText || "فشل في التحقق من صلاحياتك."
+        );
+
+        if (!isMobile) {
+          Swal.fire({
+            icon: "error",
+            title: "تم الرفض",
+            text: errorText || "فشل في التحقق من صلاحياتك.",
+            confirmButtonColor: "#E41E26",
+            timer: 2500,
+            showConfirmButton: false,
+          });
+        }
+
+        setTimeout(() => {
           navigate("/");
-        });
+        }, 2500);
       } finally {
         setIsLoadingAuth(false);
       }
@@ -246,13 +386,22 @@ export default function AdminBranches() {
   const handleToggleActive = async (branchId, currentStatus) => {
     try {
       await toggleBranchActive(branchId);
-      Swal.fire({
-        icon: "success",
-        title: "تم تحديث الحالة",
-        text: `تم ${currentStatus ? "تعطيل" : "تفعيل"} الفرع.`,
-        timer: 2000,
-        showConfirmButton: false,
-      });
+
+      const isMobile = showMobileMessage(
+        "success",
+        "تم تحديث الحالة",
+        `تم ${currentStatus ? "تعطيل" : "تفعيل"} الفرع.`
+      );
+
+      if (!isMobile) {
+        Swal.fire({
+          icon: "success",
+          title: "تم تحديث الحالة",
+          text: `تم ${currentStatus ? "تعطيل" : "تفعيل"} الفرع.`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      }
     } catch (errorMessages) {
       showErrorAlert(errorMessages);
     }
@@ -275,22 +424,40 @@ export default function AdminBranches() {
     try {
       if (editingId) {
         await updateBranch(editingId, processedData);
-        Swal.fire({
-          icon: "success",
-          title: "تم تحديث الفرع",
-          text: "تم تحديث الفرع بنجاح.",
-          timer: 2000,
-          showConfirmButton: false,
-        });
+
+        const isMobile = showMobileMessage(
+          "success",
+          "تم تحديث الفرع",
+          "تم تحديث الفرع بنجاح."
+        );
+
+        if (!isMobile) {
+          Swal.fire({
+            icon: "success",
+            title: "تم تحديث الفرع",
+            text: "تم تحديث الفرع بنجاح.",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
       } else {
         await addBranch(processedData);
-        Swal.fire({
-          icon: "success",
-          title: "تم إضافة الفرع",
-          text: "تم إضافة الفرع الجديد بنجاح.",
-          timer: 2000,
-          showConfirmButton: false,
-        });
+
+        const isMobile = showMobileMessage(
+          "success",
+          "تم إضافة الفرع",
+          "تم إضافة الفرع الجديد بنجاح."
+        );
+
+        if (!isMobile) {
+          Swal.fire({
+            icon: "success",
+            title: "تم إضافة الفرع",
+            text: "تم إضافة الفرع الجديد بنجاح.",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
       }
       resetForm();
     } catch (errorMessages) {

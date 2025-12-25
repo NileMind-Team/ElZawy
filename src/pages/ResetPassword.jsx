@@ -10,6 +10,8 @@ import {
   FaCheckCircle,
   FaTimesCircle,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -25,6 +27,67 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [message, setMessage] = useState("");
+
+  // دالة لعرض رسائل النجاح والفشل على الموبايل باستخدام toast
+  const showMobileMessage = (type, title, text) => {
+    if (window.innerWidth < 768) {
+      // عرض رسائل النجاح والفشل العادية (بدون أزرار) باستخدام toast
+      if (type === "success") {
+        toast.success(text, {
+          position: "top-right",
+          autoClose: 2500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          style: {
+            width: "70%",
+            margin: "10px",
+            borderRadius: "8px",
+            textAlign: "right",
+            fontSize: "14px",
+            direction: "rtl",
+          },
+        });
+      } else if (type === "error") {
+        toast.error(text, {
+          position: "top-right",
+          autoClose: 2500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          style: {
+            width: "70%",
+            margin: "10px",
+            borderRadius: "8px",
+            textAlign: "right",
+            fontSize: "14px",
+            direction: "rtl",
+          },
+        });
+      } else if (type === "info") {
+        toast.info(text, {
+          position: "top-right",
+          autoClose: 2500,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          style: {
+            width: "70%",
+            margin: "10px",
+            borderRadius: "8px",
+            textAlign: "right",
+            fontSize: "14px",
+            direction: "rtl",
+          },
+        });
+      }
+      return true;
+    }
+    return false;
+  };
 
   const passwordValidations = {
     length: newPassword.length >= 8,
@@ -56,14 +119,23 @@ export default function ResetPassword() {
     e.preventDefault();
 
     if (!isFormValid) {
-      Swal.fire({
-        icon: "error",
-        title: "كلمة المرور لا تلبي المتطلبات",
-        text: "يرجى التأكد من استيفاء جميع شروط كلمة المرور",
-        customClass: {
-          popup: "rounded-3xl shadow-2xl dark:bg-gray-800 dark:text-white",
-        },
-      });
+      // استخدام toast للموبايل بدلاً من Swal
+      const isMobile = showMobileMessage(
+        "error",
+        "كلمة المرور لا تلبي المتطلبات",
+        "يرجى التأكد من استيفاء جميع شروط كلمة المرور"
+      );
+
+      if (!isMobile) {
+        Swal.fire({
+          icon: "error",
+          title: "كلمة المرور لا تلبي المتطلبات",
+          text: "يرجى التأكد من استيفاء جميع شروط كلمة المرور",
+          customClass: {
+            popup: "rounded-3xl shadow-2xl dark:bg-gray-800 dark:text-white",
+          },
+        });
+      }
       return;
     }
 
@@ -78,30 +150,48 @@ export default function ResetPassword() {
       setMessage(res.data.message || "تم إعادة تعيين كلمة المرور بنجاح.");
       setSuccess(true);
 
-      Swal.fire({
-        icon: "success",
-        title: "تم إعادة تعيين كلمة المرور بنجاح",
-        text: res.data.message || "تم إعادة تعيين كلمة المرور بنجاح.",
-        showConfirmButton: false,
-        timer: 2000,
-        customClass: {
-          popup: "rounded-3xl shadow-2xl dark:bg-gray-800 dark:text-white",
-        },
-      });
+      // استخدام toast للموبايل بدلاً من Swal
+      const isMobile = showMobileMessage(
+        "success",
+        "تم إعادة تعيين كلمة المرور بنجاح",
+        res.data.message || "تم إعادة تعيين كلمة المرور بنجاح."
+      );
+
+      if (!isMobile) {
+        Swal.fire({
+          icon: "success",
+          title: "تم إعادة تعيين كلمة المرور بنجاح",
+          text: res.data.message || "تم إعادة تعيين كلمة المرور بنجاح.",
+          showConfirmButton: false,
+          timer: 2000,
+          customClass: {
+            popup: "rounded-3xl shadow-2xl dark:bg-gray-800 dark:text-white",
+          },
+        });
+      }
     } catch (err) {
       const errorMsg =
         err.response?.data?.message || "حدث خطأ أثناء إعادة تعيين كلمة المرور.";
       setMessage(errorMsg);
       setSuccess(false);
 
-      Swal.fire({
-        icon: "error",
-        title: "فشل إعادة تعيين كلمة المرور",
-        text: errorMsg,
-        customClass: {
-          popup: "rounded-3xl shadow-2xl dark:bg-gray-800 dark:text-white",
-        },
-      });
+      // استخدام toast للموبايل بدلاً من Swal
+      const isMobile = showMobileMessage(
+        "error",
+        "فشل إعادة تعيين كلمة المرور",
+        errorMsg
+      );
+
+      if (!isMobile) {
+        Swal.fire({
+          icon: "error",
+          title: "فشل إعادة تعيين كلمة المرور",
+          text: errorMsg,
+          customClass: {
+            popup: "rounded-3xl shadow-2xl dark:bg-gray-800 dark:text-white",
+          },
+        });
+      }
     } finally {
       setLoading(false);
     }

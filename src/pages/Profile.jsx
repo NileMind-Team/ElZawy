@@ -19,6 +19,8 @@ import {
   FaShieldAlt,
   FaBars,
 } from "react-icons/fa";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../api/axiosInstance";
 
 const translateProfileErrorMessage = (errorData) => {
@@ -168,6 +170,48 @@ const translateProfileErrorMessage = (errorData) => {
   return `<div style="text-align: right; color: black;">حدث خطأ غير متوقع في تحديث الملف الشخصي</div>`;
 };
 
+const showProfileMobileSuccessToast = (message) => {
+  if (window.innerWidth < 768) {
+    toast.success(message, {
+      position: "top-right",
+      autoClose: 2500,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      style: {
+        width: "70%",
+        margin: "10px",
+        borderRadius: "8px",
+        textAlign: "right",
+        fontSize: "14px",
+        direction: "rtl",
+      },
+    });
+  }
+};
+
+const showProfileMobileErrorToast = (message) => {
+  if (window.innerWidth < 768) {
+    toast.error(message, {
+      position: "top-right",
+      autoClose: 2500,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      style: {
+        width: "70%",
+        margin: "10px",
+        borderRadius: "8px",
+        textAlign: "right",
+        fontSize: "14px",
+        direction: "rtl",
+      },
+    });
+  }
+};
+
 export default function Profile() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -218,11 +262,15 @@ export default function Profile() {
           localStorage.setItem("user", JSON.stringify(userData));
         }
       } catch (err) {
-        Swal.fire({
-          icon: "error",
-          title: "خطأ",
-          text: "فشل في جلب بيانات الملف الشخصي.",
-        });
+        if (window.innerWidth < 768) {
+          showProfileMobileErrorToast("فشل في جلب بيانات الملف الشخصي");
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "خطأ",
+            text: "فشل في جلب بيانات الملف الشخصي.",
+          });
+        }
       }
     };
     fetchProfile();
@@ -320,25 +368,41 @@ export default function Profile() {
         setHasChanges(false);
         setIsEditingProfile(false);
 
-        Swal.fire({
-          icon: "success",
-          title: "تم تحديث الملف الشخصي",
-          text: "تم تحديث ملفك الشخصي بنجاح",
-          timer: 2000,
-          showConfirmButton: false,
-        });
+        Swal.close();
+
+        if (window.innerWidth < 768) {
+          showProfileMobileSuccessToast("تم تحديث ملفك الشخصي بنجاح");
+        } else {
+          Swal.fire({
+            icon: "success",
+            title: "تم تحديث الملف الشخصي",
+            text: "تم تحديث ملفك الشخصي بنجاح",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
       }
     } catch (err) {
       const errorData = err.response?.data;
       const translatedMessage = translateProfileErrorMessage(errorData);
 
-      Swal.fire({
-        title: "حدث خطأ",
-        html: translatedMessage,
-        icon: "error",
-        timer: 2500,
-        showConfirmButton: false,
-      });
+      Swal.close();
+
+      if (window.innerWidth < 768) {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = translatedMessage;
+        const textContent =
+          tempDiv.textContent || tempDiv.innerText || "حدث خطأ";
+        showProfileMobileErrorToast(textContent);
+      } else {
+        Swal.fire({
+          title: "حدث خطأ",
+          html: translatedMessage,
+          icon: "error",
+          timer: 2500,
+          showConfirmButton: false,
+        });
+      }
     }
   };
 
@@ -351,13 +415,17 @@ export default function Profile() {
         newPassword: passwordData.newPassword,
       });
       if (res.status === 200) {
-        Swal.fire({
-          icon: "success",
-          title: "تم تحديث كلمة المرور",
-          text: "تم تحديث كلمة المرور بنجاح.",
-          timer: 2000,
-          showConfirmButton: false,
-        });
+        if (window.innerWidth < 768) {
+          showProfileMobileSuccessToast("تم تحديث كلمة المرور بنجاح");
+        } else {
+          Swal.fire({
+            icon: "success",
+            title: "تم تحديث كلمة المرور",
+            text: "تم تحديث كلمة المرور بنجاح.",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
         setPasswordData({
           oldPassword: "",
           newPassword: "",
@@ -367,13 +435,21 @@ export default function Profile() {
       const errorData = err.response?.data;
       const translatedMessage = translateProfileErrorMessage(errorData);
 
-      Swal.fire({
-        title: "فشل التحديث",
-        html: translatedMessage,
-        icon: "error",
-        timer: 2500,
-        showConfirmButton: false,
-      });
+      if (window.innerWidth < 768) {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = translatedMessage;
+        const textContent =
+          tempDiv.textContent || tempDiv.innerText || "حدث خطأ";
+        showProfileMobileErrorToast(textContent);
+      } else {
+        Swal.fire({
+          title: "فشل التحديث",
+          html: translatedMessage,
+          icon: "error",
+          timer: 2500,
+          showConfirmButton: false,
+        });
+      }
     }
   };
 
