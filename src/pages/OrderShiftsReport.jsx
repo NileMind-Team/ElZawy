@@ -496,6 +496,25 @@ const OrderShiftsReport = () => {
             "الوردية المحددة"
           : "جميع الورديات";
 
+        const printDate = new Date();
+        const formattedDate = printDate.toLocaleDateString("ar-EG", {
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+        });
+        const formattedTime = printDate.toLocaleTimeString("ar-EG", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        const printFrame = document.createElement("iframe");
+        printFrame.style.display = "none";
+        printFrame.style.position = "fixed";
+        printFrame.style.top = "-10000px";
+        printFrame.style.left = "-10000px";
+        printFrame.name = "printFrame";
+        document.body.appendChild(printFrame);
+
         const printContent = `
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
@@ -505,225 +524,428 @@ const OrderShiftsReport = () => {
 <title>تقرير الورديات - Chicken One</title>
 <style>
   @media print {
-    @page { margin: 0; size: A4 portrait; }
+    @page {
+      margin: 3mm 3mm;
+      size: auto;
+    }
     body {
-      margin: 0; padding: 15px;
+      margin: 0;
+      padding: 2mm;
+      width: 100%;
       font-family: 'Arial', sans-serif;
       background: white !important;
       color: black !important;
       direction: rtl;
-      font-size: 15px;
+      font-size: 12px;
+      line-height: 1.2;
     }
     * {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+      box-sizing: border-box;
+    }
+    .no-print {
+      display: none !important;
     }
   }
   
   body {
-    margin: 0; padding: 15px;
+    margin: 0;
+    padding: 2mm;
+    width: 100%;
     font-family: 'Arial', sans-serif;
     background: white !important;
     color: black !important;
     direction: rtl;
-    font-size: 11px;
+    font-size: 12px;
+    line-height: 1.2;
+    max-width: 100%;
   }
   
-  .print-header {
-    text-align: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #000;
-  }
-  
-  .print-header h1 {
-    color: black !important;
-    margin: 0 0 5px 0;
-    font-size: 22px;
-    font-weight: bold;
-  }
-  
-  .print-header h2 {
-    color: #333 !important;
-    margin: 0 0 10px 0;
-    font-size: 16px;
-  }
-  
-  .print-header p {
-    color: #666 !important;
-    margin: 0;
-    font-size: 14px;
-  }
-  
-  .print-info {
-    margin: 15px 0;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background: #f9f9f9;
-  }
-  
-  .print-info div {
-    margin: 5px 0;
-  }
-  
-  .print-table {
+  .report-container {
     width: 100%;
-    border-collapse: collapse;
-    margin: 15px 0;
-    font-size: 9px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 0;
+  }
+  
+  .report-header {
+    text-align: center;
+    padding-bottom: 5px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #000;
+  }
+  
+  .report-header h1 {
+    color: #000 !important;
+    margin: 0 0 3px 0;
+    font-size: 18px;
+    font-weight: bold;
+    line-height: 1.1;
+  }
+  
+  .report-header h2 {
+    color: #333 !important;
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  
+  .company-info {
+    text-align: center;
+    margin-bottom: 5px;
+    padding: 3px;
+  }
+  
+  .company-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #000;
+    margin-bottom: 2px;
+    line-height: 1.1;
+  }
+  
+  .report-details {
+    margin-bottom: 10px;
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: white;
+  }
+  
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+    padding: 2px 5px;
+    font-size: 11px;
+    line-height: 1.2;
+  }
+  
+  .detail-label {
+    font-weight: bold;
+    color: #000;
+    margin-left: 15px;
+    min-width: 85px;
+  }
+  
+  .detail-value {
+    color: #000;
+    font-weight: normal;
+    text-align: left;
+    flex: 1;
+    margin-right: 10px;
+  }
+  
+  .report-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 8px 0 12px 0;
+    font-size: 11px;
     table-layout: fixed;
   }
   
-  .print-table th {
+  .report-table th {
     background-color: #f0f0f0 !important;
     color: black !important;
-    padding: 6px 3px;
-    text-align: center;
+    padding: 5px 4px !important;
+    text-align: center !important;
     border: 1px solid #ccc !important;
     font-weight: bold;
-    font-size: 9px;
+    font-size: 11px;
+    line-height: 1.2;
   }
   
-  .print-table td {
-    padding: 5px 3px;
+  .report-table td {
+    padding: 5px 4px !important;
     border: 1px solid #ddd !important;
-    text-align: center;
-    color: black !important;
-    font-size: 8px;
+    text-align: center !important;
+    color: #000 !important;
+    font-size: 11px;
+    vertical-align: middle;
+    line-height: 1.2;
   }
   
-  .print-table tr:nth-child(even) {
+  .report-table tr:nth-child(even) {
     background-color: #f9f9f9 !important;
   }
   
-  .total-amount {
+  .bill-number-cell {
     font-weight: bold;
+    color: #000;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  }
+  
+  .amount-cell {
+    font-weight: bold;
+    color: #000;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  }
+  
+  .total-section {
+    margin-top: 12px;
+    padding: 8px 10px;
+    background: white;
+    border: 1px solid #000;
+    border-radius: 3px;
   }
   
   .total-row {
-    background-color: #f0f0f0 !important;
-    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 5px 0;
+    padding: 3px 8px;
+    font-size: 12px;
+    line-height: 1.2;
   }
   
-  .print-footer {
-    margin-top: 20px;
+  .total-label {
+    font-weight: bold;
+    color: #000;
+    margin-left: 15px;
+  }
+  
+  .total-value {
+    font-weight: bold;
+    font-size: 13px;
+    color: #000;
+    font-family: 'Courier New', monospace;
+    margin-right: 10px;
+  }
+  
+  .report-footer {
+    margin-top: 10px;
     text-align: center;
-    color: #666 !important;
+    padding-top: 5px;
+    border-top: 1px solid #ccc;
+    color: #666;
     font-size: 9px;
-    padding-top: 10px;
-    border-top: 1px solid #ddd;
+    line-height: 1.1;
+  }
+  
+  .print-date {
+    margin: 2px 0;
+    font-weight: bold;
+    color: #000;
   }
   
   .no-data {
     text-align: center;
-    padding: 40px;
-    color: #666 !important;
+    padding: 20px 10px;
+    color: #666;
+    font-size: 12px;
+  }
+  
+  .single-line {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .compact {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .spaced-text {
+    padding: 0 5px;
   }
 </style>
 </head>
 <body>
+  <div class="report-container compact">
+    <div class="report-header compact">
+      <div class="company-info compact">
+        <div class="company-name single-line">Chicken One - تقرير الورديات</div>
+      </div>
+      <h1 class="single-line">تقرير الورديات</h1>
+      <h2 class="single-line spaced-text">${selectedShiftName}</h2>
+    </div>
+    
+    <div class="report-details compact">
+      <div class="detail-row single-line">
+        <span class="detail-label spaced-text">الفرع:</span>
+        <span class="detail-value spaced-text">${selectedBranchName}</span>
+      </div>
+      <div class="detail-row single-line">
+        <span class="detail-label spaced-text">الوردية:</span>
+        <span class="detail-value spaced-text">${selectedShiftName}</span>
+      </div>
+      <div class="detail-row single-line">
+        <span class="detail-label spaced-text">التاريخ:</span>
+        <span class="detail-value spaced-text">${
+          day ? new Date(day).toLocaleDateString("ar-EG") : "غير محدد"
+        }</span>
+      </div>
+      <div class="detail-row single-line">
+        <span class="detail-label spaced-text">الوقت:</span>
+        <span class="detail-value spaced-text">${formattedTime}</span>
+      </div>
+      <div class="detail-row single-line">
+        <span class="detail-label spaced-text">عدد الفواتير:</span>
+        <span class="detail-value spaced-text">${formatNumberArabic(
+          allOrders.length
+        )}</span>
+      </div>
+    </div>
+    
+    ${
+      allOrders.length === 0
+        ? `
+    <div class="no-data">
+      <h3>لا توجد فواتير</h3>
+    </div>
+    `
+        : `
+    <table class="report-table">
+      <thead>
+        <tr>
+          <th width="60%">رقم الفاتورة</th>
+          <th width="40%">المبلغ</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${allOrders
+          .map((order) => {
+            const orderNumberArabic = order.orderNumber
+              ? order.orderNumber.replace(/\d/g, (d) => toArabicNumbers(d))
+              : "فاتورة";
 
-<div class="print-header">
-  <h1>تقرير الورديات - Chicken One</h1>
-  <h2>${selectedShiftName} - ${selectedBranchName}</h2>
-  <p>نظام إدارة المطاعم - تقرير حسب الورديات</p>
-</div>
-
-<div class="print-info">
-  <div>تاريخ التقرير: ${new Date().toLocaleDateString("ar-EG")}</div>
-  ${day ? `<div>اليوم: ${new Date(day).toLocaleDateString("ar-EG")}</div>` : ""}
-  <div>الفرع: ${selectedBranchName}</div>
-  <div>الوردية: ${selectedShiftName}</div>
-  <div>عدد السجلات: ${formatNumberArabic(allOrders.length)}</div>
-  <div>الإجمالي الكلي: ${formatCurrencyArabic(printTotalPrice)}</div>
-</div>
-
-${
-  allOrders.length === 0
-    ? `
-  <div class="no-data">
-    <h3>لا توجد طلبات في اليوم المحدد</h3>
-  </div>
-`
-    : `
-  <table class="print-table">
-    <thead>
-      <tr>
-        <th width="50%">رقم الفاتورة</th>
-        <th width="50%">الإجمالي</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${allOrders
-        .map((order) => {
-          const orderNumberArabic = order.orderNumber
-            ? order.orderNumber.replace(/\d/g, (d) => toArabicNumbers(d))
-            : "";
-
-          return `
-          <tr>
-            <td>${orderNumberArabic}</td>
-            <td class="total-amount">${formatCurrencyArabic(
+            return `
+          <tr class="single-line">
+            <td class="bill-number-cell single-line spaced-text">${orderNumberArabic}</td>
+            <td class="amount-cell single-line spaced-text">${formatCurrencyArabic(
               order.totalWithFee || 0
             )}</td>
           </tr>
         `;
-        })
-        .join("")}
-      <tr class="total-row">
-        <td style="text-align: left; padding-right: 20px;">المجموع الكلي لجميع الفواتير:</td>
-        <td class="total-amount" style="text-align: center;">${formatCurrencyArabic(
+          })
+          .join("")}
+      </tbody>
+    </table>
+    
+    <div class="total-section compact">
+      <div class="total-row single-line">
+        <span class="total-label spaced-text">عدد الفواتير:</span>
+        <span class="total-value spaced-text">${formatNumberArabic(
+          allOrders.length
+        )}</span>
+      </div>
+      <div class="total-row single-line">
+        <span class="total-label spaced-text">المجموع الكلي:</span>
+        <span class="total-value spaced-text">${formatCurrencyArabic(
           printTotalPrice
-        )}</td>
-      </tr>
-    </tbody>
-  </table>
-`
-}
-
-<div class="print-footer">
-  <p>تم الإنشاء في: ${format(new Date(), "yyyy/MM/dd HH:mm").replace(
-    /\d/g,
-    (d) => toArabicNumbers(d)
-  )}</p>
-  <p>Chicken One © ${toArabicNumbers(new Date().getFullYear())}</p>
-</div>
-
+        )}</span>
+      </div>
+    </div>
+    `
+    }
+    
+    <div class="report-footer compact">
+      <div class="print-date single-line spaced-text">${formattedDate} - ${formattedTime}</div>
+      <div class="single-line spaced-text">Chicken One © ${toArabicNumbers(
+        new Date().getFullYear()
+      )}</div>
+    </div>
+  </div>
 </body>
 </html>
-          `;
+        `;
 
-        const printFrame = document.createElement("iframe");
-        printFrame.style.display = "none";
-        printFrame.style.position = "absolute";
-        printFrame.style.top = "-9999px";
-        printFrame.style.left = "-9999px";
-        document.body.appendChild(printFrame);
+        const printDoc = printFrame.contentWindow || printFrame.contentDocument;
+        if (printDoc.document) {
+          printDoc.document.open();
+          printDoc.document.write(printContent);
+          printDoc.document.close();
+        } else {
+          printDoc.open();
+          printDoc.write(printContent);
+          printDoc.close();
+        }
 
-        const printWindow = printFrame.contentWindow;
+        setTimeout(() => {
+          try {
+            printFrame.contentWindow.focus();
 
-        printWindow.document.open();
-        printWindow.document.write(printContent);
-        printWindow.document.close();
+            printFrame.contentWindow.print();
 
-        printWindow.onload = () => {
-          setTimeout(() => {
-            printWindow.focus();
-            printWindow.print();
-
-            setTimeout(() => {
-              document.body.removeChild(printFrame);
+            const cleanup = () => {
+              if (document.body.contains(printFrame)) {
+                document.body.removeChild(printFrame);
+              }
               setIsPrinting(false);
-            }, 1000);
-          }, 500);
-        };
+            };
+
+            if (printFrame.contentWindow) {
+              printFrame.contentWindow.onafterprint = () => {
+                setTimeout(cleanup, 100);
+              };
+            }
+
+            setTimeout(cleanup, 3000);
+          } catch (error) {
+            console.error("Error during printing:", error);
+
+            printFrame.style.display = "block";
+            printFrame.style.position = "fixed";
+            printFrame.style.top = "0";
+            printFrame.style.left = "0";
+            printFrame.style.width = "100%";
+            printFrame.style.height = "100%";
+            printFrame.style.zIndex = "99999";
+            printFrame.style.background = "white";
+
+            const closeButton = document.createElement("button");
+            closeButton.textContent = "إغلاق";
+            closeButton.style.position = "fixed";
+            closeButton.style.top = "20px";
+            closeButton.style.right = "20px";
+            closeButton.style.zIndex = "100000";
+            closeButton.style.padding = "10px 20px";
+            closeButton.style.background = "#E41E26";
+            closeButton.style.color = "white";
+            closeButton.style.border = "none";
+            closeButton.style.borderRadius = "5px";
+            closeButton.style.cursor = "pointer";
+            closeButton.onclick = () => {
+              if (document.body.contains(printFrame)) {
+                document.body.removeChild(printFrame);
+              }
+              if (document.body.contains(closeButton)) {
+                document.body.removeChild(closeButton);
+              }
+              setIsPrinting(false);
+            };
+
+            document.body.appendChild(closeButton);
+
+            Swal.fire({
+              icon: "info",
+              title: "جاهز للطباعة",
+              text: "تم تحضير التقرير للطباعة. الرجاء استخدام Ctrl+P للطباعة ثم اضغط على زر إغلاق.",
+              showConfirmButton: true,
+              confirmButtonText: "تمت الطباعة",
+            }).then(() => {
+              if (document.body.contains(printFrame)) {
+                document.body.removeChild(printFrame);
+              }
+              if (document.body.contains(closeButton)) {
+                document.body.removeChild(closeButton);
+              }
+              setIsPrinting(false);
+            });
+          }
+        }, 500);
       } catch (error) {
         console.error("Error in print process:", error);
         Swal.fire({
           icon: "error",
-          title: "خطأ",
-          text: "فشل في تحميل بيانات الطباعة",
+          title: "خطأ في تحميل البيانات",
+          text: "فشل في تحميل بيانات الطباعة. يرجى المحاولة مرة أخرى.",
           timer: 2000,
           showConfirmButton: false,
         });
