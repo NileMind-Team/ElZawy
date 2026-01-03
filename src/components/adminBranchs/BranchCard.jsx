@@ -8,6 +8,7 @@ import {
   FaPhone,
   FaWhatsapp,
   FaEdit,
+  FaUsers,
 } from "react-icons/fa";
 import { motion } from "framer-motion";
 
@@ -59,7 +60,7 @@ const BranchCard = ({
               <h3 className="font-bold text-gray-800 dark:text-white text-base sm:text-lg md:text-xl truncate">
                 {branch.name}
               </h3>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <div
                   className={`px-2 py-1 rounded-full text-xs font-medium ${
                     branch.isActive
@@ -78,6 +79,12 @@ const BranchCard = ({
                 >
                   {branch.status === "Open" ? "مفتوح" : "مغلق"}
                 </div>
+                {branch.supportsShifts && (
+                  <div className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 flex items-center gap-1">
+                    <FaUsers className="text-xs" />
+                    يدعم الشفتات
+                  </div>
+                )}
               </div>
             </div>
 

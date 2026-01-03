@@ -1,0 +1,512 @@
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { FaArrowLeft, FaPlay, FaStop } from "react-icons/fa";
+import Swal from "sweetalert2";
+import axiosInstance from "../api/axiosInstance";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+const isMobile = () => {
+  return window.innerWidth < 768;
+};
+
+const showMessage = (type, title, text, options = {}) => {
+  if (isMobile() && !options.forceSwal) {
+    const toastOptions = {
+      position: "top-right",
+      autoClose: options.timer || 2500,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      style: {
+        width: "70vw",
+        maxWidth: "none",
+        minWidth: "200px",
+        fontSize: "14px",
+        borderRadius: "8px",
+        right: "0",
+        top: "0",
+        margin: "0",
+        wordBreak: "break-word",
+        overflowWrap: "break-word",
+        zIndex: 9999,
+      },
+      bodyStyle: {
+        padding: "12px 16px",
+        textAlign: "right",
+        direction: "rtl",
+        width: "100%",
+        overflow: "hidden",
+        margin: 0,
+      },
+    };
+
+    switch (type) {
+      case "success":
+        toast.success(text, toastOptions);
+        break;
+      case "error":
+        toast.error(text, toastOptions);
+        break;
+      case "warning":
+        toast.warning(text, toastOptions);
+        break;
+      case "info":
+        toast.info(text, toastOptions);
+        break;
+      default:
+        toast(text, toastOptions);
+    }
+  } else {
+    Swal.fire({
+      icon: type,
+      title: title,
+      text: text,
+      confirmButtonColor: options.confirmButtonColor || "#E41E26",
+      timer: options.timer || 2500,
+      showConfirmButton:
+        options.showConfirmButton !== undefined
+          ? options.showConfirmButton
+          : false,
+      ...options,
+    });
+  }
+};
+
+const translateErrorMessage = (errorData) => {
+  if (!errorData) return "حدث خطأ غير معروف";
+
+  if (errorData.errors && typeof errorData.errors === "object") {
+    const errorMessages = [];
+
+    if (errorData.errors.Name) {
+      errorData.errors.Name.forEach((msg) => {
+        if (msg.includes("مطلوب") || msg.includes("required")) {
+          errorMessages.push("اسم الوردية مطلوب");
+        } else if (msg.includes("مستخدم") || msg.includes("already used")) {
+          errorMessages.push("اسم الوردية مستخدم بالفعل");
+        } else {
+          errorMessages.push(msg);
+        }
+      });
+    }
+
+    if (errorMessages.length > 0) {
+      return errorMessages.join("، ");
+    }
+  }
+
+  if (typeof errorData.message === "string") {
+    const msg = errorData.message.toLowerCase();
+    if (msg.includes("unauthorized") || msg.includes("401")) {
+      return "غير مصرح لك بهذا الإجراء";
+    }
+    if (msg.includes("forbidden") || msg.includes("403")) {
+      return "ليس لديك صلاحية للقيام بهذا الإجراء";
+    }
+    if (msg.includes("network") || msg.includes("internet")) {
+      return "يرجى التحقق من اتصالك بالإنترنت";
+    }
+    return errorData.message;
+  }
+
+  return "حدث خطأ غير متوقع";
+};
+
+const showErrorAlert = (errorData) => {
+  const translatedMessage = translateErrorMessage(errorData);
+  showMessage("error", "خطأ", translatedMessage);
+};
+
+const addTwoHoursAndFormatTo12Hour = (timeString) => {
+  if (!timeString) return "غير محدد";
+
+  try {
+    const timePart = timeString.split(".")[0];
+
+    // eslint-disable-next-line no-unused-vars
+    const [hours, minutes, seconds] = timePart.split(":").map(Number);
+
+    let newHours = hours + 2;
+
+    if (newHours >= 24) {
+      newHours = newHours % 24;
+    }
+
+    let period = "ص";
+    let displayHours = newHours;
+
+    if (newHours === 0) {
+      displayHours = 12;
+    } else if (newHours === 12) {
+      displayHours = 12;
+      period = "م";
+    } else if (newHours > 12) {
+      displayHours = newHours - 12;
+      period = "م";
+    } else if (newHours < 12) {
+      displayHours = newHours;
+      period = "ص";
+    }
+
+    const formattedHours = displayHours.toString();
+    const formattedMinutes = minutes.toString().padStart(2, "0");
+
+    return `${formattedHours}:${formattedMinutes} ${period}`;
+  } catch (error) {
+    console.error("Error processing time:", error);
+    return timeString.split(".")[0];
+  }
+};
+
+export default function OrderShiftsManagement() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [activeShift, setActiveShift] = useState(null);
+
+  const [formData, setFormData] = useState({
+    name: "",
+    customName: "",
+  });
+
+  const shiftTypes = [
+    { value: "صباحي", label: "صباحي" },
+    { value: "مسائي", label: "مسائي" },
+  ];
+
+  const checkActiveShift = async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/api/OrderShifts/GetAvailableShifts"
+      );
+
+      if (response.data && response.data.length > 0) {
+        const activeShiftData = response.data.find(
+          (shift) => shift.end === null
+        );
+
+        if (activeShiftData) {
+          setActiveShift({
+            id: activeShiftData.id,
+            name: activeShiftData.name,
+            start: activeShiftData.start,
+            branchId: activeShiftData.branchId,
+          });
+        } else {
+          setActiveShift(null);
+        }
+      } else {
+        setActiveShift(null);
+      }
+    } catch (error) {
+      console.error("Error checking active shift:", error);
+      setActiveShift(null);
+    }
+  };
+
+  useEffect(() => {
+    const loadPage = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/");
+          return;
+        }
+
+        await checkActiveShift();
+      } catch (error) {
+        console.error("Error loading page:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPage();
+  }, [navigate]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
+  const handleStartShift = async () => {
+    if (!formData.name.trim()) {
+      showMessage(
+        "error",
+        "معلومات ناقصة",
+        "يرجى اختيار أو كتابة اسم الوردية",
+        {
+          timer: 2000,
+          showConfirmButton: false,
+        }
+      );
+      return;
+    }
+
+    try {
+      const shiftName =
+        formData.name === "custom" ? formData.customName : formData.name;
+
+      const response = await axiosInstance.post("/api/OrderShifts/StartShift", {
+        name: shiftName,
+      });
+
+      // eslint-disable-next-line no-unused-vars
+      const shiftData = response.data;
+
+      await checkActiveShift();
+
+      showMessage("success", "تم البدء", "تم بدء الوردية بنجاح", {
+        timer: 2000,
+        showConfirmButton: false,
+      });
+
+      resetForm();
+    } catch (err) {
+      showErrorAlert(err.response?.data);
+    }
+  };
+
+  const handleEndShift = async () => {
+    if (!activeShift) return;
+
+    Swal.fire({
+      title: "إنهاء الوردية",
+      text: "هل أنت متأكد من إنهاء الوردية الحالية؟",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E41E26",
+      cancelButtonColor: "#6B7280",
+      confirmButtonText: "نعم، أنهِ الوردية",
+      cancelButtonText: "إلغاء",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axiosInstance.put(
+            `/api/OrderShifts/EndShift/${activeShift.id}`
+          );
+
+          await checkActiveShift();
+
+          showMessage("success", "تم الإنهاء", "تم إنهاء الوردية بنجاح", {
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        } catch (err) {
+          showErrorAlert(err.response?.data);
+        }
+      }
+    });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      customName: "",
+    });
+  };
+
+  const isFormValid = () => {
+    if (formData.name === "custom") {
+      return formData.customName.trim() !== "";
+    }
+    return formData.name.trim() !== "";
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-4">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#E41E26]"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-3 sm:px-4 py-4 sm:py-8 transition-colors duration-300">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8"
+        >
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate(-1)}
+            className="bg-white/80 backdrop-blur-md rounded-full p-2 sm:p-3 text-[#E41E26] hover:bg-[#E41E26] hover:text-white transition-all duration-300 shadow-lg dark:bg-gray-800/80 dark:text-gray-200 dark:hover:bg-[#E41E26]"
+          >
+            <FaArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          </motion.button>
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200">
+              الورديات
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+              إدارة ورديات الطلبات
+            </p>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl p-4 sm:p-5 lg:p-6 border border-gray-200/50 dark:bg-gray-800/90 dark:border-gray-600 transition-colors duration-300"
+        >
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-200">
+              {activeShift ? "تفاصيل الوردية الحالية" : "بدء وردية جديدة"}
+            </h3>
+            {activeShift && (
+              <span className="px-2 sm:px-3 py-1 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white text-xs sm:text-sm rounded-full">
+                نشطة
+              </span>
+            )}
+          </div>
+
+          {activeShift ? (
+            <div className="space-y-4">
+              <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-gray-700 dark:to-gray-800 rounded-xl border border-green-200 dark:border-green-900">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      اسم الوردية
+                    </p>
+                    <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                      {activeShift.name}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      بدأت منذ
+                    </p>
+                    <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                      {addTwoHoursAndFormatTo12Hour(activeShift.start)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleEndShift}
+                className="w-full py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base flex items-center justify-center gap-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white hover:shadow-xl hover:shadow-[#E41E26]/25 cursor-pointer"
+              >
+                <FaStop className="text-sm" />
+                إنهاء الوردية الحالية
+              </motion.button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  نوع الوردية *
+                </label>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    {shiftTypes.map((type) => (
+                      <button
+                        key={type.value}
+                        type="button"
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            name: type.value,
+                            customName: "",
+                          })
+                        }
+                        className={`p-3 rounded-lg border transition-all duration-200 ${
+                          formData.name === type.value
+                            ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white border-transparent"
+                            : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#E41E26] cursor-pointer"
+                        }`}
+                      >
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          name: "custom",
+                          customName: formData.customName || "",
+                        })
+                      }
+                      className={`w-full p-3 rounded-lg border transition-all duration-200 ${
+                        formData.name === "custom"
+                          ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white border-transparent"
+                          : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-[#E41E26] cursor-pointer"
+                      }`}
+                    >
+                      اسم مخصص
+                    </button>
+
+                    {formData.name === "custom" && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        transition={{ duration: 0.3 }}
+                        className="mt-3"
+                      >
+                        <div className="relative group">
+                          <input
+                            type="text"
+                            name="customName"
+                            value={formData.customName}
+                            onChange={handleInputChange}
+                            required
+                            className="w-full border bg-white dark:bg-gray-700 text-black dark:text-white rounded-lg px-4 py-3 outline-none transition-all duration-200 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-[#E41E26] focus:border-transparent"
+                            placeholder="أدخل اسم الوردية المخصص"
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={resetForm}
+                  className="flex-1 py-3 border-2 border-[#E41E26] text-[#E41E26] rounded-lg font-semibold hover:bg-[#E41E26] hover:text-white transition-all duration-300"
+                >
+                  إلغاء
+                </motion.button>
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleStartShift}
+                  disabled={!isFormValid()}
+                  className={`flex-1 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
+                    isFormValid()
+                      ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white hover:shadow-xl hover:shadow-[#E41E26]/25 cursor-pointer"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  <FaPlay className="text-sm" />
+                  بدء الوردية
+                </motion.button>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      </div>
+    </div>
+  );
+}

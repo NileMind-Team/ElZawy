@@ -165,6 +165,16 @@ const fetchAllOrdersForPrint = async (startDate, endDate) => {
   }
 };
 
+const fetchDailyReport = async () => {
+  try {
+    const response = await axiosInstance.get("/api/Orders/GetDailyReport");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching daily report:", error);
+    throw error;
+  }
+};
+
 const fetchOrderDetails = async (orderId) => {
   try {
     const response = await axiosInstance.get(`/api/Orders/GetById/${orderId}`);
@@ -1598,8 +1608,45 @@ ${
         });
       }
 
-      const printData = await fetchAllOrdersForPrint(todayStart, todayEnd);
-      const allOrders = printData.orders || [];
+      const dailyReportData = await fetchDailyReport();
+
+      if (!Array.isArray(dailyReportData) || dailyReportData.length === 0) {
+        if (window.innerWidth < 768) {
+          showSalesMobileAlertToast("لا توجد طلبات لهذا اليوم", "warning");
+        } else {
+          Swal.fire({
+            icon: "warning",
+            title: "لا توجد بيانات",
+            text: "لا توجد طلبات لهذا اليوم",
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        }
+        setIsPrinting(false);
+        return;
+      }
+
+      const allOrders = [];
+      let totalSales = 0;
+      let totalOrders = 0;
+      let deliveryOrders = 0;
+      let pickupOrders = 0;
+
+      dailyReportData.forEach((branch) => {
+        if (branch.orders && Array.isArray(branch.orders)) {
+          allOrders.push(...branch.orders);
+          totalSales += branch.totalSales || 0;
+          totalOrders += branch.ordersCount || 0;
+
+          branch.orders.forEach((order) => {
+            if (order.deliveryFee?.fee > 0) {
+              deliveryOrders++;
+            } else {
+              pickupOrders++;
+            }
+          });
+        }
+      });
 
       if (allOrders.length === 0) {
         if (window.innerWidth < 768) {
@@ -1617,7 +1664,47 @@ ${
         return;
       }
 
-      const printSummary = calculateSummary(allOrders, todayStart, todayEnd, 0);
+      const productSales = {};
+      allOrders.forEach((order) => {
+        if (order.items && order.items.length > 0) {
+          order.items.forEach((item) => {
+            const productName =
+              item.menuItem?.name ||
+              item.menuItemNameSnapshotAtOrder ||
+              "منتج غير معروف";
+            if (!productSales[productName]) {
+              productSales[productName] = {
+                quantity: 0,
+                revenue: 0,
+              };
+            }
+            productSales[productName].quantity += item.quantity || 1;
+            productSales[productName].revenue += item.totalPrice || 0;
+          });
+        }
+      });
+
+      const topProducts = Object.entries(productSales)
+        .map(([name, data]) => ({
+          name,
+          quantity: data.quantity,
+          revenue: data.revenue,
+        }))
+        .sort((a, b) => b.revenue - a.revenue)
+        .slice(0, 5);
+
+      const printSummary = {
+        totalSales,
+        totalOrders,
+        deliveryOrders,
+        pickupOrders,
+        topProducts,
+        branches: dailyReportData,
+        dateRange: `من ${format(todayStart, "dd/MM/yyyy")} إلى ${format(
+          todayEnd,
+          "dd/MM/yyyy"
+        )}`,
+      };
 
       const printContent = `
 <!DOCTYPE html>
@@ -1803,6 +1890,46 @@ ${
     font-weight: bold;
   }
   
+  .branch-header {
+    background-color: #e8f4fd !important;
+    color: #1a56db !important;
+    font-weight: bold;
+    padding: 8px;
+    margin: 15px 0 10px 0;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 12px;
+  }
+  
+  .branch-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin: 10px 0;
+    text-align: center;
+  }
+  
+  .branch-stat-card {
+    background: #f0f8ff !important;
+    border: 1px solid #cce7ff !important;
+    border-radius: 4px;
+    padding: 6px;
+  }
+  
+  .branch-stat-card h4 {
+    color: #1a56db !important;
+    margin: 0 0 4px 0;
+    font-size: 9px;
+    font-weight: normal;
+  }
+  
+  .branch-stat-card p {
+    color: black !important;
+    margin: 0;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
   .print-footer {
     margin-top: 20px;
     text-align: center;
@@ -1840,7 +1967,8 @@ ${
   )} إلى ${format(todayEnd, "dd/MM/yyyy HH:mm").replace(/\d/g, (d) =>
         toArabicNumbers(d)
       )}</div>
-  <div>عدد السجلات: ${formatNumberArabic(allOrders.length)}</div>
+  <div>عدد السجلات: ${formatNumberArabic(printSummary.totalOrders)}</div>
+  <div>عدد الفروع: ${formatNumberArabic(printSummary.branches.length)}</div>
 </div>
 
 <div class="stats-container">
@@ -1862,82 +1990,159 @@ ${
   </div>
 </div>
 
-${
-  allOrders.length === 0
-    ? `
-  <div class="no-data">
-    <h3>لا توجد طلبات لهذا اليوم</h3>
+${printSummary.branches
+  .map((branch, branchIndex) => {
+
+    return `
+    <div class="branch-header">
+      <span style="font-size: 13px;">الفرع ${toArabicNumbers(
+        branchIndex + 1
+      )}: ${branch.branchName || "فرع غير معروف"}</span>
+    </div>
+    
+    <div class="branch-stats">
+      <div class="branch-stat-card">
+        <h4>مبيعات الفرع</h4>
+        <p>${formatCurrencyArabic(branch.totalSales || 0)}</p>
+      </div>
+      <div class="branch-stat-card">
+        <h4>عدد الطلبات</h4>
+        <p>${formatNumberArabic(branch.ordersCount || 0)}</p>
+      </div>
+      <div class="branch-stat-card">
+        <h4>متوسط قيمة الطلب</h4>
+        <p>${formatCurrencyArabic(
+          branch.ordersCount > 0
+            ? (branch.totalSales || 0) / branch.ordersCount
+            : 0
+        )}</p>
+      </div>
+    </div>
+    
+    ${
+      branch.orders && branch.orders.length > 0
+        ? `
+          <table class="print-table">
+            <thead>
+              <tr>
+                <th width="10%">رقم الطلب</th>
+                <th width="15%">العميل</th>
+                <th width="10%">الهاتف</th>
+                <th width="10%">نوع الطلب</th>
+                <th width="20%">العنوان</th>
+                <th width="10%">الحالة</th>
+                <th width="15%">المبلغ النهائي</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${branch.orders
+                .map((order) => {
+                  const userName = order.user
+                    ? `${order.user.firstName || ""} ${
+                        order.user.lastName || ""
+                      }`.trim()
+                    : "غير معروف";
+
+                  const phoneNumber = order.location?.phoneNumber
+                    ? order.location.phoneNumber
+                    : order.user?.phoneNumber || "غير متوفر";
+
+                  const address = order.location?.streetName || "لا يوجد";
+
+                  const statusClass = getPrintStatusClass(order.status);
+                  const orderTypeClass = `order-type-${
+                    order.deliveryFee?.fee > 0 ? "delivery" : "pickup"
+                  }`;
+                  const orderNumberArabic = order.orderNumber
+                    ? order.orderNumber.replace(/\d/g, (d) =>
+                        toArabicNumbers(d)
+                      )
+                    : "";
+                  const phoneArabic = phoneNumber
+                    ? phoneNumber.replace(/\d/g, (d) => toArabicNumbers(d))
+                    : "غير متوفر";
+                  const addressArabic = address;
+
+                  return `
+                    <tr>
+                      <td class="customer-name">${orderNumberArabic}</td>
+                      <td>${userName}</td>
+                      <td>${phoneArabic}</td>
+                      <td class="${orderTypeClass}">${
+                    order.deliveryFee?.fee > 0 ? "توصيل" : "استلام"
+                  }</td>
+                      <td>${addressArabic}</td>
+                      <td><span class="status-badge ${statusClass}">${getStatusLabel(
+                    order.status
+                  )}</span></td>
+                      <td class="total-amount">${formatCurrencyArabic(
+                        order.totalWithFee || 0
+                      )}</td>
+                    </tr>
+                  `;
+                })
+                .join("")}
+              <tr style="background-color: #e8f4fd !important; font-weight: bold;">
+                <td colspan="6" style="text-align: left; padding-right: 20px; color: #1a56db;">إجمالي الفرع:</td>
+                <td class="total-amount" style="text-align: center; color: #1a56db;">${formatCurrencyArabic(
+                  branch.totalSales || 0
+                )}</td>
+              </tr>
+            </tbody>
+          </table>
+        `
+        : `
+          <div style="text-align: center; padding: 10px; background: #f9f9f9; margin: 10px 0; border-radius: 5px;">
+            <p style="color: #666; margin: 0;">لا توجد طلبات لهذا الفرع اليوم</p>
+          </div>
+        `
+    }
+  `;
+  })
+  .join("")}
+
+<div style="margin-top: 30px; border-top: 2px solid #000; padding-top: 15px;">
+  <div style="text-align: center; margin-bottom: 10px;">
+    <h2 style="margin: 0; font-size: 16px; color: black;">ملخص عام</h2>
   </div>
-`
-    : `
-  <table class="print-table">
+  <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
     <thead>
       <tr>
-        <th width="10%">رقم الطلب</th>
-        <th width="15%">العميل</th>
-        <th width="10%">الهاتف</th>
-        <th width="10%">نوع الطلب</th>
-        <th width="20%">المدينة</th>
-        <th width="10%">الحالة</th>
-        <th width="15%">المبلغ النهائي</th>
+        <th style="background-color: #f0f0f0; padding: 8px; border: 1px solid #ccc; text-align: center; font-weight: bold;">اسم الفرع</th>
+        <th style="background-color: #f0f0f0; padding: 8px; border: 1px solid #ccc; text-align: center; font-weight: bold;">عدد الطلبات</th>
+        <th style="background-color: #f0f0f0; padding: 8px; border: 1px solid #ccc; text-align: center; font-weight: bold;">إجمالي المبيعات</th>
       </tr>
     </thead>
     <tbody>
-      ${allOrders
-        .map((order, index) => {
-          const userName = order.user
-            ? `${order.user.firstName || ""} ${
-                order.user.lastName || ""
-              }`.trim()
-            : "غير معروف";
-
-          const phoneNumber = order.location?.phoneNumber
-            ? order.location.phoneNumber
-            : order.user?.phoneNumber || "غير متوفر";
-
-          const cityName = order.location?.city?.name || "لا يوجد";
-
-          const statusClass = getPrintStatusClass(order.status);
-          const orderTypeClass = `order-type-${
-            order.deliveryFee?.fee > 0 ? "delivery" : "pickup"
-          }`;
-          const orderNumberArabic = order.orderNumber
-            ? order.orderNumber.replace(/\d/g, (d) => toArabicNumbers(d))
-            : "";
-          const phoneArabic = phoneNumber
-            ? phoneNumber.replace(/\d/g, (d) => toArabicNumbers(d))
-            : "غير متوفر";
-          const cityArabic = cityName;
-
+      ${printSummary.branches
+        .map((branch) => {
           return `
-          <tr>
-            <td class="customer-name">${orderNumberArabic}</td>
-            <td>${userName}</td>
-            <td>${phoneArabic}</td>
-            <td class="${orderTypeClass}">${
-            order.deliveryFee?.fee > 0 ? "توصيل" : "استلام"
-          }</td>
-            <td>${cityArabic}</td>
-            <td><span class="status-badge ${statusClass}">${getStatusLabel(
-            order.status
-          )}</span></td>
-            <td class="total-amount">${formatCurrencyArabic(
-              order.totalWithFee || 0
-            )}</td>
-          </tr>
-        `;
+            <tr>
+              <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">${
+                branch.branchName || "غير معروف"
+              }</td>
+              <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">${formatNumberArabic(
+                branch.ordersCount || 0
+              )}</td>
+              <td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${formatCurrencyArabic(
+                branch.totalSales || 0
+              )}</td>
+            </tr>
+          `;
         })
         .join("")}
-      <tr style="background-color: #f0f0f0 !important; font-weight: bold;">
-        <td colspan="6" style="text-align: left; padding-right: 20px;">المجموع الكلي:</td>
-        <td class="total-amount" style="text-align: center;">${formatCurrencyArabic(
-          printSummary.totalSales || 0
+      <tr style="background-color: #f0f0f0; font-weight: bold;">
+        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">المجموع الكلي</td>
+        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${formatNumberArabic(
+          printSummary.totalOrders
+        )}</td>
+        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${formatCurrencyArabic(
+          printSummary.totalSales
         )}</td>
       </tr>
     </tbody>
   </table>
-`
-}
+</div>
 
 ${
   printSummary?.topProducts && printSummary.topProducts.length > 0

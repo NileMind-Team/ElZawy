@@ -10,6 +10,7 @@ import {
   FaCheck,
   FaTimes,
   FaChevronDown,
+  FaUsers,
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import PhoneNumbersSection from "./PhoneNumbersSection";
@@ -74,6 +75,10 @@ const BranchForm = ({
         ...formData,
         openingTime: formData.openingTime,
         closingTime: formData.closingTime,
+        supportsShifts:
+          formData.supportsShifts !== undefined
+            ? formData.supportsShifts
+            : false,
       };
 
       onSubmit(dataToSubmit);
@@ -385,21 +390,42 @@ const BranchForm = ({
             }
           />
 
-          <div className="flex items-center gap-2 pt-1 sm:pt-2">
-            <input
-              type="checkbox"
-              id="isActive"
-              name="isActive"
-              checked={formData.isActive}
-              onChange={handleInputChange}
-              className="w-4 h-4 text-[#E41E26] bg-gray-100 border-gray-300 rounded focus:ring-[#E41E26] focus:ring-2"
-            />
-            <label
-              htmlFor="isActive"
-              className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300"
-            >
-              فرع نشط
-            </label>
+          <div className="space-y-2 sm:space-y-3 sm:pt-2 border-t border-gray-200/50 dark:border-gray-600/50 pt-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="isActive"
+                name="isActive"
+                checked={formData.isActive}
+                onChange={handleInputChange}
+                className="w-4 h-4 text-[#E41E26] bg-gray-100 border-gray-300 rounded focus:ring-[#E41E26] focus:ring-2"
+              />
+              <label
+                htmlFor="isActive"
+                className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1"
+              >
+                <FaCheck className="text-green-500" />
+                فرع نشط
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="supportsShifts"
+                name="supportsShifts"
+                checked={formData.supportsShifts || false}
+                onChange={handleInputChange}
+                className="w-4 h-4 text-[#E41E26] bg-gray-100 border-gray-300 rounded focus:ring-[#E41E26] focus:ring-2"
+              />
+              <label
+                htmlFor="supportsShifts"
+                className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1"
+              >
+                <FaUsers className="text-blue-500" />
+                يدعم الشفتات
+              </label>
+            </div>
           </div>
 
           <div className="flex gap-2 sm:gap-3 pt-1 sm:pt-2">

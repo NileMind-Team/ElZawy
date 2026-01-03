@@ -24,6 +24,8 @@ import Favorites from "./pages/Favorites";
 import Branches from "./pages/Branches";
 import ItemOffersManagement from "./pages/ItemOffersManagement";
 import SalesReports from "./pages/SalesReports";
+import OrderShiftsManagement from "./pages/OrderShiftsManagement";
+import OrderShiftsReport from "./pages/OrderShiftsReport";
 
 function App() {
   const location = useLocation();
@@ -134,6 +136,8 @@ function App() {
           <Route path="/admin/item-offers" element={<ItemOffersManagement />} />
           <Route path="/admin/reports" element={<SalesReports />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/order-shifts" element={<OrderShiftsManagement />} />
+          <Route path="/admin/order-shifts" element={<OrderShiftsReport />} />
         </Routes>
       </main>
 

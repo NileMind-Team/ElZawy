@@ -237,7 +237,6 @@ const showMobileMessage = (type, title, text) => {
         autoClose: 2500,
         hideProgressBar: false,
         closeOnClick: true,
-        pauseOnHover: true,
         style: {
           width: "70%",
           margin: "10px",
@@ -341,6 +340,7 @@ export default function AdminBranches() {
     openingTime: "",
     closingTime: "",
     isActive: true,
+    supportsShifts: true,
     cityId: "",
     managerId: "",
     phoneNumbers: [],
@@ -468,6 +468,7 @@ export default function AdminBranches() {
       openingTime: "",
       closingTime: "",
       isActive: true,
+      supportsShifts: true,
       cityId: "",
       managerId: "",
       phoneNumbers: [],
@@ -500,6 +501,8 @@ export default function AdminBranches() {
       openingTime: openingTime24,
       closingTime: closingTime24,
       isActive: branch.isActive !== undefined ? branch.isActive : true,
+      supportsShifts:
+        branch.supportsShifts !== undefined ? branch.supportsShifts : true,
       cityId: branch.city?.id || "",
       managerId: branch.managerId || "",
       phoneNumbers: branch.phoneNumbers
@@ -567,6 +570,11 @@ export default function AdminBranches() {
       delete processedData.locationUrl;
     }
 
+    processedData.supportsShifts =
+      submitData.supportsShifts !== undefined
+        ? submitData.supportsShifts
+        : false;
+
     try {
       if (editingId) {
         await updateBranch(editingId, processedData);
@@ -621,6 +629,7 @@ export default function AdminBranches() {
       openingTime: "",
       closingTime: "",
       isActive: true,
+      supportsShifts: true,
       cityId: "",
       managerId: "",
       phoneNumbers: [],
