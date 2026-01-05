@@ -93,19 +93,16 @@ const fetchBranches = async () => {
   }
 };
 
-// دالة جديدة لجلب كل البيانات للإحصائيات والطباعة بدون باجينيشن
 const fetchAllOrdersForStats = async (startDate, endDate, branchId = null) => {
   try {
     if (!startDate || !endDate) {
       throw new Error("يرجى تحديد تاريخ البداية والنهاية");
     }
 
-    // تعديل: إرسال تاريخ البداية أقل بيوم واحد
     const adjustedStartDate = subDays(startDate, 1);
     const startDateStr = format(adjustedStartDate, "yyyy-MM-dd");
     const endDateStr = format(endDate, "yyyy-MM-dd");
 
-    // تعديل: استخدام توقيت UTC كما هو مطلوب
     const startDateISO = `${startDateStr}T22:00:00.000Z`;
     const endDateISO = `${endDateStr}T21:59:59.999Z`;
 
@@ -113,7 +110,7 @@ const fetchAllOrdersForStats = async (startDate, endDate, branchId = null) => {
       rangeStartUtc: startDateISO,
       rangeEndUtc: endDateISO,
       pageNumber: 1,
-      pageSize: 1000, // عدد كبير لجلب كل البيانات
+      pageSize: 1000,
     };
 
     if (branchId && branchId !== "all") {
@@ -131,7 +128,6 @@ const fetchAllOrdersForStats = async (startDate, endDate, branchId = null) => {
   }
 };
 
-// دالة لجلب البيانات مع الباجينيشن
 const fetchOrdersByDateRange = async (
   startDate,
   endDate,
@@ -144,12 +140,10 @@ const fetchOrdersByDateRange = async (
       throw new Error("يرجى تحديد تاريخ البداية والنهاية");
     }
 
-    // تعديل: إرسال تاريخ البداية أقل بيوم واحد
     const adjustedStartDate = subDays(startDate, 1);
     const startDateStr = format(adjustedStartDate, "yyyy-MM-dd");
     const endDateStr = format(endDate, "yyyy-MM-dd");
 
-    // تعديل: استخدام توقيت UTC كما هو مطلوب
     const startDateISO = `${startDateStr}T22:00:00.000Z`;
     const endDateISO = `${endDateStr}T21:59:59.999Z`;
 
@@ -778,8 +772,6 @@ const SalesReports = () => {
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState("all");
   const [isBranchDropdownOpen, setIsBranchDropdownOpen] = useState(false);
-
-  // إضافة state للباجينيشن
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   // eslint-disable-next-line no-unused-vars
@@ -870,7 +862,6 @@ const SalesReports = () => {
       setTotalPages(totalPages);
       setTotalItems(totalItems);
 
-      // جلب كل البيانات للإحصائيات
       const allOrdersResponse = await fetchAllOrdersForStats(
         startDate,
         endDate,
@@ -1094,7 +1085,6 @@ const SalesReports = () => {
         return;
       }
 
-      // استخدام البيانات المحفوظة للإحصائيات للطباعة
       if (allOrdersForStats.length === 0) {
         if (window.innerWidth < 768) {
           showSalesMobileAlertToast(
