@@ -24,14 +24,15 @@ import {
   FaBan,
   FaChevronLeft,
   FaChevronRight,
-  FaRegCalendarAlt,
+  FaBuilding,
+  FaChevronDown,
 } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { format, startOfDay, endOfDay, addHours } from "date-fns";
+import { format, startOfDay, endOfDay, subDays } from "date-fns";
 import axiosInstance from "../api/axiosInstance";
 
 const showSalesMobileSuccessToast = (message) => {
@@ -82,95 +83,94 @@ const showSalesMobileAlertToast = (message, type = "info") => {
   }
 };
 
-const fetchOrders = async (
+const fetchBranches = async () => {
+  try {
+    const response = await axiosInstance.get("/api/Branches/GetAll");
+    return response.data || [];
+  } catch (error) {
+    console.error("Error fetching branches:", error);
+    return [];
+  }
+};
+
+// دالة جديدة لجلب كل البيانات للإحصائيات والطباعة بدون باجينيشن
+const fetchAllOrdersForStats = async (startDate, endDate, branchId = null) => {
+  try {
+    if (!startDate || !endDate) {
+      throw new Error("يرجى تحديد تاريخ البداية والنهاية");
+    }
+
+    // تعديل: إرسال تاريخ البداية أقل بيوم واحد
+    const adjustedStartDate = subDays(startDate, 1);
+    const startDateStr = format(adjustedStartDate, "yyyy-MM-dd");
+    const endDateStr = format(endDate, "yyyy-MM-dd");
+
+    // تعديل: استخدام توقيت UTC كما هو مطلوب
+    const startDateISO = `${startDateStr}T22:00:00.000Z`;
+    const endDateISO = `${endDateStr}T21:59:59.999Z`;
+
+    const params = {
+      rangeStartUtc: startDateISO,
+      rangeEndUtc: endDateISO,
+      pageNumber: 1,
+      pageSize: 1000, // عدد كبير لجلب كل البيانات
+    };
+
+    if (branchId && branchId !== "all") {
+      params.branchId = branchId;
+    }
+
+    const response = await axiosInstance.get("/api/Orders/GetPeriodReport", {
+      params: params,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching all orders for stats:", error);
+    throw error;
+  }
+};
+
+// دالة لجلب البيانات مع الباجينيشن
+const fetchOrdersByDateRange = async (
   startDate,
   endDate,
+  branchId = null,
   pageNumber = 1,
   pageSize = 10
 ) => {
   try {
-    const requestBody = {
+    if (!startDate || !endDate) {
+      throw new Error("يرجى تحديد تاريخ البداية والنهاية");
+    }
+
+    // تعديل: إرسال تاريخ البداية أقل بيوم واحد
+    const adjustedStartDate = subDays(startDate, 1);
+    const startDateStr = format(adjustedStartDate, "yyyy-MM-dd");
+    const endDateStr = format(endDate, "yyyy-MM-dd");
+
+    // تعديل: استخدام توقيت UTC كما هو مطلوب
+    const startDateISO = `${startDateStr}T22:00:00.000Z`;
+    const endDateISO = `${endDateStr}T21:59:59.999Z`;
+
+    const params = {
+      rangeStartUtc: startDateISO,
+      rangeEndUtc: endDateISO,
       pageNumber: pageNumber,
       pageSize: pageSize,
-      filters: [],
     };
 
-    if (startDate && endDate) {
-      const startDateISO = addHours(startOfDay(startDate), 2).toISOString();
-      const endDateISO = addHours(endOfDay(endDate), 2).toISOString();
-
-      requestBody.filters.push({
-        propertyName: "createdAt",
-        propertyValue: `${startDateISO},${endDateISO}`,
-        range: true,
-      });
+    if (branchId && branchId !== "all") {
+      params.branchId = branchId;
     }
 
-    console.log(
-      "Request Body for Orders:",
-      JSON.stringify(requestBody, null, 2)
-    );
-
-    const response = await axiosInstance.post(
-      "/api/Orders/GetAllWithPagination",
-      requestBody
-    );
-
-    if (
-      !response.data ||
-      !response.data.data ||
-      response.data.data.length === 0
-    ) {
-      throw new Error("لا توجد بيانات في الفترة المحددة");
-    }
+    const response = await axiosInstance.get("/api/Orders/GetPeriodReport", {
+      params: params,
+    });
 
     return response.data;
   } catch (error) {
     console.error("Error fetching orders:", error);
-    throw error;
-  }
-};
-
-const fetchAllOrdersForPrint = async (startDate, endDate) => {
-  try {
-    if (!startDate || !endDate) {
-      return {
-        orders: [],
-        totalPrice: 0,
-      };
-    }
-
-    const startDateStr = format(startDate, "yyyy-MM-dd");
-    const endDateStr = format(endDate, "yyyy-MM-dd");
-
-    console.log(`Fetching print orders from ${startDateStr} to ${endDateStr}`);
-
-    const response = await axiosInstance.get("/api/Orders/GetAll", {
-      params: {
-        startRange: startDateStr,
-        endRange: endDateStr,
-      },
-    });
-
-    const orders = response.data || [];
-    console.log(`تم جلب ${orders.length} طلب للطباعة`);
-
-    return {
-      orders: orders,
-      totalPrice: 0,
-    };
-  } catch (error) {
-    console.error("Error fetching all orders for print:", error);
-    throw error;
-  }
-};
-
-const fetchDailyReport = async () => {
-  try {
-    const response = await axiosInstance.get("/api/Orders/GetDailyReport");
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching daily report:", error);
     throw error;
   }
 };
@@ -181,16 +181,6 @@ const fetchOrderDetails = async (orderId) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching order details:", error);
-    throw error;
-  }
-};
-
-const fetchUserProfile = async () => {
-  try {
-    const response = await axiosInstance.get("/api/Account/Profile");
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching user profile:", error);
     throw error;
   }
 };
@@ -783,14 +773,17 @@ const SalesReports = () => {
   const [orderDetails, setOrderDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [allOrdersForStats, setAllOrdersForStats] = useState([]);
+  const [totalPriceFromResponse, setTotalPriceFromResponse] = useState(0);
+  const [branches, setBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = useState("all");
+  const [isBranchDropdownOpen, setIsBranchDropdownOpen] = useState(false);
+
+  // إضافة state للباجينيشن
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  // eslint-disable-next-line no-unused-vars
+  const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
-  const [allOrdersForStats, setAllOrdersForStats] = useState([]);
-  // eslint-disable-next-line no-unused-vars
-  const [totalPriceFromResponse, setTotalPriceFromResponse] = useState(0);
-  const [userRoles, setUserRoles] = useState([]);
 
   useEffect(() => {
     setSummary({
@@ -802,23 +795,19 @@ const SalesReports = () => {
       dateRange: "لم يتم تحديد فترة",
     });
 
-    const loadUserProfile = async () => {
+    const loadBranches = async () => {
       try {
-        const profileData = await fetchUserProfile();
-        setUserRoles(profileData.roles || []);
+        const branchesData = await fetchBranches();
+        setBranches(branchesData);
       } catch (error) {
-        console.error("Error loading user profile:", error);
+        console.error("Error loading branches:", error);
       }
     };
 
-    loadUserProfile();
+    loadBranches();
   }, []);
 
-  const hasTodayReportAccess = () => {
-    return userRoles.some((role) => role === "Admin" || role === "Restaurant");
-  };
-
-  const fetchReportData = async (page = 1, isFilterAction = false) => {
+  const fetchReportData = async (isFilterAction = false, page = 1) => {
     if (!startDate || !endDate) {
       if (isFilterAction) {
         if (window.innerWidth < 768) {
@@ -863,27 +852,39 @@ const SalesReports = () => {
 
     setLoading(true);
     try {
-      const response = await fetchOrders(startDate, endDate, page, 10);
-      const orders = response.data;
-      setReportData(orders);
-      setTotalPages(response.totalPages);
-      setTotalItems(response.totalItems);
-      setCurrentPage(response.pageNumber);
-      setTotalPriceFromResponse(response.totalPrice || 0);
+      const response = await fetchOrdersByDateRange(
+        startDate,
+        endDate,
+        selectedBranch !== "all" ? selectedBranch : null,
+        page,
+        pageSize
+      );
 
-      let allOrders = [];
-      if (isFilterAction) {
-        allOrders = orders;
-        setAllOrdersForStats(allOrders);
-      } else {
-        allOrders = allOrdersForStats;
-      }
+      const orders = response.data || [];
+      const totalItems = response.totalItems || 0;
+      const totalPages = response.totalPages || 1;
+
+      setReportData(orders);
+      setCurrentPage(page);
+      setTotalPages(totalPages);
+      setTotalItems(totalItems);
+
+      // جلب كل البيانات للإحصائيات
+      const allOrdersResponse = await fetchAllOrdersForStats(
+        startDate,
+        endDate,
+        selectedBranch !== "all" ? selectedBranch : null
+      );
+
+      const allOrders = allOrdersResponse?.data || [];
+      setAllOrdersForStats(allOrders);
+      setTotalPriceFromResponse(allOrdersResponse?.totalPrice || 0);
 
       const summaryData = calculateSummary(
         allOrders,
         startDate,
         endDate,
-        response.totalPrice || 0
+        allOrdersResponse?.totalPrice || 0
       );
       setSummary(summaryData);
 
@@ -904,10 +905,18 @@ const SalesReports = () => {
     } catch (error) {
       console.error("Error fetching report data:", error);
 
-      const errorMessage =
-        error.message === "لا توجد بيانات في الفترة المحددة"
-          ? "لا توجد بيانات في الفترة المحددة"
-          : "فشل في تحميل بيانات التقرير";
+      let errorMessage;
+      if (error.message === "يرجى تحديد تاريخ البداية والنهاية") {
+        errorMessage = "يرجى تحديد تاريخ البداية والنهاية";
+      } else if (error.response?.status === 404) {
+        errorMessage = "لا توجد بيانات في الفترة المحددة";
+      } else if (error.response?.status === 400) {
+        errorMessage = "بيانات الطلب غير صحيحة";
+      } else if (error.message) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = "فشل في تحميل بيانات التقرير";
+      }
 
       if (window.innerWidth < 768) {
         showSalesMobileAlertToast(errorMessage, "info");
@@ -922,6 +931,12 @@ const SalesReports = () => {
       }
 
       setReportData([]);
+      setAllOrdersForStats([]);
+      setTotalPriceFromResponse(0);
+      setCurrentPage(1);
+      setTotalPages(1);
+      setTotalItems(0);
+
       setSummary({
         totalSales: 0,
         totalOrders: 0,
@@ -936,11 +951,6 @@ const SalesReports = () => {
               )}`
             : "لم يتم تحديد فترة",
       });
-      setTotalPages(1);
-      setCurrentPage(1);
-      setTotalItems(0);
-      setAllOrdersForStats([]);
-      setTotalPriceFromResponse(0);
     } finally {
       setLoading(false);
     }
@@ -1060,54 +1070,6 @@ const SalesReports = () => {
     }
   };
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-    fetchReportData(pageNumber, false);
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      handlePageChange(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      handlePageChange(currentPage + 1);
-    }
-  };
-
-  const getPaginationNumbers = () => {
-    const delta = 2;
-    const range = [];
-
-    for (
-      let i = Math.max(2, currentPage - delta);
-      i <= Math.min(totalPages - 1, currentPage + delta);
-      i++
-    ) {
-      range.push(i);
-    }
-
-    if (currentPage - delta > 2) {
-      range.unshift("...");
-    }
-    if (currentPage + delta < totalPages - 1) {
-      range.push("...");
-    }
-
-    range.unshift(1);
-    if (totalPages > 1) {
-      range.push(totalPages);
-    }
-
-    return range;
-  };
-
   const handlePrint = async () => {
     try {
       setIsPrinting(true);
@@ -1131,37 +1093,40 @@ const SalesReports = () => {
         return;
       }
 
-      try {
-        const printData = await fetchAllOrdersForPrint(startDate, endDate);
-        const allOrders = printData.orders || [];
-
-        if (allOrders.length === 0) {
-          if (window.innerWidth < 768) {
-            showSalesMobileAlertToast(
-              "لا توجد بيانات لعرضها في التقرير",
-              "warning"
-            );
-          } else {
-            Swal.fire({
-              icon: "warning",
-              title: "لا توجد بيانات",
-              text: "لا توجد بيانات لعرضها في التقرير",
-              timer: 2000,
-              showConfirmButton: false,
-            });
-          }
-          setIsPrinting(false);
-          return;
+      // استخدام البيانات المحفوظة للإحصائيات للطباعة
+      if (allOrdersForStats.length === 0) {
+        if (window.innerWidth < 768) {
+          showSalesMobileAlertToast(
+            "لا توجد بيانات لعرضها في التقرير",
+            "warning"
+          );
+        } else {
+          Swal.fire({
+            icon: "warning",
+            title: "لا توجد بيانات",
+            text: "لا توجد بيانات لعرضها في التقرير",
+            timer: 2000,
+            showConfirmButton: false,
+          });
         }
+        setIsPrinting(false);
+        return;
+      }
 
-        const printSummary = calculateSummary(
-          allOrders,
-          startDate,
-          endDate,
-          summary?.totalSales || 0
-        );
+      const printSummary = calculateSummary(
+        allOrdersForStats,
+        startDate,
+        endDate,
+        totalPriceFromResponse
+      );
 
-        const printContent = `
+      const selectedBranchName =
+        selectedBranch === "all"
+          ? "جميع الفروع"
+          : branches.find((b) => b.id === selectedBranch)?.name ||
+            "فرع غير معروف";
+
+      const printContent = `
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
 <head>
@@ -1326,6 +1291,7 @@ const SalesReports = () => {
 
 <div class="print-info">
   <div>تاريخ التقرير: ${new Date().toLocaleDateString("ar-EG")}</div>
+  <div>الفرع: ${selectedBranchName}</div>
   ${
     startDate
       ? `<div>من: ${new Date(startDate).toLocaleDateString("ar-EG")}</div>`
@@ -1336,7 +1302,7 @@ const SalesReports = () => {
       ? `<div>إلى: ${new Date(endDate).toLocaleDateString("ar-EG")}</div>`
       : ""
   }
-  <div>عدد السجلات: ${formatNumberArabic(allOrders.length)}</div>
+  <div>عدد السجلات: ${formatNumberArabic(allOrdersForStats.length)}</div>
 </div>
 
 <div class="stats-container">
@@ -1359,7 +1325,7 @@ const SalesReports = () => {
 </div>
 
 ${
-  allOrders.length === 0
+  allOrdersForStats.length === 0
     ? `
   <div class="no-data">
     <h3>لا توجد طلبات في الفترة المحددة</h3>
@@ -1378,7 +1344,7 @@ ${
       </tr>
     </thead>
     <tbody>
-      ${allOrders
+      ${allOrdersForStats
         .map((order, index) => {
           const userName = order.user
             ? `${order.user.firstName || ""} ${
@@ -1482,616 +1448,6 @@ ${
 </html>
           `;
 
-        const printFrame = document.createElement("iframe");
-        printFrame.style.display = "none";
-        printFrame.style.position = "absolute";
-        printFrame.style.top = "-9999px";
-        printFrame.style.left = "-9999px";
-        document.body.appendChild(printFrame);
-
-        const printWindow = printFrame.contentWindow;
-
-        printWindow.document.open();
-        printWindow.document.write(printContent);
-        printWindow.document.close();
-
-        printWindow.onload = () => {
-          setTimeout(() => {
-            printWindow.focus();
-            printWindow.print();
-
-            setTimeout(() => {
-              document.body.removeChild(printFrame);
-              setIsPrinting(false);
-            }, 1000);
-          }, 500);
-        };
-      } catch (error) {
-        console.error("Error in print process:", error);
-        if (window.innerWidth < 768) {
-          showSalesMobileAlertToast("فشل في تحميل بيانات الطباعة", "error");
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: "خطأ",
-            text: "فشل في تحميل بيانات الطباعة",
-            timer: 2000,
-            showConfirmButton: false,
-          });
-        }
-        setIsPrinting(false);
-      }
-    } catch (error) {
-      console.error("Error in handlePrint:", error);
-      setIsPrinting(false);
-    }
-  };
-
-  const handleTodayReport = async () => {
-    try {
-      setIsPrinting(true);
-
-      const today = new Date();
-      const todayStart = startOfDay(today);
-      const todayEnd = endOfDay(today);
-
-      if (window.innerWidth < 768) {
-        showSalesMobileAlertToast("جاري تحضير تقرير اليوم...", "info");
-      } else {
-        Swal.fire({
-          title: "جاري التحضير",
-          text: "يتم تحضير تقرير اليوم للطباعة...",
-          icon: "info",
-          showConfirmButton: false,
-          timer: 1000,
-        });
-      }
-
-      const dailyReportData = await fetchDailyReport();
-
-      if (!Array.isArray(dailyReportData) || dailyReportData.length === 0) {
-        if (window.innerWidth < 768) {
-          showSalesMobileAlertToast("لا توجد طلبات لهذا اليوم", "warning");
-        } else {
-          Swal.fire({
-            icon: "warning",
-            title: "لا توجد بيانات",
-            text: "لا توجد طلبات لهذا اليوم",
-            timer: 2000,
-            showConfirmButton: false,
-          });
-        }
-        setIsPrinting(false);
-        return;
-      }
-
-      const allOrders = [];
-      let totalSales = 0;
-      let totalOrders = 0;
-      let deliveryOrders = 0;
-      let pickupOrders = 0;
-
-      dailyReportData.forEach((branch) => {
-        if (branch.orders && Array.isArray(branch.orders)) {
-          allOrders.push(...branch.orders);
-          totalSales += branch.totalSales || 0;
-          totalOrders += branch.ordersCount || 0;
-
-          branch.orders.forEach((order) => {
-            if (order.deliveryFee?.fee > 0) {
-              deliveryOrders++;
-            } else {
-              pickupOrders++;
-            }
-          });
-        }
-      });
-
-      if (allOrders.length === 0) {
-        if (window.innerWidth < 768) {
-          showSalesMobileAlertToast("لا توجد طلبات لهذا اليوم", "warning");
-        } else {
-          Swal.fire({
-            icon: "warning",
-            title: "لا توجد بيانات",
-            text: "لا توجد طلبات لهذا اليوم",
-            timer: 2000,
-            showConfirmButton: false,
-          });
-        }
-        setIsPrinting(false);
-        return;
-      }
-
-      const productSales = {};
-      allOrders.forEach((order) => {
-        if (order.items && order.items.length > 0) {
-          order.items.forEach((item) => {
-            const productName =
-              item.menuItem?.name ||
-              item.menuItemNameSnapshotAtOrder ||
-              "منتج غير معروف";
-            if (!productSales[productName]) {
-              productSales[productName] = {
-                quantity: 0,
-                revenue: 0,
-              };
-            }
-            productSales[productName].quantity += item.quantity || 1;
-            productSales[productName].revenue += item.totalPrice || 0;
-          });
-        }
-      });
-
-      const topProducts = Object.entries(productSales)
-        .map(([name, data]) => ({
-          name,
-          quantity: data.quantity,
-          revenue: data.revenue,
-        }))
-        .sort((a, b) => b.revenue - a.revenue)
-        .slice(0, 5);
-
-      const printSummary = {
-        totalSales,
-        totalOrders,
-        deliveryOrders,
-        pickupOrders,
-        topProducts,
-        branches: dailyReportData,
-        dateRange: `من ${format(todayStart, "dd/MM/yyyy")} إلى ${format(
-          todayEnd,
-          "dd/MM/yyyy"
-        )}`,
-      };
-
-      const printContent = `
-<!DOCTYPE html>
-<html dir="rtl" lang="ar">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تقرير اليوم - Chicken One</title>
-<style>
-  @media print {
-    @page { margin: 0; size: A4 portrait; }
-    body {
-      margin: 0; padding: 15px;
-      font-family: 'Arial', sans-serif;
-      background: white !important;
-      color: black !important;
-      direction: rtl;
-      font-size: 15px;
-    }
-    * {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-  }
-  
-  body {
-    margin: 0; padding: 15px;
-    font-family: 'Arial', sans-serif;
-    background: white !important;
-    color: black !important;
-    direction: rtl;
-    font-size: 11px;
-  }
-  
-  .print-header {
-    text-align: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #000;
-  }
-  
-  .print-header h1 {
-    color: black !important;
-    margin: 0 0 5px 0;
-    font-size: 22px;
-    font-weight: bold;
-  }
-  
-  .print-header h2 {
-    color: #333 !important;
-    margin: 0 0 10px 0;
-    font-size: 18px;
-    font-weight: bold;
-  }
-  
-  .print-header p {
-    color: #666 !important;
-    margin: 0;
-    font-size: 14px;
-  }
-  
-  .print-info {
-    margin: 15px 0;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background: #f9f9f9;
-  }
-  
-  .print-info div {
-    margin: 5px 0;
-  }
-  
-  .stats-container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
-    margin: 15px 0;
-    text-align: center;
-  }
-  
-  .stat-card {
-    background: #f5f5f5 !important;
-    border: 1px solid #ddd !important;
-    border-radius: 5px;
-    padding: 8px;
-  }
-  
-  .stat-card h3 {
-    color: #666 !important;
-    margin: 0 0 6px 0;
-    font-size: 10px;
-    font-weight: normal;
-  }
-  
-  .stat-card p {
-    color: black !important;
-    margin: 0;
-    font-size: 14px;
-    font-weight: bold;
-  }
-  
-  .print-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 15px 0;
-    font-size: 9px;
-    table-layout: fixed;
-  }
-  
-  .print-table th {
-    background-color: #f0f0f0 !important;
-    color: black !important;
-    padding: 6px 3px;
-    text-align: center;
-    border: 1px solid #ccc !important;
-    font-weight: bold;
-    font-size: 9px;
-  }
-  
-  .print-table td {
-    padding: 5px 3px;
-    border: 1px solid #ddd !important;
-    text-align: center;
-    color: black !important;
-    font-size: 8px;
-  }
-  
-  .print-table tr:nth-child(even) {
-    background-color: #f9f9f9 !important;
-  }
-  
-  .customer-name {
-    font-weight: bold;
-  }
-  
-  .order-type-delivery {
-    color: #1d4ed8 !important;
-  }
-  
-  .order-type-pickup {
-    color: #059669 !important;
-  }
-  
-  .total-amount {
-    font-weight: bold;
-  }
-  
-  .branch-header {
-    background-color: #e8f4fd !important;
-    color: #1a56db !important;
-    font-weight: bold;
-    padding: 8px;
-    margin: 15px 0 10px 0;
-    border-radius: 5px;
-    text-align: center;
-    font-size: 12px;
-  }
-  
-  .branch-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    margin: 10px 0;
-    text-align: center;
-  }
-  
-  .branch-stat-card {
-    background: #f0f8ff !important;
-    border: 1px solid #cce7ff !important;
-    border-radius: 4px;
-    padding: 6px;
-  }
-  
-  .branch-stat-card h4 {
-    color: #1a56db !important;
-    margin: 0 0 4px 0;
-    font-size: 9px;
-    font-weight: normal;
-  }
-  
-  .branch-stat-card p {
-    color: black !important;
-    margin: 0;
-    font-size: 12px;
-    font-weight: bold;
-  }
-  
-  .print-footer {
-    margin-top: 20px;
-    text-align: center;
-    color: #666 !important;
-    font-size: 9px;
-    padding-top: 10px;
-    border-top: 1px solid #ddd;
-  }
-  
-  .no-data {
-    text-align: center;
-    padding: 40px;
-    color: #666 !important;
-  }
-</style>
-</head>
-<body>
-
-<div class="print-header">
-  <h1>تقرير اليوم - Chicken One</h1>
-  <h2>${format(todayStart, "dd/MM/yyyy").replace(/\d/g, (d) =>
-    toArabicNumbers(d)
-  )}</h2>
-  <p>نظام إدارة المطاعم - تقرير اليوم الحالي</p>
-</div>
-
-<div class="print-info">
-  <div>تاريخ الطباعة: ${new Date().toLocaleDateString(
-    "ar-EG"
-  )} الساعة: ${format(new Date(), "HH:mm").replace(/\d/g, (d) =>
-        toArabicNumbers(d)
-      )}</div>
-  <div>الفترة: من ${format(todayStart, "dd/MM/yyyy HH:mm").replace(/\d/g, (d) =>
-    toArabicNumbers(d)
-  )} إلى ${format(todayEnd, "dd/MM/yyyy HH:mm").replace(/\d/g, (d) =>
-        toArabicNumbers(d)
-      )}</div>
-  <div>عدد السجلات: ${formatNumberArabic(printSummary.totalOrders)}</div>
-  <div>عدد الفروع: ${formatNumberArabic(printSummary.branches.length)}</div>
-</div>
-
-<div class="stats-container">
-  <div class="stat-card">
-    <h3>إجمالي المبيعات</h3>
-    <p>${formatCurrencyArabic(printSummary.totalSales || 0)}</p>
-  </div>
-  <div class="stat-card">
-    <h3>إجمالي الطلبات</h3>
-    <p>${formatNumberArabic(printSummary.totalOrders || 0)}</p>
-  </div>
-  <div class="stat-card">
-    <h3>طلبات التوصيل</h3>
-    <p>${formatNumberArabic(printSummary.deliveryOrders || 0)}</p>
-  </div>
-  <div class="stat-card">
-    <h3>طلبات الاستلام</h3>
-    <p>${formatNumberArabic(printSummary.pickupOrders || 0)}</p>
-  </div>
-</div>
-
-${printSummary.branches
-  .map((branch, branchIndex) => {
-    return `
-    <div class="branch-header">
-      <span style="font-size: 13px;">الفرع ${toArabicNumbers(
-        branchIndex + 1
-      )}: ${branch.branchName || "فرع غير معروف"}</span>
-    </div>
-    
-    <div class="branch-stats">
-      <div class="branch-stat-card">
-        <h4>مبيعات الفرع</h4>
-        <p>${formatCurrencyArabic(branch.totalSales || 0)}</p>
-      </div>
-      <div class="branch-stat-card">
-        <h4>عدد الطلبات</h4>
-        <p>${formatNumberArabic(branch.ordersCount || 0)}</p>
-      </div>
-      <div class="branch-stat-card">
-        <h4>متوسط قيمة الطلب</h4>
-        <p>${formatCurrencyArabic(
-          branch.ordersCount > 0
-            ? (branch.totalSales || 0) / branch.ordersCount
-            : 0
-        )}</p>
-      </div>
-    </div>
-    
-    ${
-      branch.orders && branch.orders.length > 0
-        ? `
-          <table class="print-table">
-            <thead>
-              <tr>
-                <th width="15%">رقم الطلب</th>
-                <th width="20%">العميل</th>
-                <th width="20%">الهاتف</th>
-                <th width="15%">نوع الطلب</th>
-                <th width="20%">العنوان</th>
-                <th width="20%">المبلغ النهائي</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${branch.orders
-                .map((order) => {
-                  const userName = order.user
-                    ? `${order.user.firstName || ""} ${
-                        order.user.lastName || ""
-                      }`.trim()
-                    : "غير معروف";
-
-                  const phoneNumber = order.location?.phoneNumber
-                    ? order.location.phoneNumber
-                    : order.user?.phoneNumber || "غير متوفر";
-
-                  const address = order.location?.streetName || "لا يوجد";
-
-                  const orderTypeClass = `order-type-${
-                    order.deliveryFee?.fee > 0 ? "delivery" : "pickup"
-                  }`;
-                  const orderNumberArabic = order.orderNumber
-                    ? order.orderNumber.replace(/\d/g, (d) =>
-                        toArabicNumbers(d)
-                      )
-                    : "";
-                  const phoneArabic = phoneNumber
-                    ? phoneNumber.replace(/\d/g, (d) => toArabicNumbers(d))
-                    : "غير متوفر";
-                  const addressArabic = address;
-
-                  return `
-                    <tr>
-                      <td class="customer-name">${orderNumberArabic}</td>
-                      <td>${userName}</td>
-                      <td>${phoneArabic}</td>
-                      <td class="${orderTypeClass}">${
-                    order.deliveryFee?.fee > 0 ? "توصيل" : "استلام"
-                  }</td>
-                      <td>${addressArabic}</td>
-                      <td class="total-amount">${formatCurrencyArabic(
-                        order.totalWithFee || 0
-                      )}</td>
-                    </tr>
-                  `;
-                })
-                .join("")}
-              <tr style="background-color: #e8f4fd !important; font-weight: bold;">
-                <td colspan="5" style="text-align: left; padding-right: 20px; color: #1a56db;">إجمالي الفرع:</td>
-                <td class="total-amount" style="text-align: center; color: #1a56db;">${formatCurrencyArabic(
-                  branch.totalSales || 0
-                )}</td>
-              </tr>
-            </tbody>
-          </table>
-        `
-        : `
-          <div style="text-align: center; padding: 10px; background: #f9f9f9; margin: 10px 0; border-radius: 5px;">
-            <p style="color: #666; margin: 0;">لا توجد طلبات لهذا الفرع اليوم</p>
-          </div>
-        `
-    }
-  `;
-  })
-  .join("")}
-
-<div style="margin-top: 30px; border-top: 2px solid #000; padding-top: 15px;">
-  <div style="text-align: center; margin-bottom: 10px;">
-    <h2 style="margin: 0; font-size: 16px; color: black;">ملخص عام</h2>
-  </div>
-  <table style="width: 100%; border-collapse: collapse; margin: 10px 0;">
-    <thead>
-      <tr>
-        <th style="background-color: #f0f0f0; padding: 8px; border: 1px solid #ccc; text-align: center; font-weight: bold;">اسم الفرع</th>
-        <th style="background-color: #f0f0f0; padding: 8px; border: 1px solid #ccc; text-align: center; font-weight: bold;">عدد الطلبات</th>
-        <th style="background-color: #f0f0f0; padding: 8px; border: 1px solid #ccc; text-align: center; font-weight: bold;">إجمالي المبيعات</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${printSummary.branches
-        .map((branch) => {
-          return `
-            <tr>
-              <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">${
-                branch.branchName || "غير معروف"
-              }</td>
-              <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">${formatNumberArabic(
-                branch.ordersCount || 0
-              )}</td>
-              <td style="padding: 6px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${formatCurrencyArabic(
-                branch.totalSales || 0
-              )}</td>
-            </tr>
-          `;
-        })
-        .join("")}
-      <tr style="background-color: #f0f0f0; font-weight: bold;">
-        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">المجموع الكلي</td>
-        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${formatNumberArabic(
-          printSummary.totalOrders
-        )}</td>
-        <td style="padding: 8px; border: 1px solid #ccc; text-align: center;">${formatCurrencyArabic(
-          printSummary.totalSales
-        )}</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-${
-  printSummary?.topProducts && printSummary.topProducts.length > 0
-    ? `
-<div style="margin-top: 30px;">
-  <div style="text-align: center; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #ddd;">
-    <h2 style="margin: 0; font-size: 16px; color: black;">المنتجات الأكثر مبيعاً اليوم</h2>
-  </div>
-  <table class="print-table">
-    <thead>
-      <tr>
-        <th width="5%">#</th>
-        <th width="45%">اسم المنتج</th>
-        <th width="20%">الكمية</th>
-        <th width="30%">الإيرادات</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${printSummary.topProducts
-        .map(
-          (product, index) => `
-        <tr>
-          <td style="text-align: center;">${toArabicNumbers(index + 1)}</td>
-          <td style="text-align: center;">${product.name}</td>
-          <td style="text-align: center;">${formatNumberArabic(
-            product.quantity
-          )}</td>
-          <td class="total-amount" style="text-align: center;">${formatCurrencyArabic(
-            product.revenue
-          )}</td>
-        </tr>
-      `
-        )
-        .join("")}
-    </tbody>
-  </table>
-</div>
-`
-    : ""
-}
-
-<div class="print-footer">
-  <p>تم الإنشاء في: ${format(new Date(), "yyyy/MM/dd HH:mm").replace(
-    /\d/g,
-    (d) => toArabicNumbers(d)
-  )}</p>
-  <p>Chicken One © ${toArabicNumbers(new Date().getFullYear())}</p>
-</div>
-
-</body>
-</html>
-          `;
-
       const printFrame = document.createElement("iframe");
       printFrame.style.display = "none";
       printFrame.style.position = "absolute";
@@ -2117,25 +1473,85 @@ ${
         }, 500);
       };
     } catch (error) {
-      console.error("Error in today report:", error);
-      setIsPrinting(false);
+      console.error("Error in print process:", error);
       if (window.innerWidth < 768) {
-        showSalesMobileAlertToast("فشل في تحضير تقرير اليوم", "error");
+        showSalesMobileAlertToast("فشل في تحميل بيانات الطباعة", "error");
       } else {
         Swal.fire({
           icon: "error",
           title: "خطأ",
-          text: "فشل في تحضير تقرير اليوم",
+          text: "فشل في تحميل بيانات الطباعة",
           timer: 2000,
           showConfirmButton: false,
         });
       }
+      setIsPrinting(false);
     }
   };
 
   const handleDateFilter = () => {
     setCurrentPage(1);
-    fetchReportData(1, true);
+    fetchReportData(true, 1);
+  };
+
+  const handleBranchSelect = (branchId) => {
+    setSelectedBranch(branchId);
+    setIsBranchDropdownOpen(false);
+  };
+
+  const getSelectedBranchName = () => {
+    if (selectedBranch === "all") {
+      return "جميع الفروع";
+    }
+    const branch = branches.find((b) => b.id === selectedBranch);
+    return branch ? branch.name : "اختر فرع";
+  };
+
+  // دوال الباجينيشن
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    fetchReportData(false, pageNumber);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      fetchReportData(false, currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      fetchReportData(false, currentPage + 1);
+    }
+  };
+
+  const getPaginationNumbers = () => {
+    const delta = 2;
+    const range = [];
+
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      range.unshift("...");
+    }
+    if (currentPage + delta < totalPages - 1) {
+      range.push("...");
+    }
+
+    range.unshift(1);
+    if (totalPages > 1) {
+      range.push(totalPages);
+    }
+
+    return range;
   };
 
   if (loading) {
@@ -2180,27 +1596,6 @@ ${
                 </p>
               </div>
             </div>
-            {hasTodayReportAccess() && (
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleTodayReport}
-                disabled={isPrinting}
-                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-green-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all duration-300"
-              >
-                {isPrinting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    جاري الطباعة...
-                  </>
-                ) : (
-                  <>
-                    <FaRegCalendarAlt />
-                    تقرير اليوم
-                  </>
-                )}
-              </motion.button>
-            )}
           </div>
         </div>
 
@@ -2217,13 +1612,13 @@ ${
               <div className="flex items-center gap-2">
                 <FaCalendarAlt className="text-[#E41E26] text-xl" />
                 <h3 className="text-lg font-bold text-gray-800 dark:text-white">
-                  فلترة بتاريخ
+                  فلترة بتاريخ وفرع
                 </h3>
               </div>
             </div>
 
             <div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
               dir="rtl"
             >
               <div>
@@ -2264,6 +1659,69 @@ ${
                     locale="ar"
                     placeholderText="اختر تاريخ النهاية"
                   />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  الفرع
+                </label>
+                <div className="relative">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setIsBranchDropdownOpen(!isBranchDropdownOpen)
+                      }
+                      className={`w-full flex items-center justify-between px-3 py-2.5 border ${
+                        isBranchDropdownOpen
+                          ? "border-[#E41E26] ring-2 ring-[#E41E26]/30"
+                          : "border-gray-300 dark:border-gray-600"
+                      } dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-[#E41E26] focus:border-transparent outline-none text-right group transition-all`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FaBuilding className="text-[#E41E26]" />
+                        <span className="text-sm">
+                          {getSelectedBranchName()}
+                        </span>
+                      </div>
+                      <FaChevronDown
+                        className={`text-[#E41E26] transition-transform duration-300 ${
+                          isBranchDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {isBranchDropdownOpen && (
+                      <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <div className="py-1">
+                          <button
+                            onClick={() => handleBranchSelect("all")}
+                            className={`w-full text-right px-4 py-3 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:bg-gray-700 transition-all text-sm ${
+                              selectedBranch === "all"
+                                ? "bg-gradient-to-r from-[#fff8e7] to-[#ffe5b4] dark:bg-gray-700"
+                                : ""
+                            }`}
+                          >
+                            جميع الفروع
+                          </button>
+                          {branches.map((branch) => (
+                            <button
+                              key={branch.id}
+                              onClick={() => handleBranchSelect(branch.id)}
+                              className={`w-full text-right px-4 py-3 hover:bg-gradient-to-r hover:from-[#fff8e7] hover:to-[#ffe5b4] dark:hover:bg-gray-700 transition-all text-sm ${
+                                selectedBranch === branch.id
+                                  ? "bg-gradient-to-r from-[#fff8e7] to-[#ffe5b4] dark:bg-gray-700"
+                                  : ""
+                              }`}
+                            >
+                              {branch.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -2438,158 +1896,169 @@ ${
 
           {/* Orders Table */}
           {reportData && reportData.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg"
-            >
-              <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-2">
-                  <FaListAlt className="text-[#E41E26] text-xl" />
-                  <h3 className="text-lg font-bold text-gray-800 dark:text-white">
-                    تفاصيل الطلبات
-                  </h3>
+            <>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg mb-6"
+              >
+                <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FaListAlt className="text-[#E41E26] text-xl" />
+                      <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                        تفاصيل الطلبات
+                      </h3>
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      إجمالي {totalItems} طلب • صفحة {currentPage} من{" "}
+                      {totalPages}
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-700/50">
-                    <tr>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                        رقم الطلب
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                        اسم العميل
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                        رقم الهاتف
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                        نوع الطلب
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                        المدينة
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                        الحالة
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                        الإجمالي
-                      </th>
-                      <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                        الإجراءات
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {reportData.map((order) => (
-                      <tr
-                        key={order.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150"
-                      >
-                        <td className="px-4 py-3 text-center font-mono text-sm text-gray-800 dark:text-white font-bold">
-                          {order.orderNumber}
-                        </td>
-                        <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
-                          {getCustomerName(order)}
-                        </td>
-                        <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
-                          {getCustomerPhone(order)}
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 dark:bg-gray-700/50">
+                      <tr>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                          رقم الطلب
+                        </th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                          اسم العميل
+                        </th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                          رقم الهاتف
+                        </th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                          نوع الطلب
+                        </th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                          المدينة
+                        </th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                          الحالة
+                        </th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                          الإجمالي
+                        </th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                          الإجراءات
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                      {reportData.map((order) => (
+                        <tr
+                          key={order.id}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150"
+                        >
+                          <td className="px-4 py-3 text-center font-mono text-sm text-gray-800 dark:text-white font-bold">
+                            {order.orderNumber}
+                          </td>
+                          <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                            {getCustomerName(order)}
+                          </td>
+                          <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                            {getCustomerPhone(order)}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span
+                              className={`inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
+                                order.deliveryFee?.fee > 0
+                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                  : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                              }`}
+                            >
+                              {order.deliveryFee?.fee > 0 ? (
+                                <>
+                                  <FaTruck className="text-xs" />
+                                  توصيل
+                                </>
+                              ) : (
+                                <>
+                                  <FaStore className="text-xs" />
+                                  استلام
+                                </>
+                              )}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                            {getCustomerCity(order)}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span
+                              className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusClass(
+                                order.status
+                              )}`}
+                            >
+                              {getStatusIcon(order.status)}
+                              {getStatusLabel(order.status)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center font-bold text-[#E41E26] dark:text-[#FDB913]">
+                            {formatCurrency(order.totalWithFee)}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleViewOrderDetails(order.id)}
+                              disabled={loadingDetails}
+                              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 mx-auto"
+                            >
+                              {loadingDetails &&
+                              selectedOrder?.id === order.id ? (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <FaEye />
+                              )}
+                              عرض التفاصيل
+                            </motion.button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
+                      <tr>
+                        <td
+                          colSpan="7"
+                          className="px-4 py-3 text-center font-bold text-gray-800 dark:text-white"
+                        >
+                          المجموع الكلي:
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span
-                            className={`inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                              order.deliveryFee?.fee > 0
-                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                                : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                            }`}
-                          >
-                            {order.deliveryFee?.fee > 0 ? (
-                              <>
-                                <FaTruck className="text-xs" />
-                                توصيل
-                              </>
-                            ) : (
-                              <>
-                                <FaStore className="text-xs" />
-                                استلام
-                              </>
-                            )}
+                          <span className="text-xl font-bold text-[#E41E26] dark:text-[#FDB913]">
+                            {formatCurrency(summary?.totalSales || 0)}
                           </span>
-                        </td>
-                        <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
-                          {getCustomerCity(order)}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span
-                            className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusClass(
-                              order.status
-                            )}`}
-                          >
-                            {getStatusIcon(order.status)}
-                            {getStatusLabel(order.status)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center font-bold text-[#E41E26] dark:text-[#FDB913]">
-                          {formatCurrency(order.totalWithFee)}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleViewOrderDetails(order.id)}
-                            disabled={loadingDetails}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 mx-auto"
-                          >
-                            {loadingDetails &&
-                            selectedOrder?.id === order.id ? (
-                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            ) : (
-                              <FaEye />
-                            )}
-                            عرض التفاصيل
-                          </motion.button>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot className="bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
-                    <tr>
-                      <td
-                        colSpan="7"
-                        className="px-4 py-3 text-center font-bold text-gray-800 dark:text-white"
-                      >
-                        المجموع الكلي:
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className="text-xl font-bold text-[#E41E26] dark:text-[#FDB913]">
-                          {formatCurrency(summary?.totalSales || 0)}
-                        </span>
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+                    </tfoot>
+                  </table>
+                </div>
+              </motion.div>
 
-              {/* Pagination Controls - Only at bottom */}
+              {/* Pagination - بنفس ديزاين الكود الأول */}
               {totalPages > 1 && (
-                <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center justify-center gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="mt-8 flex flex-col items-center"
+                >
+                  <div className="flex items-center justify-center gap-1 sm:gap-2">
+                    <button
                       onClick={handlePrevPage}
                       disabled={currentPage === 1}
-                      className={`p-2 sm:p-3 rounded-xl transition-all ${
+                      className={`p-2 sm:p-3 rounded-xl ${
                         currentPage === 1
                           ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
                           : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
                       }`}
                     >
                       <FaChevronRight className="text-sm sm:text-base" />
-                    </motion.button>
+                    </button>
 
                     <div className="flex items-center gap-1 sm:gap-2">
                       {getPaginationNumbers().map((pageNum, index) => (
@@ -2599,40 +2068,36 @@ ${
                               ...
                             </span>
                           ) : (
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
+                            <button
                               onClick={() => handlePageChange(pageNum)}
-                              className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl font-semibold transition-all ${
+                              className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl font-semibold ${
                                 currentPage === pageNum
                                   ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white shadow-lg"
                                   : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
                               }`}
                             >
                               {pageNum}
-                            </motion.button>
+                            </button>
                           )}
                         </React.Fragment>
                       ))}
                     </div>
 
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <button
                       onClick={handleNextPage}
                       disabled={currentPage === totalPages}
-                      className={`p-2 sm:p-3 rounded-xl transition-all ${
+                      className={`p-2 sm:p-3 rounded-xl ${
                         currentPage === totalPages
                           ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
                           : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
                       }`}
                     >
                       <FaChevronLeft className="text-sm sm:text-base" />
-                    </motion.button>
+                    </button>
                   </div>
-                </div>
+                </motion.div>
               )}
-            </motion.div>
+            </>
           )}
 
           {(!reportData || reportData.length === 0) && (
