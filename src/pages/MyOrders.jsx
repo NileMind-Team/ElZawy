@@ -52,7 +52,7 @@ export default function MyOrders() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [fetchingOrders, setFetchingOrders] = useState(false);
   const BASE_URL = "https://restaurant-template.runasp.net/";
-  const refreshIntervalRef = useRef(null);
+  const wsRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -67,6 +67,8 @@ export default function MyOrders() {
   const [selectedBranchId, setSelectedBranchId] = useState("");
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [isAdminOrRestaurant, setIsAdminOrRestaurant] = useState(false);
+  // eslint-disable-next-line no-unused-vars
+  const [wsStatus, setWsStatus] = useState("🔌 Connecting...");
 
   const isMobile = () => {
     return window.innerWidth < 768;
@@ -235,9 +237,10 @@ export default function MyOrders() {
     const basePrice =
       item.menuItemBasePriceSnapshotAtOrder > 0
         ? item.menuItemBasePriceSnapshotAtOrder
-        : item.menuItem?.basePrice ||
+        : item.basePriceSnapshot ||
+          item.menuItem?.basePrice ||
           item.basePriceAtOrder ||
-          item.basePriceSnapshot ||
+          item.BasePriceSnapshot ||
           0;
 
     const optionsTotal =
@@ -246,10 +249,10 @@ export default function MyOrders() {
         0
       ) || 0;
 
-    const itemDiscount = item.totalDiscount || 0;
+    const itemDiscount = item.totalDiscount || item.TotalDiscount || 0;
 
     const itemPriceBeforeDiscount =
-      (basePrice + optionsTotal) * (item.quantity || 1);
+      (basePrice + optionsTotal) * (item.quantity || item.Quantity || 1);
     const itemFinalPrice = itemPriceBeforeDiscount - itemDiscount;
 
     return Math.max(itemFinalPrice, 0);
@@ -262,16 +265,26 @@ export default function MyOrders() {
       orderDetails.items.length === 0
     ) {
       return {
-        subtotal: orderDetails?.totalWithoutFee || 0,
+        subtotal:
+          orderDetails?.totalWithoutFee || orderDetails?.TotalWithoutFee || 0,
         totalAdditions: 0,
-        totalDiscount: orderDetails?.totalDiscount || 0,
-        totalBeforeDiscount: orderDetails?.totalWithoutFee || 0,
+        totalDiscount:
+          orderDetails?.totalDiscount || orderDetails?.TotalDiscount || 0,
+        totalBeforeDiscount:
+          orderDetails?.totalWithoutFee || orderDetails?.TotalWithoutFee || 0,
         totalAfterDiscountBeforeDelivery:
-          (orderDetails?.totalWithoutFee || 0) -
-          (orderDetails?.totalDiscount || 0),
+          (orderDetails?.totalWithoutFee ||
+            orderDetails?.TotalWithoutFee ||
+            0) -
+          (orderDetails?.totalDiscount || orderDetails?.TotalDiscount || 0),
         deliveryFee:
-          orderDetails?.deliveryCost || orderDetails?.deliveryFee?.fee || 0,
-        totalWithFee: orderDetails?.totalWithFee || 0,
+          orderDetails?.deliveryCost ||
+          orderDetails?.deliveryFee?.fee ||
+          orderDetails?.DeliveryFee?.Fee ||
+          orderDetails?.DeliveryCost ||
+          0,
+        totalWithFee:
+          orderDetails?.totalWithFee || orderDetails?.TotalWithFee || 0,
       };
     }
 
@@ -283,19 +296,26 @@ export default function MyOrders() {
       const basePrice =
         item.menuItemBasePriceSnapshotAtOrder > 0
           ? item.menuItemBasePriceSnapshotAtOrder
-          : item.basePriceSnapshot || item.menuItem?.basePrice || 0;
+          : item.basePriceSnapshot ||
+            item.menuItem?.basePrice ||
+            item.BasePriceSnapshot ||
+            0;
 
-      subtotal += basePrice * (item.quantity || 1);
+      subtotal += basePrice * (item.quantity || item.Quantity || 1);
 
       if (item.options && item.options.length > 0) {
         item.options.forEach((option) => {
           totalAdditions +=
-            (option.optionPriceAtOrder || 0) * (item.quantity || 1);
+            (option.optionPriceAtOrder || 0) *
+            (item.quantity || item.Quantity || 1);
         });
       }
 
-      if (item.totalDiscount && item.totalDiscount > 0) {
-        totalDiscount += item.totalDiscount;
+      if (
+        (item.totalDiscount && item.totalDiscount > 0) ||
+        (item.TotalDiscount && item.TotalDiscount > 0)
+      ) {
+        totalDiscount += item.totalDiscount || item.TotalDiscount || 0;
       }
     });
 
@@ -303,7 +323,11 @@ export default function MyOrders() {
     const totalAfterDiscountBeforeDelivery =
       totalBeforeDiscount - totalDiscount;
     const deliveryFee =
-      orderDetails.deliveryCost || orderDetails.deliveryFee?.fee || 0;
+      orderDetails.deliveryCost ||
+      orderDetails.deliveryFee?.fee ||
+      orderDetails.DeliveryFee?.Fee ||
+      orderDetails.DeliveryCost ||
+      0;
     const totalWithFee = totalAfterDiscountBeforeDelivery + deliveryFee;
 
     return {
@@ -318,7 +342,7 @@ export default function MyOrders() {
   };
 
   const getFinalTotal = (order) => {
-    return order.totalWithFee || 0;
+    return order.totalWithFee || order.TotalWithFee || 0;
   };
 
   const formatDateForApi = (dateString, isStart = true) => {
@@ -464,6 +488,185 @@ export default function MyOrders() {
     } finally {
       setFetchingOrders(false);
     }
+  };
+
+  // WebSocket Connection
+  const connectWebSocket = () => {
+    const wsUrl = "wss://proxyserver.runasp.net/ws";
+    const tenant = "Chicken_One";
+    const joinGroup = `${tenant}-orders`;
+
+    setWsStatus("🔌 Connecting...");
+
+    wsRef.current = new WebSocket(wsUrl);
+
+    wsRef.current.addEventListener("open", () => {
+      setWsStatus("✅ Connected");
+      console.log("WebSocket connection established");
+
+      // Send JOIN message
+      const joinMessage = `JOIN:${tenant}:${joinGroup}`;
+      wsRef.current.send(joinMessage);
+      console.log("Joined group:", joinMessage);
+    });
+
+    wsRef.current.addEventListener("message", (event) => {
+      console.log("📦 WebSocket message received:", event.data);
+
+      try {
+        const wsOrder = JSON.parse(event.data);
+
+        // Convert WebSocket order format to match our app format
+        const normalizedOrder = normalizeWebSocketOrder(wsOrder);
+
+        // Add new order to the beginning of the list
+        setOrders((prevOrders) => {
+          // Check if order already exists
+          const existingOrderIndex = prevOrders.findIndex(
+            (o) =>
+              o.id === normalizedOrder.id ||
+              o.orderNumber === normalizedOrder.orderNumber
+          );
+
+          if (existingOrderIndex === -1) {
+            // New order, add to the beginning
+            return [normalizedOrder, ...prevOrders];
+          } else {
+            // Update existing order
+            const updatedOrders = [...prevOrders];
+            updatedOrders[existingOrderIndex] = {
+              ...updatedOrders[existingOrderIndex],
+              ...normalizedOrder,
+            };
+            return updatedOrders;
+          }
+        });
+
+        // Update total items count
+        setTotalItems((prev) => prev + 1);
+
+        // Show notification for new orders
+        if (normalizedOrder.orderNumber) {
+          showMessage(
+            "info",
+            "طلب جديد",
+            `تم استلام طلب جديد #${normalizedOrder.orderNumber}`,
+            { timer: 3000, forceSwal: false }
+          );
+        }
+      } catch (err) {
+        console.error("❌ WebSocket JSON Error:", err, event.data);
+      }
+    });
+
+    wsRef.current.addEventListener("close", () => {
+      setWsStatus("⚠️ Disconnected");
+      console.log("WebSocket disconnected");
+
+      // Attempt to reconnect after 5 seconds
+      setTimeout(() => {
+        if (!wsRef.current || wsRef.current.readyState === WebSocket.CLOSED) {
+          console.log("Attempting to reconnect WebSocket...");
+          connectWebSocket();
+        }
+      }, 5000);
+    });
+
+    wsRef.current.addEventListener("error", (err) => {
+      console.error("❌ WebSocket Error:", err);
+      setWsStatus("❌ Connection Error");
+    });
+  };
+
+  // Function to normalize WebSocket order format to match our app format
+  const normalizeWebSocketOrder = (wsOrder) => {
+    return {
+      id: wsOrder.Id,
+      orderNumber: wsOrder.OrderNumber || wsOrder.orderNumber,
+      status: wsOrder.Status,
+      userId: wsOrder.UserId,
+      user: wsOrder.User
+        ? {
+            id: wsOrder.User.Id,
+            firstName: wsOrder.User.FirstName,
+            lastName: wsOrder.User.LastName,
+            email: wsOrder.User.Email,
+            phoneNumber: wsOrder.User.PhoneNumber,
+            imageUrl: wsOrder.User.ImageUrl,
+          }
+        : null,
+      deliveryFee: wsOrder.DeliveryFee
+        ? {
+            id: wsOrder.DeliveryFee.Id,
+            areaName: wsOrder.DeliveryFee.AreaName,
+            fee: wsOrder.DeliveryFee.Fee,
+            estimatedTimeMin: wsOrder.DeliveryFee.EstimatedTimeMin,
+            estimatedTimeMax: wsOrder.DeliveryFee.EstimatedTimeMax,
+            branchId: wsOrder.DeliveryFee.BranchId,
+          }
+        : wsOrder.deliveryFee,
+      location: wsOrder.Location
+        ? {
+            id: wsOrder.Location.Id,
+            userId: wsOrder.Location.UserId,
+            phoneNumber: wsOrder.Location.PhoneNumber,
+            streetName: wsOrder.Location.StreetName,
+            buildingNumber: wsOrder.Location.BuildingNumber,
+            floorNumber: wsOrder.Location.FloorNumber,
+            flatNumber: wsOrder.Location.FlatNumber,
+            detailedDescription: wsOrder.Location.DetailedDescription,
+            city: wsOrder.Location.City,
+          }
+        : wsOrder.location,
+      branch: wsOrder.Branch
+        ? {
+            id: wsOrder.Branch.Id,
+            name: wsOrder.Branch.Name,
+            email: wsOrder.Branch.Email,
+            address: wsOrder.Branch.Address,
+            status: wsOrder.Branch.Status,
+          }
+        : wsOrder.branch,
+      totalDiscount: wsOrder.TotalDiscount || wsOrder.totalDiscount,
+      totalWithoutFee: wsOrder.TotalWithoutFee || wsOrder.totalWithoutFee,
+      deliveryCost: wsOrder.DeliveryCost || wsOrder.deliveryCost,
+      totalWithFee: wsOrder.TotalWithFee || wsOrder.totalWithFee,
+      notes: wsOrder.Notes || wsOrder.notes,
+      createdAt: wsOrder.CreatedAt || wsOrder.createdAt,
+      updatedAt: wsOrder.UpdatedAt || wsOrder.updatedAt,
+      deliveredAt: wsOrder.DeliveredAt || wsOrder.deliveredAt,
+      items: wsOrder.Items
+        ? wsOrder.Items.map((item) => ({
+            id: item.Id,
+            quantity: item.Quantity,
+            note: item.Note,
+            menuItem: item.MenuItem
+              ? {
+                  id: item.MenuItem.Id,
+                  name: item.MenuItem.Name,
+                  description: item.MenuItem.Description,
+                  basePrice: item.MenuItem.BasePrice,
+                  imageUrl: item.MenuItem.ImageUrl,
+                }
+              : item.menuItem,
+            options: item.Options
+              ? item.Options.map((opt) => ({
+                  optionNameAtOrder:
+                    opt.OptionNameAtOrder || opt.optionNameAtOrder,
+                  optionPriceAtOrder:
+                    opt.OptionPriceAtOrder || opt.optionPriceAtOrder,
+                }))
+              : item.options,
+            nameSnapshot: item.NameSnapshot || item.nameSnapshot,
+            descriptionSnapshot:
+              item.DescriptionSnapshot || item.descriptionSnapshot,
+            basePriceSnapshot: item.BasePriceSnapshot || item.basePriceSnapshot,
+            imageUrlSnapshot: item.ImageUrlSnapshot || item.imageUrlSnapshot,
+            totalPrice: item.TotalPrice || item.totalPrice,
+            totalDiscount: item.TotalDiscount || item.totalDiscount,
+          }))
+        : wsOrder.items || [],
+    };
   };
 
   const handleUpdateStatus = async (orderId, currentStatus) => {
@@ -774,61 +977,21 @@ export default function MyOrders() {
     pageSize,
   ]);
 
+  // Initialize WebSocket connection
   useEffect(() => {
-    if (refreshIntervalRef.current) {
-      clearInterval(refreshIntervalRef.current);
+    if (!isInitialLoad) {
+      connectWebSocket();
     }
 
-    refreshIntervalRef.current = setInterval(() => {
-      if (!isInitialLoad && !selectedOrder) {
-        fetchOrders();
-      }
-    }, 60000);
-
+    // Cleanup WebSocket on component unmount
     return () => {
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isInitialLoad,
-    selectedOrder,
-    filter,
-    dateRange,
-    selectedUserId,
-    selectedBranchId,
-  ]);
-
-  useEffect(() => {
-    if (selectedOrder) {
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
-        refreshIntervalRef.current = null;
-      }
-    } else if (!isInitialLoad) {
-      if (!refreshIntervalRef.current) {
-        refreshIntervalRef.current = setInterval(() => {
-          fetchOrders();
-        }, 60000);
-      }
-    }
-
-    return () => {
-      if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
-        refreshIntervalRef.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    selectedOrder,
-    isInitialLoad,
-    filter,
-    dateRange,
-    selectedUserId,
-    selectedBranchId,
-  ]);
+  }, [isInitialLoad]);
 
   const mapStatus = (apiStatus) => {
     const statusMap = {

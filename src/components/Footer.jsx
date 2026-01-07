@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   FaFacebookF,
@@ -12,29 +12,22 @@ import {
   FaArrowRight,
 } from "react-icons/fa";
 import logo from "../assets/logo.png";
+import { useEffect, useState } from "react";
+import axiosInstance from "../api/axiosInstance";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [categories, setCategories] = useState([
+    { id: "all", name: "جميع العناصر" },
+    { id: "offers", name: "العروض" },
+  ]);
+  const navigate = useNavigate();
 
   const quickLinks = [
     { name: "الصفحة الرئيسية", path: "/" },
     { name: "عربة التسوق", path: "/cart" },
     { name: "عناويني", path: "/addresses" },
     { name: "المفضلة", path: "/favorites" },
-  ];
-
-  const categories = [
-    { name: "الأطباق الرئيسية", path: "/category/meals" },
-    { name: "المشروبات", path: "/category/drinks" },
-    { name: "الحلويات", path: "/category/desserts" },
-    { name: "العروض الخاصة", path: "/offers" },
-  ];
-
-  const supportLinks = [
-    { name: "مركز المساعدة", path: "/help" },
-    { name: "سياسة الخصوصية", path: "/privacy" },
-    { name: "شروط الخدمة", path: "/terms" },
-    { name: "الأسئلة الشائعة", path: "/faq" },
   ];
 
   const socialLinks = [
@@ -63,6 +56,79 @@ const Footer = () => {
       color: "hover:bg-blue-800",
     },
   ];
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axiosInstance.get("/api/Categories/GetAll");
+        const categoriesData = response.data;
+
+        const transformedCategories = [
+          { id: "all", name: "جميع العناصر" },
+          { id: "offers", name: "العروض" },
+          ...categoriesData.map((category) => ({
+            id: category.id.toString(),
+            name: category.name,
+            isActive: category.isActive,
+            originalId: category.id,
+          })),
+        ];
+
+        setCategories(transformedCategories);
+      } catch (error) {
+        console.error("Error fetching categories in footer:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const getCategoriesInColumns = () => {
+    const columns = [];
+    const itemsPerColumn = 4;
+
+    const otherCategories = categories.filter(
+      (cat) => cat.id !== "all" && cat.id !== "offers"
+    );
+
+    const firstColumnItems = [
+      categories.find((cat) => cat.id === "all"),
+      categories.find((cat) => cat.id === "offers"),
+      ...otherCategories.slice(0, itemsPerColumn - 2),
+    ].filter(Boolean);
+
+    columns.push(firstColumnItems);
+
+    const remainingCategories = otherCategories.slice(itemsPerColumn - 2);
+
+    for (let i = 0; i < remainingCategories.length; i += itemsPerColumn) {
+      const column = remainingCategories.slice(i, i + itemsPerColumn);
+      if (column.length > 0) {
+        columns.push(column);
+      }
+    }
+
+    return columns;
+  };
+
+  const categoryColumns = getCategoriesInColumns();
+
+  const handleCategoryClick = (categoryId) => {
+    if (window.location.pathname === "/") {
+      window.dispatchEvent(
+        new CustomEvent("categorySelectedFromFooter", {
+          detail: { categoryId, fromHomePage: true },
+        })
+      );
+    } else {
+      navigate("/", {
+        state: {
+          selectedCategoryFromFooter: categoryId,
+          scrollToCategories: true,
+        },
+      });
+    }
+  };
 
   return (
     <footer
@@ -143,76 +209,34 @@ const Footer = () => {
             </ul>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <h3 className="text-lg font-bold mb-6 relative inline-block">
-              الفئات
-              <div className="absolute bottom-0 right-0 w-1/2 h-0.5 bg-gradient-to-r from-[#FDB913] to-[#E41E26]"></div>
-            </h3>
-            <ul className="space-y-3">
-              {categories.map((category) => (
-                <li key={category.name}>
-                  <Link
-                    to={category.path}
-                    className="flex items-center gap-3 text-gray-300 hover:text-white transition-all duration-300 group"
-                  >
-                    <FaArrowRight className="text-[#FDB913] text-xs opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0 rotate-180" />
-                    <span className="group-hover:translate-x-2 transition-transform duration-300">
-                      {category.name}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <h3 className="text-lg font-bold mb-6 relative inline-block">
-              الدعم
-              <div className="absolute bottom-0 right-0 w-1/2 h-0.5 bg-gradient-to-r from-[#FDB913] to-[#E41E26]"></div>
-            </h3>
-            <ul className="space-y-3 mb-8">
-              {supportLinks.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.path}
-                    className="flex items-center gap-3 text-gray-300 hover:text-white transition-all duration-300 group"
-                  >
-                    <FaArrowRight className="text-[#FDB913] text-xs opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0 rotate-180" />
-                    <span className="group-hover:translate-x-2 transition-transform duration-300">
-                      {link.name}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            <div>
-              <h4 className="text-lg font-bold mb-4">تابعنا</h4>
-              <div className="flex gap-3">
-                {socialLinks.map((social) => (
-                  <motion.a
-                    key={social.name}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{ scale: 1.1, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`w-10 h-10 bg-gray-700 rounded-xl flex items-center justify-center text-white transition-all duration-300 ${social.color} hover:shadow-lg`}
-                  >
-                    {social.icon}
-                  </motion.a>
+          {categoryColumns.map((columnCategories, columnIndex) => (
+            <motion.div
+              key={columnIndex}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 + columnIndex * 0.1 }}
+            >
+              <h3 className="text-lg font-bold mb-6 relative inline-block">
+                {columnIndex === 0 ? "الفئات" : " "}
+                <div className="absolute bottom-0 right-0 w-1/2 h-0.5 bg-gradient-to-r from-[#FDB913] to-[#E41E26]"></div>
+              </h3>
+              <ul className="space-y-3">
+                {columnCategories.map((category) => (
+                  <li key={category.id}>
+                    <button
+                      onClick={() => handleCategoryClick(category.id)}
+                      className="flex items-center gap-3 text-gray-300 hover:text-white transition-all duration-300 group w-full text-right"
+                    >
+                      <FaArrowRight className="text-[#FDB913] text-xs opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0 rotate-180" />
+                      <span className="group-hover:translate-x-2 transition-transform duration-300 flex-1">
+                        {category.name}
+                      </span>
+                    </button>
+                  </li>
                 ))}
-              </div>
-            </div>
-          </motion.div>
+              </ul>
+            </motion.div>
+          ))}
         </div>
 
         <motion.div
@@ -257,20 +281,30 @@ const Footer = () => {
 
             <div className="flex gap-6 text-sm text-gray-400">
               <Link
-                to="/sitemap"
-                className="hover:text-white transition-colors"
-              >
-                خريطة الموقع
-              </Link>
-              <Link to="/terms" className="hover:text-white transition-colors">
-                شروط الخدمة
-              </Link>
-              <Link
                 to="/privacy"
                 className="hover:text-white transition-colors"
               >
                 سياسة الخصوصية
               </Link>
+              <Link to="/terms" className="hover:text-white transition-colors">
+                شروط الخدمة
+              </Link>
+            </div>
+
+            <div className="flex gap-3">
+              {socialLinks.map((social) => (
+                <motion.a
+                  key={social.name}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.1, y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`w-10 h-10 bg-gray-700 rounded-xl flex items-center justify-center text-white transition-all duration-300 ${social.color} hover:shadow-lg`}
+                >
+                  {social.icon}
+                </motion.a>
+              ))}
             </div>
           </div>
         </motion.div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   FaShoppingCart,
   FaPlus,
@@ -19,7 +19,7 @@ import {
   FaFire,
   FaPercent,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
@@ -61,6 +61,7 @@ const Home = () => {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const isMobile = () => {
     return window.innerWidth <= 768;
@@ -222,6 +223,39 @@ const Home = () => {
       </div>
     );
   };
+
+  const scrollToCategories = useCallback(() => {
+    if (categoriesSectionRef.current) {
+      const element = categoriesSectionRef.current;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - 100;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (location.state) {
+      const { selectedCategoryFromFooter, scrollToCategories: shouldScroll } =
+        location.state;
+
+      if (selectedCategoryFromFooter) {
+        setSelectedCategory(selectedCategoryFromFooter);
+        setCurrentPage(1);
+
+        navigate(".", { replace: true, state: {} });
+
+        if (shouldScroll) {
+          setTimeout(() => {
+            scrollToCategories();
+          }, 300);
+        }
+      }
+    }
+  }, [location.state, navigate, scrollToCategories]);
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -1223,17 +1257,12 @@ const Home = () => {
     navigate("/cart");
   };
 
-  const scrollToCategories = () => {
-    if (categoriesSectionRef.current) {
-      const element = categoriesSectionRef.current;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - 100;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
-    }
+  const handleCategorySelectFromFooter = (categoryId) => {
+    setSelectedCategory(categoryId);
+    setCurrentPage(1);
+    setTimeout(() => {
+      scrollToCategories();
+    }, 100);
   };
 
   const handlePageChange = (pageNumber) => {
@@ -1288,12 +1317,34 @@ const Home = () => {
     return range;
   };
 
-  // التحقق من صلاحيات المستخدم
+  useEffect(() => {
+    const handleCategorySelectedFromFooter = (event) => {
+      const { categoryId, fromHomePage } = event.detail;
+      if (fromHomePage) {
+        handleCategorySelectFromFooter(categoryId);
+      } else {
+        handleCategorySelectFromFooter(categoryId);
+      }
+    };
+
+    window.addEventListener(
+      "categorySelectedFromFooter",
+      handleCategorySelectedFromFooter
+    );
+
+    return () => {
+      window.removeEventListener(
+        "categorySelectedFromFooter",
+        handleCategorySelectedFromFooter
+      );
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollToCategories]);
+
   const isAdmin = userRoles.includes("Admin");
   const isRestaurant = userRoles.includes("Restaurant");
   const isBranch = userRoles.includes("Branch");
 
-  // Branch users can only see the toggle active button
   const canShowAdminButtons = isAdmin || isRestaurant;
   const canShowToggleButton = isAdmin || isRestaurant || isBranch;
 

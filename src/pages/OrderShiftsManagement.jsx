@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FaArrowLeft, FaPlay, FaStop } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaPlay,
+  FaStop,
+  FaPause,
+  FaPlayCircle,
+} from "react-icons/fa";
 import Swal from "sweetalert2";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
@@ -298,6 +304,7 @@ export default function OrderShiftsManagement() {
             id: activeShiftData.id,
             name: activeShiftData.name,
             start: activeShiftData.start,
+            isActive: activeShiftData.isActive,
             branchId: activeShiftData.branchId,
           });
         } else {
@@ -426,6 +433,44 @@ export default function OrderShiftsManagement() {
     });
   };
 
+  const handleToggleShiftStatus = async () => {
+    if (!activeShift) return;
+
+    const action = activeShift.isActive ? "تعطيل" : "تفعيل";
+    const actionText = activeShift.isActive ? "تعطيل الوردية" : "تفعيل الوردية";
+    const confirmText = activeShift.isActive
+      ? "هل أنت متأكد من تعطيل الوردية الحالية؟"
+      : "هل أنت متأكد من تفعيل الوردية الحالية؟";
+
+    Swal.fire({
+      title: actionText,
+      text: confirmText,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#E41E26",
+      cancelButtonColor: "#6B7280",
+      confirmButtonText: `نعم، ${action}`,
+      cancelButtonText: "إلغاء",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axiosInstance.put(
+            `/api/OrderShifts/ChangeStatus/${activeShift.id}`
+          );
+
+          await checkActiveShift();
+
+          showMessage("success", `تم ${action}`, `تم ${action} الوردية بنجاح`, {
+            timer: 2000,
+            showConfirmButton: false,
+          });
+        } catch (err) {
+          showErrorAlert(err.response?.data);
+        }
+      }
+    });
+  };
+
   const resetForm = () => {
     setFormData({
       name: "",
@@ -487,9 +532,22 @@ export default function OrderShiftsManagement() {
               {activeShift ? "تفاصيل الوردية الحالية" : "بدء وردية جديدة"}
             </h3>
             {activeShift && (
-              <span className="px-2 sm:px-3 py-1 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white text-xs sm:text-sm rounded-full">
-                نشطة
-              </span>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`px-2 sm:px-3 py-1 bg-gradient-to-r ${
+                    activeShift.isActive
+                      ? "from-green-500 to-emerald-500"
+                      : "from-yellow-500 to-orange-500"
+                  } text-white text-xs sm:text-sm rounded-full`}
+                >
+                  {activeShift.isActive ? "نشطة" : "معطلة"}
+                </span>
+                {!activeShift.isActive && (
+                  <span className="px-2 sm:px-3 py-1 bg-gradient-to-r from-gray-500 to-gray-600 text-white text-xs sm:text-sm rounded-full">
+                    غير مفعلة
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
@@ -513,18 +571,51 @@ export default function OrderShiftsManagement() {
                       {addTwoHoursAndFormatTo12Hour(activeShift.start)}
                     </p>
                   </div>
+                  <div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      حالة الوردية
+                    </p>
+                    <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
+                      {activeShift.isActive ? "مفعلة" : "معطلة"}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleEndShift}
-                className="w-full py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base flex items-center justify-center gap-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white hover:shadow-xl hover:shadow-[#E41E26]/25 cursor-pointer"
-              >
-                <FaStop className="text-sm" />
-                إنهاء الوردية الحالية
-              </motion.button>
+              <div className="space-y-3">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleToggleShiftStatus}
+                  className={`w-full py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base flex items-center justify-center gap-2 ${
+                    activeShift.isActive
+                      ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:shadow-xl hover:shadow-yellow-500/25"
+                      : "bg-gradient-to-r from-green-500 to-emerald-500 text-white hover:shadow-xl hover:shadow-green-500/25"
+                  } cursor-pointer`}
+                >
+                  {activeShift.isActive ? (
+                    <>
+                      <FaPause className="text-sm" />
+                      تعطيل الوردية
+                    </>
+                  ) : (
+                    <>
+                      <FaPlayCircle className="text-sm" />
+                      تفعيل الوردية
+                    </>
+                  )}
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleEndShift}
+                  className="w-full py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 text-sm sm:text-base flex items-center justify-center gap-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white hover:shadow-xl hover:shadow-[#E41E26]/25 cursor-pointer"
+                >
+                  <FaStop className="text-sm" />
+                  إنهاء الوردية الحالية
+                </motion.button>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
