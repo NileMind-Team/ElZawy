@@ -2,14 +2,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   FaFacebookF,
-  FaTwitter,
-  FaInstagram,
-  FaLinkedinIn,
   FaPhone,
-  FaEnvelope,
   FaMapMarkerAlt,
   FaClock,
   FaArrowRight,
+  FaWhatsapp,
 } from "react-icons/fa";
 import logo from "../assets/logo.png";
 import { useEffect, useState } from "react";
@@ -34,26 +31,14 @@ const Footer = () => {
     {
       name: "فيسبوك",
       icon: <FaFacebookF />,
-      url: "https://facebook.com",
+      url: "https://www.facebook.com/ELZAWYRESTAURANT",
       color: "hover:bg-blue-600",
     },
     {
-      name: "تويتر",
-      icon: <FaTwitter />,
-      url: "https://twitter.com",
-      color: "hover:bg-blue-400",
-    },
-    {
-      name: "انستجرام",
-      icon: <FaInstagram />,
-      url: "https://instagram.com",
-      color: "hover:bg-pink-600",
-    },
-    {
-      name: "لينكد إن",
-      icon: <FaLinkedinIn />,
-      url: "https://linkedin.com",
-      color: "hover:bg-blue-800",
+      name: "واتساب",
+      icon: <FaWhatsapp />,
+      url: "https://wa.me/201027508008",
+      color: "hover:bg-green-600",
     },
   ];
 
@@ -88,7 +73,7 @@ const Footer = () => {
     const itemsPerColumn = 4;
 
     const otherCategories = categories.filter(
-      (cat) => cat.id !== "all" && cat.id !== "offers"
+      (cat) => cat.id !== "all" && cat.id !== "offers",
     );
 
     const firstColumnItems = [
@@ -118,7 +103,7 @@ const Footer = () => {
       window.dispatchEvent(
         new CustomEvent("categorySelectedFromFooter", {
           detail: { categoryId, fromHomePage: true },
-        })
+        }),
       );
     } else {
       navigate("/", {
@@ -170,15 +155,15 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-gray-300 hover:text-white transition-colors">
                 <FaPhone className="text-[#FDB913] text-sm" />
-                <span className="text-sm">+20 115 942 4411</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-300 hover:text-white transition-colors">
-                <FaEnvelope className="text-[#FDB913] text-sm" />
-                <span className="text-sm">info@ChickenOne.com</span>
+                <span className="text-sm" dir="ltr">
+                  +20 102 750 8008
+                </span>
               </div>
               <div className="flex items-center gap-3 text-gray-300 hover:text-white transition-colors">
                 <FaMapMarkerAlt className="text-[#FDB913] text-sm" />
-                <span className="text-sm">الجيزة، مصر</span>
+                <span className="text-sm">
+                  الفيوم - الحواتم - ميدان الحواتم
+                </span>
               </div>
             </div>
           </motion.div>
@@ -252,16 +237,18 @@ const Footer = () => {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-gray-300">
               <div>
-                <p className="font-semibold text-white">الأحد - الخميس</p>
-                <p>9:00 ص - 11:00 م</p>
+                <p className="font-semibold text-white">السبت - الأربعاء</p>
+                <p>11:00 ص - 2:00 ص</p>
               </div>
+
               <div>
-                <p className="font-semibold text-white">الجمعة - السبت</p>
-                <p>10:00 ص - 12:00 ص</p>
+                <p className="font-semibold text-white">الخميس</p>
+                <p>11:00 ص - 3:00 ص</p>
               </div>
+
               <div>
-                <p className="font-semibold text-white">التوصيل</p>
-                <p>متاح 24/7</p>
+                <p className="font-semibold text-white">الجمعة</p>
+                <p>12:00 ص - 3:00 ص</p>
               </div>
             </div>
           </div>
@@ -278,18 +265,6 @@ const Footer = () => {
               © {currentYear} Chicken-One. جميع الحقوق محفوظة. | صنع بواسطة{" "}
               <span className="text-[#E41E26]">مهند أشرف</span> في مصر
             </p>
-
-            <div className="flex gap-6 text-sm text-gray-400">
-              <Link
-                to="/privacy"
-                className="hover:text-white transition-colors"
-              >
-                سياسة الخصوصية
-              </Link>
-              <Link to="/terms" className="hover:text-white transition-colors">
-                شروط الخدمة
-              </Link>
-            </div>
 
             <div className="flex gap-3">
               {socialLinks.map((social) => (
