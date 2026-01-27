@@ -248,7 +248,7 @@ const Footer = () => {
 
               <div>
                 <p className="font-semibold text-white">الجمعة</p>
-                <p>12:00 ص - 3:00 ص</p>
+                <p>12:00 م - 3:00 ص</p>
               </div>
             </div>
           </div>
