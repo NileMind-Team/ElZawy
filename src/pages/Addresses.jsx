@@ -473,25 +473,25 @@ export default function Addresses() {
       if (editingId) {
         const res = await axiosInstance.put(
           `/api/Locations/Update/${editingId}`,
-          formattedData
+          formattedData,
         );
         if (res.status === 200 || res.status === 204) {
           setAddresses(
             addresses.map((addr) =>
-              addr.id === editingId ? { ...addr, ...formattedData } : addr
-            )
+              addr.id === editingId ? { ...addr, ...formattedData } : addr,
+            ),
           );
           showAddressSuccessAlert("تم تحديث العنوان: تم تحديث عنوانك بنجاح");
         }
       } else {
         const res = await axiosInstance.post(
           "/api/Locations/Add",
-          formattedData
+          formattedData,
         );
         if (res.status === 200) {
           fetchAddresses();
           showAddressSuccessAlert(
-            "تم إضافة العنوان: تم إضافة عنوانك الجديد بنجاح"
+            "تم إضافة العنوان: تم إضافة عنوانك الجديد بنجاح",
           );
 
           if (location.state?.fromCart) {
@@ -563,11 +563,11 @@ export default function Addresses() {
         addresses.map((addr) => ({
           ...addr,
           isDefaultLocation: addr.id === id,
-        }))
+        })),
       );
 
       showAddressSuccessAlert(
-        "تم تحديث العنوان الافتراضي: تم تغيير عنوانك الافتراضي"
+        "تم تحديث العنوان الافتراضي: تم تغيير عنوانك الافتراضي",
       );
 
       if (location.state?.fromCart) {
@@ -628,7 +628,7 @@ export default function Addresses() {
           console.warn("خطأ في تحديد الموقع:", error);
           setSelectedLocation(defaultCenter);
         },
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true },
       );
     } else {
       setSelectedLocation(defaultCenter);
@@ -671,7 +671,7 @@ export default function Addresses() {
     ];
 
     return requiredFields.every(
-      (field) => formData[field] && formData[field].toString().trim() !== ""
+      (field) => formData[field] && formData[field].toString().trim() !== "",
     );
   };
 
@@ -1058,8 +1058,8 @@ export default function Addresses() {
                                     ? "bg-gray-600 text-gray-200 hover:bg-gray-500"
                                     : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                                   : expandedMaps[address.id]
-                                  ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    ? "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                               } border ${
                                 darkMode ? "border-gray-600" : "border-gray-200"
                               }`}
@@ -1080,27 +1080,32 @@ export default function Addresses() {
                         )}
                       </div>
 
-                      <div className="flex flex-row sm:flex-col lg:flex-row gap-1 sm:gap-2 justify-end sm:justify-start">
-                        {!address.isDefaultLocation && (
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => handleSetDefault(address.id)}
-                            className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${
-                              darkMode
-                                ? "bg-green-900/50 text-green-300 hover:bg-green-800"
-                                : "bg-green-50 text-green-700 hover:bg-green-100"
-                            } rounded-lg transition-colors duration-200 text-xs sm:text-sm font-medium flex-1 sm:flex-none justify-center`}
-                          >
-                            <FaStar className="text-xs sm:text-sm" />
-                            <span className="whitespace-nowrap hidden xs:inline">
-                              تعيين افتراضي
-                            </span>
-                            <span className="whitespace-nowrap xs:hidden">
-                              افتراضي
-                            </span>
-                          </motion.button>
-                        )}
+                      <div className="flex flex-row sm:flex-col lg:flex-row gap-1 sm:gap-2 justify-end sm:justify-start items-center">
+                        {/* تشيك بوكس دائري مع علامة ✓ */}
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleSetDefault(address.id)}
+                          className={`relative w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 cursor-pointer transition-all duration-200 flex items-center justify-center ${
+                            address.isDefaultLocation
+                              ? "border-[#E41E26] bg-[#E41E26]"
+                              : darkMode
+                                ? "border-gray-500 bg-gray-800 hover:border-[#E41E26]"
+                                : "border-gray-300 bg-white hover:border-[#E41E26]"
+                          }`}
+                        >
+                          {address.isDefaultLocation && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 300 }}
+                              className="text-white text-xs sm:text-sm font-bold"
+                            >
+                              ✓
+                            </motion.div>
+                          )}
+                        </motion.div>
+
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
@@ -1238,7 +1243,8 @@ export default function Addresses() {
                               <span>
                                 {formData.cityId
                                   ? cities.find(
-                                      (c) => c.id.toString() === formData.cityId
+                                      (c) =>
+                                        c.id.toString() === formData.cityId,
                                     )?.name
                                   : "اختر المدينة"}
                               </span>
