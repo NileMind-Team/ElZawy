@@ -560,13 +560,13 @@ export default function Addresses() {
 
   const handleSetDefault = async (id, e) => {
     if (e) e.stopPropagation();
+    if (settingDefaultId) return;
 
-    if (settingDefaultId) return; // منع النقر أثناء التحميل
-
-    setSettingDefaultId(id); // بدء الـloading
+    setSettingDefaultId(id);
 
     try {
       await axiosInstance.put(`/api/Locations/ChangeDefaultLocation/${id}`);
+
       setAddresses(
         addresses.map((addr) => ({
           ...addr,
@@ -580,13 +580,23 @@ export default function Addresses() {
 
       if (location.state?.fromCart) {
         setTimeout(() => {
-          navigate("/cart", { state: { fromAddresses: true } });
-        }, 1500);
+          Swal.fire({
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            },
+          });
+
+          setTimeout(() => {
+            Swal.close();
+            navigate("/cart", { state: { fromAddresses: true } });
+          }, 500);
+        }, 100);
       }
     } catch (err) {
       showAddressErrorAlert(err.response?.data);
     } finally {
-      setSettingDefaultId(null); // إنهاء الـloading
+      setSettingDefaultId(null);
     }
   };
 
