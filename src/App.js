@@ -2,6 +2,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Helmet } from "react-helmet-async";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import ConfirmEmail from "./pages/ConfirmEmail";
@@ -27,6 +28,7 @@ import SalesReports from "./pages/SalesReports";
 import OrderShiftsManagement from "./pages/OrderShiftsManagement";
 import OrderShiftsReport from "./pages/OrderShiftsReport";
 import TimeDateSalesReport from "./pages/TimeDateSalesReport";
+import AuthGuard from "./guards/AuthGuard";
 
 function App() {
   const location = useLocation();
@@ -60,7 +62,7 @@ function App() {
   ];
 
   const shouldShowNavbarFooter = !hideNavbarFooterPaths.includes(
-    location.pathname
+    location.pathname,
   );
 
   useEffect(() => {
@@ -106,43 +108,55 @@ function App() {
         <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
       )}
 
+      <Helmet>
+        <title>Chicken One El-Zawy</title>
+        <meta
+          name="description"
+          content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
+        />
+      </Helmet>
+
       {/* Main content */}
-      <main className="flex-grow w-full bg-white dark:bg-gray-900 transition-colors duration-300">
+      <main className="flex-grow w-full bg-white dark:bg-gray-900">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/register" element={<AuthPage />} />
+          <Route path="/auth" element={<AuthPage />} />
           <Route path="/auth/verify-email-address" element={<ConfirmEmail />} />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/addresses" element={<Addresses />} />
-          <Route path="/reviews" element={<Reviews />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/order-tracking" element={<OrderTracking />} />
-          <Route path="/my-orders" element={<MyOrders />} />
-          <Route path="/products/new" element={<ProductForm />} />
-          <Route path="/products/edit" element={<ProductForm />} />
-          <Route path="/admin/users" element={<AdminUsers />} />
-          <Route path="/admin/branches" element={<AdminBranches />} />
-          <Route
-            path="/admin/delivery-cost"
-            element={<DeliveryCostManagement />}
-          />
-          {/* <Route path="/admin/coupons" element={<CouponsManagement />} /> */}
-          <Route path="/admin/cities" element={<CitiesManagement />} />
           <Route path="/product/:id" element={<ProductDetails />} />
-          {/* <Route path="/cashier" element={<Cashier />} /> */}
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/branches" element={<Branches />} />
-          <Route path="/admin/item-offers" element={<ItemOffersManagement />} />
-          <Route path="/admin/reports" element={<SalesReports />} />
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/order-shifts" element={<OrderShiftsManagement />} />
-          <Route path="/admin/order-shifts" element={<OrderShiftsReport />} />
-          <Route
-            path="/admin/time-date-reports"
-            element={<TimeDateSalesReport />}
-          />
+
+          <Route element={<AuthGuard />}>
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/branches" element={<Branches />} />
+            <Route path="/addresses" element={<Addresses />} />
+            <Route path="/reviews" element={<Reviews />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/order-tracking" element={<OrderTracking />} />
+            <Route path="/my-orders" element={<MyOrders />} />
+            <Route path="/products/new" element={<ProductForm />} />
+            <Route path="/products/edit" element={<ProductForm />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/branches" element={<AdminBranches />} />
+            <Route
+              path="/admin/delivery-cost"
+              element={<DeliveryCostManagement />}
+            />
+            <Route path="/admin/cities" element={<CitiesManagement />} />
+            <Route
+              path="/admin/item-offers"
+              element={<ItemOffersManagement />}
+            />
+            <Route path="/admin/reports" element={<SalesReports />} />
+            <Route path="/order-shifts" element={<OrderShiftsManagement />} />
+            <Route path="/admin/order-shifts" element={<OrderShiftsReport />} />
+            <Route
+              path="/admin/time-date-reports"
+              element={<TimeDateSalesReport />}
+            />
+          </Route>
         </Routes>
       </main>
 

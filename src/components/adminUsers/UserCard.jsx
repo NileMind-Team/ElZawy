@@ -31,8 +31,8 @@ export default function UserCard({
         isCurrentUser(user)
           ? "border-[#E41E26] shadow-lg hover:shadow-xl"
           : user.isActive === false
-          ? "border-red-200 shadow-md hover:shadow-lg"
-          : "border-gray-200/50 hover:shadow-lg"
+            ? "border-red-200 shadow-md hover:shadow-lg"
+            : "border-gray-200/50 hover:shadow-lg"
       } ${user.isActive === false ? "bg-red-50/50" : ""}`}
     >
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
@@ -93,7 +93,7 @@ export default function UserCard({
                   <span
                     key={role}
                     className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold border ${getRoleBadgeColor(
-                      role
+                      role,
                     )} ${user.isActive === false ? "opacity-60" : ""}`}
                   >
                     {getRoleIcon(role)}
@@ -159,8 +159,8 @@ export default function UserCard({
               isCurrentUser(user)
                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                 : user.isActive === false
-                ? "bg-green-50 text-green-700 hover:bg-green-100"
-                : "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+                  ? "bg-green-50 text-green-700 hover:bg-green-100"
+                  : "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
             }`}
           >
             {user.isActive === false ? (
@@ -197,7 +197,7 @@ export default function UserCard({
                   whileTap={{ scale: 0.95 }}
                   onClick={() => handleAssignRole(user.id, role.name)}
                   className={`flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold border transition-colors duration-200 ${getRoleBadgeColor(
-                    role.name
+                    role.name,
                   )} hover:opacity-80`}
                 >
                   {getRoleIcon(role.name)}
