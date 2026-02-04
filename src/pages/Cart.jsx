@@ -974,16 +974,13 @@ export default function Cart() {
   };
 
   const handleSaveNotes = () => {
-    if (selectedProduct) {
-      updateCartItem();
-    } else {
-      handleCloseNotesModal();
-      toast.success("تم حفظ التعليمات الإضافية", {
-        position: "top-right",
-        autoClose: 1500,
-        rtl: true,
-      });
-    }
+    setShowNotesModal(false);
+
+    toast.success("تم حفظ التعليمات الإضافية", {
+      position: "top-right",
+      autoClose: 1500,
+      rtl: true,
+    });
   };
 
   const handleClearNotes = () => {
