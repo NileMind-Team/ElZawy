@@ -18,6 +18,7 @@ import {
   FaRegHeart,
   FaFire,
   FaPercent,
+  FaCheck,
 } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -54,6 +55,12 @@ const Home = () => {
   const [pageSize, setPageSize] = useState(8);
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const [addingToCart, setAddingToCart] = useState(null);
+  const [showAddonsModal, setShowAddonsModal] = useState(false);
+  const [selectedProductForAddons, setSelectedProductForAddons] =
+    useState(null);
+  const [productAddons, setProductAddons] = useState([]);
+  const [selectedAddons, setSelectedAddons] = useState({});
+  const [modalLoading, setModalLoading] = useState(false);
 
   const categoriesContainerRef = useRef(null);
   const categoriesSectionRef = useRef(null);
@@ -594,38 +601,43 @@ const Home = () => {
     navigate(`/product/${product.id}`, { state: { product } });
   };
 
-  const extractRequiredOptionsFromError = (errorDescription) => {
-    if (!errorDescription) return [];
+  // Updated function to fetch product addons
+  const fetchProductAddons = async (productId) => {
+    try {
+      setModalLoading(true);
+      const response = await axiosInstance.get(
+        `/api/MenuItems/Get/${productId}`,
+      );
+      const productData = response.data;
 
-    let optionsText = errorDescription
-      .replace("You must select at least one option for:", "")
-      .replace(".", "")
-      .trim();
+      const transformedAddons =
+        productData.typesWithOptions?.map((type) => ({
+          id: type.id,
+          title: type.name,
+          type: type.canSelectMultipleOptions ? "multiple" : "single",
+          required: type.isSelectionRequired,
+          canSelectMultipleOptions: type.canSelectMultipleOptions,
+          isSelectionRequired: type.isSelectionRequired,
+          options:
+            type.menuItemOptions?.map((option) => ({
+              id: option.id,
+              name: option.name,
+              price: option.price,
+              typeId: type.id,
+            })) || [],
+        })) || [];
 
-    const optionsList = optionsText
-      .split(/،|,|\sو\s/)
-      .map((option) => option.trim())
-      .filter(Boolean);
-
-    return optionsList;
+      setProductAddons(transformedAddons);
+      setModalLoading(false);
+      return transformedAddons;
+    } catch (error) {
+      console.error("Error fetching product addons:", error);
+      setModalLoading(false);
+      return [];
+    }
   };
 
-  const formatOptionsForDisplay = (optionsList) => {
-    if (optionsList.length === 0) return "";
-
-    if (optionsList.length === 1) {
-      return optionsList[0];
-    }
-
-    if (optionsList.length === 2) {
-      return `${optionsList[0]} و ${optionsList[1]}`;
-    }
-
-    const lastOption = optionsList[optionsList.length - 1];
-    const otherOptions = optionsList.slice(0, -1);
-    return `${otherOptions.join("، ")} و ${lastOption}`;
-  };
-
+  // Updated function to handle add to cart with addons modal
   const handleAddToCart = async (product, e) => {
     e.stopPropagation();
 
@@ -660,14 +672,142 @@ const Home = () => {
       return;
     }
 
-    setAddingToCart(product.id);
+    // First check if product has required addons
+    try {
+      // Fetch product details to check for required addons
+      const addons = await fetchProductAddons(product.id);
+
+      // Check if there are any required addons
+      const requiredAddons = addons.filter(
+        (addon) => addon.isSelectionRequired,
+      );
+
+      if (requiredAddons.length > 0) {
+        // Show addons modal instead of going to details page
+        setSelectedProductForAddons(product);
+        setProductAddons(addons);
+        setSelectedAddons({}); // Reset selected addons
+        setShowAddonsModal(true);
+        return;
+      }
+
+      // If no required addons, add directly to cart
+      await addProductToCartDirectly(product.id, []);
+    } catch (error) {
+      console.error("Error checking product addons:", error);
+      // If there's an error fetching addons, try to add directly
+      try {
+        await addProductToCartDirectly(product.id, []);
+      } catch (innerError) {
+        console.error("Error adding to cart:", innerError);
+        showNotification("error", "خطأ", "فشل في إضافة المنتج إلى السلة", {
+          timer: 2000,
+        });
+      }
+    }
+  };
+
+  // Function to add product to cart directly (without modal)
+  const addProductToCartDirectly = async (productId, options = []) => {
+    setAddingToCart(productId);
 
     try {
       await axiosInstance.post("/api/CartItems/AddCartItem", {
-        menuItemId: product.id,
+        menuItemId: productId,
         note: "",
         quantity: 1,
-        options: [],
+        options: options,
+      });
+
+      await fetchCartItemsCount();
+
+      const product = products.find((p) => p.id === productId);
+      if (product) {
+        showNotification(
+          "success",
+          "تم الإضافة إلى السلة!",
+          `تم إضافة ${product.name} إلى سلة التسوق`,
+          { timer: 1500 },
+        );
+      }
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      throw error;
+    } finally {
+      setTimeout(() => {
+        setAddingToCart(null);
+      }, 500);
+    }
+  };
+
+  // Function to handle addon selection in modal
+  const handleAddonSelect = (addonId, optionId, type) => {
+    setSelectedAddons((prev) => {
+      const newSelectedAddons = { ...prev };
+
+      if (type === "single") {
+        newSelectedAddons[addonId] = [optionId];
+      } else {
+        const currentSelections = newSelectedAddons[addonId] || [];
+
+        if (currentSelections.includes(optionId)) {
+          newSelectedAddons[addonId] = currentSelections.filter(
+            (id) => id !== optionId,
+          );
+        } else {
+          newSelectedAddons[addonId] = [...currentSelections, optionId];
+        }
+
+        if (newSelectedAddons[addonId].length === 0) {
+          delete newSelectedAddons[addonId];
+        }
+      }
+
+      return newSelectedAddons;
+    });
+  };
+
+  // Function to add product with selected addons
+  const handleAddToCartWithAddons = async () => {
+    if (!selectedProductForAddons) return;
+
+    // Check if all required addons are selected
+    const requiredAddons = productAddons.filter(
+      (addon) => addon.isSelectionRequired,
+    );
+    const missingRequiredAddons = requiredAddons.filter(
+      (addon) => !selectedAddons[addon.id],
+    );
+
+    if (missingRequiredAddons.length > 0) {
+      showNotification(
+        "warning",
+        "خيارات مطلوبة",
+        `يرجى اختيار ${missingRequiredAddons
+          .map((addon) => addon.title)
+          .join(" و ")}`,
+        { timer: 2000 },
+      );
+      return;
+    }
+
+    // Prepare options array
+    const options = [];
+    Object.values(selectedAddons).forEach((optionIds) => {
+      optionIds.forEach((optionId) => {
+        options.push(optionId);
+      });
+    });
+
+    // Add to cart
+    try {
+      setAddingToCart(selectedProductForAddons.id);
+
+      await axiosInstance.post("/api/CartItems/AddCartItem", {
+        menuItemId: selectedProductForAddons.id,
+        note: "",
+        quantity: 1,
+        options: options,
       });
 
       await fetchCartItemsCount();
@@ -675,54 +815,14 @@ const Home = () => {
       showNotification(
         "success",
         "تم الإضافة إلى السلة!",
-        `تم إضافة ${product.name} إلى سلة التسوق`,
+        `تم إضافة ${selectedProductForAddons.name} إلى سلة التسوق`,
         { timer: 1500 },
       );
+
+      // Close modal and reset states
+      handleCloseAddonsModal();
     } catch (error) {
-      console.error("Error adding to cart:", error);
-
-      if (error.response && error.response.data && error.response.data.errors) {
-        const errors = error.response.data.errors;
-        const missingOptionsError = errors.find(
-          (err) => err.code === "MissingRequiredOptions",
-        );
-
-        if (missingOptionsError) {
-          const requiredOptions = extractRequiredOptionsFromError(
-            missingOptionsError.description,
-          );
-
-          if (requiredOptions.length > 0) {
-            const formattedOptions = formatOptionsForDisplay(requiredOptions);
-
-            let errorMessage;
-            if (requiredOptions.length === 1) {
-              errorMessage = `يجب تحديد خيار واحد على الأقل من: ${formattedOptions}. الرجاء عرض تفاصيل المنتج لتحديد الخيارات المطلوبة.`;
-            } else {
-              errorMessage = `يجب تحديد خيار واحد على الأقل من كل من: ${formattedOptions}. الرجاء عرض تفاصيل المنتج لتحديد الخيارات المطلوبة.`;
-            }
-
-            Swal.fire({
-              icon: "warning",
-              title: "خيارات مطلوبة",
-              text: errorMessage,
-              showConfirmButton: true,
-              confirmButtonText: "عرض التفاصيل",
-              showCancelButton: true,
-              cancelButtonText: "إلغاء",
-              confirmButtonColor: "#E41E26",
-              cancelButtonColor: "#6B7280",
-            }).then((result) => {
-              if (result.isConfirmed) {
-                handleProductDetails(product);
-              }
-            });
-            setAddingToCart(null);
-            return;
-          }
-        }
-      }
-
+      console.error("Error adding to cart with addons:", error);
       showNotification("error", "خطأ", "فشل في إضافة المنتج إلى السلة", {
         timer: 2000,
       });
@@ -731,6 +831,15 @@ const Home = () => {
         setAddingToCart(null);
       }, 500);
     }
+  };
+
+  // Function to close addons modal
+  const handleCloseAddonsModal = () => {
+    setShowAddonsModal(false);
+    setSelectedProductForAddons(null);
+    setProductAddons([]);
+    setSelectedAddons({});
+    setModalLoading(false);
   };
 
   const handleEditProduct = (product, e) => {
@@ -1366,6 +1475,183 @@ const Home = () => {
           content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
         />
       </Helmet>
+
+      {/* Addons Modal - Responsive بدون اسكرول داخلي */}
+      {showAddonsModal && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
+            onClick={handleCloseAddonsModal}
+          />
+          <div
+            className="fixed inset-0 z-[101] flex items-center justify-center p-2 sm:p-4"
+            onClick={handleCloseAddonsModal}
+          >
+            <div
+              className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden w-full max-w-[95vw] sm:max-w-2xl mx-2 sm:mx-4"
+              onClick={(e) => e.stopPropagation()}
+              dir="rtl"
+              style={{ maxHeight: "calc(100vh - 2rem)" }}
+            >
+              <div className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white p-4 sm:p-6 relative">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="bg-white/20 p-2 sm:p-3 rounded-xl sm:rounded-2xl backdrop-blur-sm">
+                      <FaLayerGroup className="text-lg sm:text-2xl" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
+                        اختيار الإضافات
+                      </h2>
+                      <p className="text-white/80 mt-1 text-sm sm:text-base">
+                        {selectedProductForAddons?.name}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleCloseAddonsModal}
+                    className="bg-white/20 backdrop-blur-sm rounded-full p-2 sm:p-3 text-white hover:bg-white/30 flex-shrink-0"
+                  >
+                    <FaTimes className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5" />
+                  </button>
+                </div>
+              </div>
+
+              <div
+                className="p-3 sm:p-4 md:p-6 overflow-y-auto"
+                style={{ maxHeight: "calc(100vh - 12rem)" }}
+              >
+                {modalLoading ? (
+                  <div className="flex items-center justify-center py-8 sm:py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-t-4 border-b-4 border-[#E41E26]"></div>
+                  </div>
+                ) : productAddons.length === 0 ? (
+                  <div className="text-center py-8 sm:py-12">
+                    <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base md:text-lg">
+                      لا توجد إضافات مطلوبة لهذا المنتج
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-4 sm:mb-6">
+                      <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm md:text-base mb-3 sm:mb-4">
+                        يرجى اختيار الإضافات المطلوبة لهذا المنتج:
+                      </p>
+
+                      <div className="space-y-3 sm:space-y-4 md:space-y-6">
+                        {productAddons.map((addon) => (
+                          <div
+                            key={addon.id}
+                            className="bg-gray-50 dark:bg-gray-700/50 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-600"
+                          >
+                            <div className="flex items-center justify-between mb-2 sm:mb-3">
+                              <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                                <h3 className="font-semibold text-sm sm:text-base md:text-lg text-gray-800 dark:text-gray-200">
+                                  {addon.title}
+                                </h3>
+                                <div className="flex gap-1 sm:gap-2">
+                                  {addon.isSelectionRequired && (
+                                    <span className="text-[10px] sm:text-xs bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                      مطلوب
+                                    </span>
+                                  )}
+                                  {addon.canSelectMultipleOptions && (
+                                    <span className="text-[10px] sm:text-xs bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full whitespace-nowrap">
+                                      متعدد
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-2">
+                              {addon.options.map((option) => {
+                                const isSelected = selectedAddons[
+                                  addon.id
+                                ]?.includes(option.id);
+                                return (
+                                  <div key={option.id} className="w-full">
+                                    <button
+                                      onClick={() =>
+                                        handleAddonSelect(
+                                          addon.id,
+                                          option.id,
+                                          addon.type,
+                                        )
+                                      }
+                                      className={`w-full p-2 sm:p-3 rounded-lg border-2 transition-all duration-200 flex items-center justify-between ${
+                                        isSelected
+                                          ? "border-[#E41E26] bg-red-50 dark:bg-red-900/20"
+                                          : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-500"
+                                      }`}
+                                    >
+                                      <div className="flex items-center gap-1 sm:gap-2 truncate min-w-0">
+                                        <span
+                                          className={`font-medium text-xs sm:text-sm md:text-base truncate ${
+                                            isSelected
+                                              ? "text-[#E41E26]"
+                                              : "text-gray-700 dark:text-gray-300"
+                                          }`}
+                                        >
+                                          {option.name}
+                                        </span>
+                                        {isSelected && (
+                                          <FaCheck className="text-[#E41E26] flex-shrink-0 w-3 h-3 sm:w-4 sm:h-4" />
+                                        )}
+                                      </div>
+
+                                      {option.price > 0 && (
+                                        <span className="text-xs sm:text-sm md:text-base text-green-600 dark:text-green-400 font-semibold whitespace-nowrap flex-shrink-0 mr-1 sm:mr-2">
+                                          +{option.price} ج.م
+                                        </span>
+                                      )}
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 sm:gap-3 mt-6 sm:mt-8">
+                      <button
+                        onClick={handleCloseAddonsModal}
+                        className="flex-1 py-2 sm:py-3 text-xs sm:text-sm md:text-base bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                      >
+                        إلغاء
+                      </button>
+                      <button
+                        onClick={handleAddToCartWithAddons}
+                        disabled={addingToCart === selectedProductForAddons?.id}
+                        className={`flex-1 py-2 sm:py-3 rounded-lg font-semibold flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm md:text-base ${
+                          addingToCart === selectedProductForAddons?.id
+                            ? "bg-gradient-to-r from-gray-500 to-gray-600 text-white cursor-wait"
+                            : "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white hover:shadow-lg transition-all"
+                        }`}
+                      >
+                        {addingToCart === selectedProductForAddons?.id ? (
+                          <>
+                            <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-t-2 border-b-2 border-white"></div>
+                            <span>يتم الإضافة...</span>
+                          </>
+                        ) : (
+                          <>
+                            <FaShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+                            <span>أضف إلى السلة</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       <div className="min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 font-sans relative overflow-x-hidden">
         <div ref={topOfPageRef}></div>
 
