@@ -42,6 +42,7 @@ export default function UserCard({
               <img
                 src={`https://restaurant-template.runasp.net/${user.imageUrl}`}
                 alt="صورة المستخدم"
+                loading="lazy"
                 className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full object-cover border-2 ${
                   user.isActive === false
                     ? "border-red-300 grayscale"

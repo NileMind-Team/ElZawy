@@ -31,6 +31,7 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axiosInstance from "../api/axiosInstance";
+import { Helmet } from "react-helmet-async";
 
 const ProductForm = () => {
   const navigate = useNavigate();
@@ -246,7 +247,7 @@ const ProductForm = () => {
       const maxSize = 5 * 1024 * 1024;
       if (blob.size > maxSize) {
         throw new Error(
-          `حجم الصورة (${formatBytes(blob.size)}) يتجاوز الحد الأقصى (5MB)`
+          `حجم الصورة (${formatBytes(blob.size)}) يتجاوز الحد الأقصى (5MB)`,
         );
       }
 
@@ -264,7 +265,7 @@ const ProductForm = () => {
       if (!allowedTypes.includes(mimeType.toLowerCase())) {
         const fileType = mimeType.split("/")[1] || "غير معروف";
         throw new Error(
-          `صيغة الملف (${fileType}) غير مدعومة. الصيغ المدعومة: JPG, JPEG, PNG, JFIF, HEIF/HEIC, WebP`
+          `صيغة الملف (${fileType}) غير مدعومة. الصيغ المدعومة: JPG, JPEG, PNG, JFIF, HEIF/HEIC, WebP`,
         );
       }
 
@@ -289,7 +290,7 @@ const ProductForm = () => {
 
       showSuccessAlert(
         "تم تحميل الصورة!",
-        `تم تحميل الصورة بنجاح (${formatBytes(file.size)})`
+        `تم تحميل الصورة بنجاح (${formatBytes(file.size)})`,
       );
 
       return file;
@@ -297,7 +298,7 @@ const ProductForm = () => {
       console.error("Error downloading image:", error);
       showErrorAlert(
         "خطأ في تحميل الصورة",
-        error.message || "فشل في تحميل الصورة من الرابط المقدم"
+        error.message || "فشل في تحميل الصورة من الرابط المقدم",
       );
       return null;
     } finally {
@@ -340,7 +341,7 @@ const ProductForm = () => {
     const fetchOptionTypes = async () => {
       try {
         const response = await axiosInstance.get(
-          "/api/MenuItemOptionTypes/GetAll"
+          "/api/MenuItemOptionTypes/GetAll",
         );
         setOptionTypes(response.data);
       } catch (error) {
@@ -381,8 +382,8 @@ const ProductForm = () => {
   const updateMenuItemOption = (id, field, value) => {
     setMenuItemOptions(
       menuItemOptions.map((optionType) =>
-        optionType.id === id ? { ...optionType, [field]: value } : optionType
-      )
+        optionType.id === id ? { ...optionType, [field]: value } : optionType,
+      ),
     );
   };
 
@@ -403,8 +404,8 @@ const ProductForm = () => {
                 },
               ],
             }
-          : optionType
-      )
+          : optionType,
+      ),
     );
   };
 
@@ -415,11 +416,11 @@ const ProductForm = () => {
           ? {
               ...optionType,
               options: optionType.options.filter(
-                (option) => option.id !== optionId
+                (option) => option.id !== optionId,
               ),
             }
-          : optionType
-      )
+          : optionType,
+      ),
     );
   };
 
@@ -430,11 +431,11 @@ const ProductForm = () => {
           ? {
               ...optionType,
               options: optionType.options.map((option) =>
-                option.id === optionId ? { ...option, [field]: value } : option
+                option.id === optionId ? { ...option, [field]: value } : option,
               ),
             }
-          : optionType
-      )
+          : optionType,
+      ),
     );
   };
 
@@ -476,13 +477,13 @@ const ProductForm = () => {
           name: editingOptionType.name,
           canSelectMultipleOptions: editingOptionType.canSelectMultipleOptions,
           isSelectionRequired: editingOptionType.isSelectionRequired,
-        }
+        },
       );
 
       setOptionTypes(
         optionTypes.map((type) =>
-          type.id === editingOptionType.id ? { ...editingOptionType } : type
-        )
+          type.id === editingOptionType.id ? { ...editingOptionType } : type,
+        ),
       );
 
       setEditingOptionType(null);
@@ -506,7 +507,7 @@ const ProductForm = () => {
           name: newOptionType.name,
           canSelectMultipleOptions: newOptionType.canSelectMultipleOptions,
           isSelectionRequired: newOptionType.isSelectionRequired,
-        }
+        },
       );
 
       const newOptionTypeData = response.data;
@@ -539,11 +540,11 @@ const ProductForm = () => {
       if (result.isConfirmed) {
         try {
           await axiosInstance.delete(
-            `/api/MenuItemOptionTypes/Delete/${optionTypeId}`
+            `/api/MenuItemOptionTypes/Delete/${optionTypeId}`,
           );
 
           setOptionTypes(
-            optionTypes.filter((type) => type.id !== optionTypeId)
+            optionTypes.filter((type) => type.id !== optionTypeId),
           );
 
           showSuccessAlert("تم الحذف!", "تم حذف نوع الإضافة بنجاح");
@@ -562,7 +563,7 @@ const ProductForm = () => {
       try {
         setIsLoadingProduct(true);
         const response = await axiosInstance.get(
-          `/api/MenuItems/Get/${productId}`
+          `/api/MenuItems/Get/${productId}`,
         );
         const product = response.data;
 
@@ -790,7 +791,7 @@ const ProductForm = () => {
       if (file.size > maxSize) {
         showErrorAlert(
           "حجم الملف كبير",
-          `حجم الصورة (${formatBytes(file.size)}) يتجاوز الحد الأقصى (5MB)`
+          `حجم الصورة (${formatBytes(file.size)}) يتجاوز الحد الأقصى (5MB)`,
         );
         return;
       }
@@ -809,7 +810,7 @@ const ProductForm = () => {
         const fileType = file.type.split("/")[1] || "غير معروف";
         showErrorAlert(
           "نوع ملف غير مدعوم",
-          `صيغة الملف (${fileType}) غير مدعومة. الصيغ المدعومة: JPG, JPEG, PNG, JFIF, HEIF/HEIC, WebP`
+          `صيغة الملف (${fileType}) غير مدعومة. الصيغ المدعومة: JPG, JPEG, PNG, JFIF, HEIF/HEIC, WebP`,
         );
         return;
       }
@@ -880,7 +881,7 @@ const ProductForm = () => {
   const hasRequiredOptionTypes = () => {
     const requiredOptionTypes = menuItemOptions.filter((optionType) => {
       const optionTypeData = optionTypes.find(
-        (type) => type.id === optionType.typeId
+        (type) => type.id === optionType.typeId,
       );
       return optionTypeData?.isSelectionRequired === true;
     });
@@ -926,7 +927,7 @@ const ProductForm = () => {
     ) {
       showErrorAlert(
         "وقت تحضير غير صحيح",
-        "وقت البدء يجب أن يكون أقل من وقت الانتهاء في وقت التحضير"
+        "وقت البدء يجب أن يكون أقل من وقت الانتهاء في وقت التحضير",
       );
       setIsLoading(false);
       return;
@@ -971,14 +972,14 @@ const ProductForm = () => {
         optionType.options.forEach((option, optionIndex) => {
           if (!option.name.trim()) {
             invalidOptions.push(
-              `اسم الإضافة ${optionIndex + 1} في النوع ${typeIndex + 1} مطلوب`
+              `اسم الإضافة ${optionIndex + 1} في النوع ${typeIndex + 1} مطلوب`,
             );
           }
           if (!option.price || parseFloat(option.price) < 0) {
             invalidOptions.push(
               `سعر الإضافة ${optionIndex + 1} في النوع ${
                 typeIndex + 1
-              } يجب أن يكون رقمًا صحيحًا`
+              } يجب أن يكون رقمًا صحيحًا`,
             );
           }
         });
@@ -987,7 +988,7 @@ const ProductForm = () => {
       if (invalidOptions.length > 0) {
         showErrorAlert(
           "خطأ في الإضافات",
-          invalidOptions.slice(0, 3).join("\n")
+          invalidOptions.slice(0, 3).join("\n"),
         );
         setIsLoading(false);
         return;
@@ -996,7 +997,7 @@ const ProductForm = () => {
       if (formData.IsPriceBasedOnRequest && !hasRequiredOptionTypes()) {
         showErrorAlert(
           "خطأ في الإعدادات",
-          "المنتج بسعر حسب الطلب يجب أن يحتوي على أنواع إضافات مطلوبة للاختيار"
+          "المنتج بسعر حسب الطلب يجب أن يحتوي على أنواع إضافات مطلوبة للاختيار",
         );
         setIsLoading(false);
         return;
@@ -1014,7 +1015,7 @@ const ProductForm = () => {
       } else {
         formDataToSend.append(
           "BasePrice",
-          parseFloat(formData.BasePrice).toString()
+          parseFloat(formData.BasePrice).toString(),
         );
       }
 
@@ -1029,14 +1030,14 @@ const ProductForm = () => {
       if (formData.PreparationTimeStart) {
         formDataToSend.append(
           "PreparationTimeStart",
-          formData.PreparationTimeStart.toString()
+          formData.PreparationTimeStart.toString(),
         );
       }
 
       if (formData.PreparationTimeEnd) {
         formDataToSend.append(
           "PreparationTimeEnd",
-          formData.PreparationTimeEnd.toString()
+          formData.PreparationTimeEnd.toString(),
         );
       }
 
@@ -1071,19 +1072,19 @@ const ProductForm = () => {
             formDataToSend.append(`${prefix}.name`, option.name);
             formDataToSend.append(
               `${prefix}.price`,
-              parseFloat(option.price).toString()
+              parseFloat(option.price).toString(),
             );
             formDataToSend.append(
               `${prefix}.isAvailableNow`,
-              option.isAvailableNow.toString()
+              option.isAvailableNow.toString(),
             );
             formDataToSend.append(
               `${prefix}.isActive`,
-              option.isActive.toString()
+              option.isActive.toString(),
             );
             formDataToSend.append(
               `${prefix}.typeId`,
-              optionType.typeId.toString()
+              optionType.typeId.toString(),
             );
             optionIndex++;
           });
@@ -1104,7 +1105,7 @@ const ProductForm = () => {
             console.error("Error converting old image URL to file:", error);
             showErrorAlert(
               "خطأ في الصورة",
-              "فشل في تحميل الصورة القديمة. يرجى إعادة رفع الصورة."
+              "فشل في تحميل الصورة القديمة. يرجى إعادة رفع الصورة.",
             );
             setIsLoading(false);
             return;
@@ -1122,7 +1123,7 @@ const ProductForm = () => {
           } else {
             showErrorAlert(
               "خطأ في الصورة",
-              "يرجى تحميل الصورة من الرابط أولاً أو استخدام صورة أخرى"
+              "يرجى تحميل الصورة من الرابط أولاً أو استخدام صورة أخرى",
             );
             setIsLoading(false);
             return;
@@ -1144,7 +1145,7 @@ const ProductForm = () => {
       if (response.status === 200 || response.status === 204) {
         showSuccessAlert(
           isEditing ? "تم تحديث المنتج!" : "تم إضافة المنتج!",
-          `${formData.Name} تم ${isEditing ? "تحديثه" : "إضافته"} بنجاح`
+          `${formData.Name} تم ${isEditing ? "تحديثه" : "إضافته"} بنجاح`,
         );
         navigate("/");
       }
@@ -1165,563 +1166,493 @@ const ProductForm = () => {
   }
 
   return (
-    <div
-      className={`min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-2 xs:px-3 sm:px-4 md:px-6 py-2 xs:py-3 sm:py-6 relative font-sans overflow-hidden transition-colors duration-300`}
-      dir="rtl"
-    >
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -left-8 xs:-left-10 sm:-left-20 -top-8 xs:-top-10 sm:-top-20 w-32 h-32 xs:w-40 xs:h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#E41E26]/10 to-[#FDB913]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
-        <div className="absolute -right-8 xs:-right-10 sm:-right-20 -bottom-8 xs:-bottom-10 sm:-bottom-20 w-32 h-32 xs:w-40 xs:h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#FDB913]/10 to-[#E41E26]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, type: "spring" }}
-        className="max-w-6xl xl:max-w-5xl mx-auto bg-white/90 backdrop-blur-xl shadow-lg xs:shadow-xl sm:shadow-2xl rounded-xl xs:rounded-2xl sm:rounded-3xl border border-white/50 relative overflow-hidden dark:bg-gray-800/90 dark:border-gray-700/50"
+    <>
+      <Helmet>
+        <title>Chicken One El-Zawy</title>
+        <meta
+          name="description"
+          content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
+        />
+      </Helmet>
+      <div
+        className={`min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-2 xs:px-3 sm:px-4 md:px-6 py-2 xs:py-3 sm:py-6 relative font-sans overflow-hidden transition-colors duration-300`}
+        dir="rtl"
       >
-        <div className="relative h-28 xs:h-32 sm:h-40 md:h-44 lg:h-52 bg-gradient-to-r from-[#E41E26] to-[#FDB913] overflow-hidden">
-          <div className="absolute inset-0 bg-black/10"></div>
-          <div className="absolute -top-3 xs:-top-4 sm:-top-6 -right-3 xs:-right-4 sm:-right-6 w-12 h-12 xs:w-16 xs:h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-white/10 rounded-full"></div>
-          <div className="absolute -bottom-3 xs:-bottom-4 sm:-bottom-6 -left-3 xs:-left-4 sm:-left-6 w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-32 lg:h-32 bg-white/10 rounded-full"></div>
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -left-8 xs:-left-10 sm:-left-20 -top-8 xs:-top-10 sm:-top-20 w-32 h-32 xs:w-40 xs:h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#E41E26]/10 to-[#FDB913]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
+          <div className="absolute -right-8 xs:-right-10 sm:-right-20 -bottom-8 xs:-bottom-10 sm:-bottom-20 w-32 h-32 xs:w-40 xs:h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#FDB913]/10 to-[#E41E26]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
+        </div>
 
-          <motion.button
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            onClick={() => navigate(-1)}
-            className="absolute top-2 xs:top-3 sm:top-6 left-2 xs:left-3 sm:left-6 z-50 bg-white/80 backdrop-blur-md hover:bg-[#E41E26] hover:text-white rounded-full p-1.5 xs:p-2 sm:p-3 text-[#E41E26] border border-[#E41E26]/30 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl group dark:bg-gray-800/80 dark:text-gray-200 dark:hover:bg-[#E41E26]"
-          >
-            <FaArrowLeft
-              size={12}
-              className="xs:size-3 sm:size-4 group-hover:scale-110 transition-transform"
-            />
-          </motion.button>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, type: "spring" }}
+          className="max-w-6xl xl:max-w-5xl mx-auto bg-white/90 backdrop-blur-xl shadow-lg xs:shadow-xl sm:shadow-2xl rounded-xl xs:rounded-2xl sm:rounded-3xl border border-white/50 relative overflow-hidden dark:bg-gray-800/90 dark:border-gray-700/50"
+        >
+          <div className="relative h-28 xs:h-32 sm:h-40 md:h-44 lg:h-52 bg-gradient-to-r from-[#E41E26] to-[#FDB913] overflow-hidden">
+            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="absolute -top-3 xs:-top-4 sm:-top-6 -right-3 xs:-right-4 sm:-right-6 w-12 h-12 xs:w-16 xs:h-16 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-white/10 rounded-full"></div>
+            <div className="absolute -bottom-3 xs:-bottom-4 sm:-bottom-6 -left-3 xs:-left-4 sm:-left-6 w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-32 lg:h-32 bg-white/10 rounded-full"></div>
 
-          <div className="relative z-10 h-full flex flex-col justify-end items-center text-center px-3 xs:px-4 sm:px-6 pb-4 xs:pb-5 sm:pb-8 md:pb-10">
+            <motion.button
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              onClick={() => navigate(-1)}
+              className="absolute top-2 xs:top-3 sm:top-6 left-2 xs:left-3 sm:left-6 z-50 bg-white/80 backdrop-blur-md hover:bg-[#E41E26] hover:text-white rounded-full p-1.5 xs:p-2 sm:p-3 text-[#E41E26] border border-[#E41E26]/30 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl group dark:bg-gray-800/80 dark:text-gray-200 dark:hover:bg-[#E41E26]"
+            >
+              <FaArrowLeft
+                size={12}
+                className="xs:size-3 sm:size-4 group-hover:scale-110 transition-transform"
+              />
+            </motion.button>
+
+            <div className="relative z-10 h-full flex flex-col justify-end items-center text-center px-3 xs:px-4 sm:px-6 pb-4 xs:pb-5 sm:pb-8 md:pb-10">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-3 mb-1.5 xs:mb-2 sm:mb-3"
+              >
+                <div className="p-1.5 xs:p-2 sm:p-3 bg-white/20 backdrop-blur-sm rounded-lg xs:rounded-xl sm:rounded-2xl">
+                  <FaClock className="text-white text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl" />
+                </div>
+                <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white">
+                  {isEditing ? "تعديل المنتج" : "إضافة منتج جديد"}
+                </h1>
+              </motion.div>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-white/90 text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl max-w-2xl mb-1.5 xs:mb-2 sm:mb-3"
+              >
+                {isEditing
+                  ? "قم بتحديث معلومات المنتج"
+                  : "قم بإنشاء عنصر قائمة جديد"}
+              </motion.p>
+            </div>
+          </div>
+
+          <div className="relative px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 pb-3 xs:pb-4 sm:pb-6 md:pb-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-3 mb-1.5 xs:mb-2 sm:mb-3"
+              transition={{ delay: 0.4 }}
+              className="mt-4 xs:mt-5 sm:mt-6 md:mt-8"
             >
-              <div className="p-1.5 xs:p-2 sm:p-3 bg-white/20 backdrop-blur-sm rounded-lg xs:rounded-xl sm:rounded-2xl">
-                <FaClock className="text-white text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl" />
-              </div>
-              <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-white">
-                {isEditing ? "تعديل المنتج" : "إضافة منتج جديد"}
-              </h1>
-            </motion.div>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-white/90 text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl max-w-2xl mb-1.5 xs:mb-2 sm:mb-3"
-            >
-              {isEditing
-                ? "قم بتحديث معلومات المنتج"
-                : "قم بإنشاء عنصر قائمة جديد"}
-            </motion.p>
-          </div>
-        </div>
-
-        <div className="relative px-2 xs:px-3 sm:px-4 md:px-6 lg:px-8 pb-3 xs:pb-4 sm:pb-6 md:pb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mt-4 xs:mt-5 sm:mt-6 md:mt-8"
-          >
-            <div className="bg-white/80 backdrop-blur-sm rounded-lg xs:rounded-xl sm:rounded-2xl p-3 xs:p-4 sm:p-6 md:p-8 border border-gray-200/50 dark:bg-gray-700/80 dark:border-gray-600/50">
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-4 xs:space-y-5 sm:space-y-6"
-              >
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xs:gap-5 sm:gap-6">
-                  <div className="space-y-4 xs:space-y-5 sm:space-y-6">
-                    <div>
-                      <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
-                        اسم المنتج *
-                      </label>
-                      <input
-                        type="text"
-                        name="Name"
-                        value={formData.Name}
-                        onChange={handleInputChange}
-                        className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                        placeholder="اسم المنتج"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
-                        الفئة *
-                      </label>
-                      {isLoadingCategories ? (
-                        <div className="text-center py-4 text-gray-500">
-                          جاري تحميل الفئات...
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 gap-1.5 xs:gap-2 sm:gap-3">
-                          {categories
-                            .filter((category) => category.isActive)
-                            .map((category) => (
-                              <motion.button
-                                key={category.id}
-                                type="button"
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() =>
-                                  setFormData({
-                                    ...formData,
-                                    CategoryId: category.id,
-                                  })
-                                }
-                                className={`flex flex-col items-center gap-1 xs:gap-1.5 sm:gap-2 p-1.5 xs:p-2 sm:p-3 rounded-lg border-2 transition-all duration-200 ${
-                                  formData.CategoryId === category.id
-                                    ? "border-[#E41E26] bg-gradient-to-r from-[#fff8e7] to-[#ffe5b4] text-[#E41E26] dark:from-gray-600 dark:to-gray-500"
-                                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300 dark:hover:border-gray-400"
-                                }`}
-                              >
-                                <span className="text-[10px] xs:text-xs sm:text-sm font-medium text-center leading-tight">
-                                  {category.name}
-                                </span>
-                              </motion.button>
-                            ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg xs:rounded-xl sm:rounded-2xl p-3 xs:p-4 sm:p-6 md:p-8 border border-gray-200/50 dark:bg-gray-700/80 dark:border-gray-600/50">
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-4 xs:space-y-5 sm:space-y-6"
+                >
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 xs:gap-5 sm:gap-6">
+                    <div className="space-y-4 xs:space-y-5 sm:space-y-6">
                       <div>
                         <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
-                          نوع السعر *
+                          اسم المنتج *
                         </label>
-                        <div className="grid grid-cols-2 gap-2 xs:gap-3 mb-3">
-                          <motion.button
-                            type="button"
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handlePriceTypeChange("fixed")}
-                            className={`flex items-center justify-center gap-1.5 xs:gap-2 p-2 xs:p-3 rounded-lg border-2 transition-all duration-200 ${
-                              !formData.IsPriceBasedOnRequest
-                                ? "border-[#E41E26] bg-white text-[#E41E26] shadow-md dark:bg-gray-600"
-                                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300 dark:hover:border-gray-400"
-                            }`}
-                          >
-                            <FaDollarSign className="text-xs xs:text-sm" />
-                            <span className="text-xs xs:text-sm font-medium">
-                              سعر ثابت
-                            </span>
-                          </motion.button>
-
-                          <motion.button
-                            type="button"
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => handlePriceTypeChange("request")}
-                            className={`flex items-center justify-center gap-1.5 xs:gap-2 p-2 xs:p-3 rounded-lg border-2 transition-all duration-200 ${
-                              formData.IsPriceBasedOnRequest
-                                ? "border-[#E41E26] bg-white text-[#E41E26] shadow-md dark:bg-gray-600"
-                                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300 dark:hover:border-gray-400"
-                            }`}
-                          >
-                            <FaQuestionCircle className="text-xs xs:text-sm" />
-                            <span className="text-xs xs:text-sm font-medium">
-                              حسب الطلب
-                            </span>
-                          </motion.button>
-                        </div>
-                      </div>
-
-                      {!formData.IsPriceBasedOnRequest && (
-                        <div>
-                          <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
-                            السعر (جنيه) *
-                          </label>
-                          <input
-                            type="number"
-                            name="BasePrice"
-                            value={formData.BasePrice}
-                            onChange={handleNumberInputChange}
-                            step="0.01"
-                            min="0.01"
-                            onWheel={(e) => e.target.blur()}
-                            className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                            placeholder="0.00"
-                            required={!formData.IsPriceBasedOnRequest}
-                          />
-                          {formData.IsPriceBasedOnRequest &&
-                            !isEditing &&
-                            hasRequiredOptionTypes() && (
-                              <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                <p className="text-xs text-yellow-700">
-                                  <span className="font-semibold">ملاحظة:</span>{" "}
-                                  المنتج بسعر حسب الطلب يجب أن يحتوي على أنواع
-                                  إضافات مطلوبة للاختيار
-                                </p>
-                              </div>
-                            )}
-                        </div>
-                      )}
-
-                      {formData.IsPriceBasedOnRequest && (
-                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                          <div className="flex items-start gap-2">
-                            <FaQuestionCircle className="text-blue-500 mt-0.5" />
-                            <div>
-                              <p className="text-xs text-blue-700 font-semibold">
-                                السعر حسب الطلب
-                              </p>
-                              <p className="text-xs text-blue-600 mt-1">
-                                سيتم تحديد السعر بناءً على اختيارات العميل من
-                                الإضافات.
-                                {!isEditing &&
-                                  " يجب أن يحتوي المنتج على أنواع إضافات مطلوبة للاختيار."}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
-                        السعرات الحرارية
-                      </label>
-                      <div className="relative group">
-                        <FaFire className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#E41E26] text-sm transition-all duration-300 group-focus-within:scale-110" />
                         <input
-                          type="number"
-                          name="Calories"
-                          value={formData.Calories}
-                          onChange={handleNumberInputChange}
-                          min="0"
-                          onWheel={(e) => e.target.blur()}
-                          className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white pr-10"
-                          placeholder="عدد السعرات الحرارية"
+                          type="text"
+                          name="Name"
+                          value={formData.Name}
+                          onChange={handleInputChange}
+                          className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                          placeholder="اسم المنتج"
+                          required
                         />
                       </div>
-                    </div>
 
-                    <div>
-                      <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
-                        وقت التحضير (بالدقائق)
-                      </label>
-                      <div className="grid grid-cols-2 gap-2 xs:gap-3">
-                        <div className="relative group">
-                          <FaClock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#E41E26] text-xs transition-all duration-300 group-focus-within:scale-110" />
-                          <input
-                            type="number"
-                            name="PreparationTimeStart"
-                            value={formData.PreparationTimeStart}
-                            onChange={handlePreparationTimeChange}
-                            min="0"
-                            onWheel={(e) => e.target.blur()}
-                            className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white pr-8"
-                            placeholder="من"
-                          />
-                        </div>
-                        <div className="relative group">
-                          <FaClock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#E41E26] text-xs transition-all duration-300 group-focus-within:scale-110" />
-                          <input
-                            type="number"
-                            name="PreparationTimeEnd"
-                            value={formData.PreparationTimeEnd}
-                            onChange={handlePreparationTimeChange}
-                            min="0"
-                            onWheel={(e) => e.target.blur()}
-                            className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white pr-8"
-                            placeholder="إلى"
-                          />
-                        </div>
-                      </div>
-                      {formData.PreparationTimeStart &&
-                        formData.PreparationTimeEnd &&
-                        parseInt(formData.PreparationTimeStart) >=
-                          parseInt(formData.PreparationTimeEnd) && (
-                          <p className="text-red-500 text-xs mt-1">
-                            وقت البدء يجب أن يكون أقل من وقت الانتهاء في وقت
-                            التحضير
-                          </p>
-                        )}
-                    </div>
-
-                    <div>
-                      <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
-                        الحالة *
-                      </label>
-                      <div className="flex gap-3 bg-gray-50/80 dark:bg-gray-600/80 rounded-lg p-2 xs:p-3 border border-gray-200 dark:border-gray-500">
-                        <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-2 xs:p-3 rounded-lg transition-all duration-200 border-2 border-transparent hover:border-[#E41E26]/30">
-                          <div className="relative">
-                            <input
-                              type="radio"
-                              name="IsActive"
-                              checked={formData.IsActive === true}
-                              onChange={() =>
-                                setFormData({ ...formData, IsActive: true })
-                              }
-                              className="sr-only"
-                              required
-                            />
-                            <div
-                              className={`w-4 h-4 xs:w-5 xs:h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
-                                formData.IsActive === true
-                                  ? "border-[#E41E26] bg-[#E41E26]"
-                                  : "border-gray-400 bg-white dark:bg-gray-500"
-                              }`}
-                            >
-                              {formData.IsActive === true && (
-                                <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-white rounded-full"></div>
-                              )}
-                            </div>
-                          </div>
-                          <span className="text-xs xs:text-sm font-medium text-gray-700 dark:text-gray-300">
-                            نشط
-                          </span>
+                      <div>
+                        <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
+                          الفئة *
                         </label>
-                        <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-2 xs:p-3 rounded-lg transition-all duration-200 border-2 border-transparent hover:border-[#E41E26]/30">
-                          <div className="relative">
-                            <input
-                              type="radio"
-                              name="IsActive"
-                              checked={formData.IsActive === false}
-                              onChange={() =>
-                                setFormData({ ...formData, IsActive: false })
-                              }
-                              className="sr-only"
-                              required
-                            />
-                            <div
-                              className={`w-4 h-4 xs:w-5 xs:h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
-                                formData.IsActive === false
-                                  ? "border-[#E41E26] bg-[#E41E26]"
-                                  : "border-gray-400 bg-white dark:bg-gray-500"
-                              }`}
-                            >
-                              {formData.IsActive === false && (
-                                <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-white rounded-full"></div>
-                              )}
-                            </div>
+                        {isLoadingCategories ? (
+                          <div className="text-center py-4 text-gray-500">
+                            جاري تحميل الفئات...
                           </div>
-                          <span className="text-xs xs:text-sm font-medium text-gray-700 dark:text-gray-300">
-                            غير نشط
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-
-                    {/* حقل ShowInSlider الجديد */}
-                    <div>
-                      <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
-                        عرض في السلايدر
-                      </label>
-                      <div className="flex gap-3 bg-gray-50/80 dark:bg-gray-600/80 rounded-lg p-2 xs:p-3 border border-gray-200 dark:border-gray-500">
-                        <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-2 xs:p-3 rounded-lg transition-all duration-200 border-2 border-transparent hover:border-[#E41E26]/30">
-                          <div className="relative">
-                            <input
-                              type="radio"
-                              name="ShowInSlider"
-                              checked={formData.ShowInSlider === true}
-                              onChange={() =>
-                                setFormData({ ...formData, ShowInSlider: true })
-                              }
-                              className="sr-only"
-                            />
-                            <div
-                              className={`w-4 h-4 xs:w-5 xs:h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
-                                formData.ShowInSlider === true
-                                  ? "border-[#E41E26] bg-[#E41E26]"
-                                  : "border-gray-400 bg-white dark:bg-gray-500"
-                              }`}
-                            >
-                              {formData.ShowInSlider === true && (
-                                <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-white rounded-full"></div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <FaSlidersH className="text-[#E41E26] text-xs xs:text-sm" />
-                            <span className="text-xs xs:text-sm font-medium text-gray-700 dark:text-gray-300">
-                              عرض
-                            </span>
-                          </div>
-                        </label>
-                        <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-2 xs:p-3 rounded-lg transition-all duration-200 border-2 border-transparent hover:border-[#E41E26]/30">
-                          <div className="relative">
-                            <input
-                              type="radio"
-                              name="ShowInSlider"
-                              checked={formData.ShowInSlider === false}
-                              onChange={() =>
-                                setFormData({
-                                  ...formData,
-                                  ShowInSlider: false,
-                                })
-                              }
-                              className="sr-only"
-                            />
-                            <div
-                              className={`w-4 h-4 xs:w-5 xs:h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
-                                formData.ShowInSlider === false
-                                  ? "border-[#E41E26] bg-[#E41E26]"
-                                  : "border-gray-400 bg-white dark:bg-gray-500"
-                              }`}
-                            >
-                              {formData.ShowInSlider === false && (
-                                <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-white rounded-full"></div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <FaTimes className="text-gray-500 text-xs xs:text-sm" />
-                            <span className="text-xs xs:text-sm font-medium text-gray-700 dark:text-gray-300">
-                              إخفاء
-                            </span>
-                          </div>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 xs:space-y-5 sm:space-y-6">
-                    <div>
-                      <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
-                        صورة المنتج *
-                      </label>
-
-                      {/* Switch between upload modes */}
-                      <div className="flex gap-2 mb-3 xs:mb-4">
-                        <motion.button
-                          type="button"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setImageInputMode("upload")}
-                          className={`flex-1 flex items-center justify-center gap-1.5 xs:gap-2 p-2 xs:p-2.5 rounded-lg border-2 transition-all duration-200 ${
-                            imageInputMode === "upload"
-                              ? "border-[#E41E26] bg-white text-[#E41E26] shadow-md dark:bg-gray-600"
-                              : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300 dark:hover:border-gray-400"
-                          }`}
-                        >
-                          <FaUpload className="text-xs xs:text-sm" />
-                          <span className="text-xs xs:text-sm font-medium">
-                            رفع صورة
-                          </span>
-                        </motion.button>
-                        <motion.button
-                          type="button"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={() => setImageInputMode("url")}
-                          className={`flex-1 flex items-center justify-center gap-1.5 xs:gap-2 p-2 xs:p-2.5 rounded-lg border-2 transition-all duration-200 ${
-                            imageInputMode === "url"
-                              ? "border-[#E41E26] bg-white text-[#E41E26] shadow-md dark:bg-gray-600"
-                              : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300 dark:hover:border-gray-400"
-                          }`}
-                        >
-                          <FaLink className="text-xs xs:text-sm" />
-                          <span className="text-xs xs:text-sm font-medium">
-                            رابط صورة
-                          </span>
-                        </motion.button>
-                      </div>
-
-                      {imageInputMode === "upload" ? (
-                        <div
-                          className="border-2 border-dashed border-gray-300 rounded-lg p-2 xs:p-3 sm:p-4 text-center hover:border-[#E41E26] transition-colors duration-200 cursor-pointer dark:border-gray-600"
-                          onClick={handleUploadAreaClick}
-                        >
-                          {imagePreview ? (
-                            <div className="relative">
-                              <img
-                                src={imagePreview}
-                                alt="Preview"
-                                className="w-full h-48 xs:h-56 sm:h-64 md:h-96 object-contain rounded-lg mb-2 xs:mb-3"
-                              />
-                              <button
-                                type="button"
-                                onClick={handleRemoveImage}
-                                className="absolute top-1 xs:top-2 left-1 xs:left-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
-                              >
-                                <FaTimes size={10} className="xs:size-2" />
-                              </button>
-                            </div>
-                          ) : (
-                            <div className="py-8 xs:py-10 sm:py-12 md:py-16">
-                              <FaUpload className="mx-auto text-2xl xs:text-3xl sm:text-4xl md:text-5xl text-gray-400 dark:text-gray-500 mb-2 xs:mb-3 sm:mb-4" />
-                              <p className="text-gray-600 dark:text-gray-400 mb-1.5 xs:mb-2 sm:mb-3 text-xs xs:text-sm sm:text-base">
-                                انقر لرفع الصورة
-                              </p>
-                              <p className="text-gray-500 dark:text-gray-500 text-[10px] xs:text-xs sm:text-sm">
-                                الصيغ المدعومة: JPG, JPEG, PNG, JFIF, HEIF/HEIC,
-                                WebP (الحد الأقصى 5MB)
-                              </p>
-                            </div>
-                          )}
-                          <input
-                            id="file-input"
-                            type="file"
-                            accept="image/jpeg,image/jpg,image/png,image/jfif,image/heic,image/heif,image/webp"
-                            onChange={handleImageChange}
-                            className="hidden"
-                            required={!isEditing && imageInputMode === "upload"}
-                          />
-                        </div>
-                      ) : (
-                        <div className="space-y-3 xs:space-y-4">
-                          <div className="border-2 border-gray-300 rounded-lg p-2 xs:p-3 sm:p-4 dark:border-gray-600">
-                            <div className="mb-3 xs:mb-4">
-                              <label className="block text-xs xs:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-2">
-                                رابط الصورة
-                              </label>
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  value={imageUrl}
-                                  onChange={(e) => setImageUrl(e.target.value)}
-                                  placeholder="أدخل رابط الصورة"
-                                  className="flex-1 border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                                />
+                        ) : (
+                          <div className="grid grid-cols-2 gap-1.5 xs:gap-2 sm:gap-3">
+                            {categories
+                              .filter((category) => category.isActive)
+                              .map((category) => (
                                 <motion.button
+                                  key={category.id}
                                   type="button"
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
-                                  onClick={handleDownloadFromUrl}
-                                  disabled={
-                                    isDownloadingImage || !imageUrl.trim()
+                                  onClick={() =>
+                                    setFormData({
+                                      ...formData,
+                                      CategoryId: category.id,
+                                    })
                                   }
-                                  className={`px-3 xs:px-4 py-2 xs:py-2.5 rounded-lg font-semibold transition-all duration-300 flex items-center gap-1.5 xs:gap-2 text-xs xs:text-sm ${
-                                    imageUrl.trim() && !isDownloadingImage
-                                      ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white hover:shadow-xl hover:shadow-[#E41E26]/25 cursor-pointer"
-                                      : "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400"
+                                  className={`flex flex-col items-center gap-1 xs:gap-1.5 sm:gap-2 p-1.5 xs:p-2 sm:p-3 rounded-lg border-2 transition-all duration-200 ${
+                                    formData.CategoryId === category.id
+                                      ? "border-[#E41E26] bg-gradient-to-r from-[#fff8e7] to-[#ffe5b4] text-[#E41E26] dark:from-gray-600 dark:to-gray-500"
+                                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300 dark:hover:border-gray-400"
                                   }`}
                                 >
-                                  {isDownloadingImage ? (
-                                    <>
-                                      <div className="animate-spin h-3 w-3 xs:h-4 xs:w-4 border-t-2 border-b-2 border-white rounded-full"></div>
-                                      <span>جاري التحميل...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <FaDownload className="xs:size-3" />
-                                      <span>تحميل</span>
-                                    </>
-                                  )}
+                                  <span className="text-[10px] xs:text-xs sm:text-sm font-medium text-center leading-tight">
+                                    {category.name}
+                                  </span>
                                 </motion.button>
-                              </div>
-                              <p className="text-gray-500 dark:text-gray-400 text-[10px] xs:text-xs mt-2">
-                                الصيغ المدعومة: JPG, JPEG, PNG, JFIF, HEIF/HEIC,
-                                WebP (الحد الأقصى 5MB)
-                              </p>
-                            </div>
+                              ))}
+                          </div>
+                        )}
+                      </div>
 
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
+                            نوع السعر *
+                          </label>
+                          <div className="grid grid-cols-2 gap-2 xs:gap-3 mb-3">
+                            <motion.button
+                              type="button"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => handlePriceTypeChange("fixed")}
+                              className={`flex items-center justify-center gap-1.5 xs:gap-2 p-2 xs:p-3 rounded-lg border-2 transition-all duration-200 ${
+                                !formData.IsPriceBasedOnRequest
+                                  ? "border-[#E41E26] bg-white text-[#E41E26] shadow-md dark:bg-gray-600"
+                                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300 dark:hover:border-gray-400"
+                              }`}
+                            >
+                              <FaDollarSign className="text-xs xs:text-sm" />
+                              <span className="text-xs xs:text-sm font-medium">
+                                سعر ثابت
+                              </span>
+                            </motion.button>
+
+                            <motion.button
+                              type="button"
+                              whileHover={{ scale: 1.02 }}
+                              whileTap={{ scale: 0.98 }}
+                              onClick={() => handlePriceTypeChange("request")}
+                              className={`flex items-center justify-center gap-1.5 xs:gap-2 p-2 xs:p-3 rounded-lg border-2 transition-all duration-200 ${
+                                formData.IsPriceBasedOnRequest
+                                  ? "border-[#E41E26] bg-white text-[#E41E26] shadow-md dark:bg-gray-600"
+                                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300 dark:hover:border-gray-400"
+                              }`}
+                            >
+                              <FaQuestionCircle className="text-xs xs:text-sm" />
+                              <span className="text-xs xs:text-sm font-medium">
+                                حسب الطلب
+                              </span>
+                            </motion.button>
+                          </div>
+                        </div>
+
+                        {!formData.IsPriceBasedOnRequest && (
+                          <div>
+                            <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
+                              السعر (جنيه) *
+                            </label>
+                            <input
+                              type="number"
+                              name="BasePrice"
+                              value={formData.BasePrice}
+                              onChange={handleNumberInputChange}
+                              step="0.01"
+                              min="0.01"
+                              onWheel={(e) => e.target.blur()}
+                              className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                              placeholder="0.00"
+                              required={!formData.IsPriceBasedOnRequest}
+                            />
+                            {formData.IsPriceBasedOnRequest &&
+                              !isEditing &&
+                              hasRequiredOptionTypes() && (
+                                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                  <p className="text-xs text-yellow-700">
+                                    <span className="font-semibold">
+                                      ملاحظة:
+                                    </span>{" "}
+                                    المنتج بسعر حسب الطلب يجب أن يحتوي على أنواع
+                                    إضافات مطلوبة للاختيار
+                                  </p>
+                                </div>
+                              )}
+                          </div>
+                        )}
+
+                        {formData.IsPriceBasedOnRequest && (
+                          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex items-start gap-2">
+                              <FaQuestionCircle className="text-blue-500 mt-0.5" />
+                              <div>
+                                <p className="text-xs text-blue-700 font-semibold">
+                                  السعر حسب الطلب
+                                </p>
+                                <p className="text-xs text-blue-600 mt-1">
+                                  سيتم تحديد السعر بناءً على اختيارات العميل من
+                                  الإضافات.
+                                  {!isEditing &&
+                                    " يجب أن يحتوي المنتج على أنواع إضافات مطلوبة للاختيار."}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
+                          السعرات الحرارية
+                        </label>
+                        <div className="relative group">
+                          <FaFire className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#E41E26] text-sm transition-all duration-300 group-focus-within:scale-110" />
+                          <input
+                            type="number"
+                            name="Calories"
+                            value={formData.Calories}
+                            onChange={handleNumberInputChange}
+                            min="0"
+                            onWheel={(e) => e.target.blur()}
+                            className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white pr-10"
+                            placeholder="عدد السعرات الحرارية"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
+                          وقت التحضير (بالدقائق)
+                        </label>
+                        <div className="grid grid-cols-2 gap-2 xs:gap-3">
+                          <div className="relative group">
+                            <FaClock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#E41E26] text-xs transition-all duration-300 group-focus-within:scale-110" />
+                            <input
+                              type="number"
+                              name="PreparationTimeStart"
+                              value={formData.PreparationTimeStart}
+                              onChange={handlePreparationTimeChange}
+                              min="0"
+                              onWheel={(e) => e.target.blur()}
+                              className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white pr-8"
+                              placeholder="من"
+                            />
+                          </div>
+                          <div className="relative group">
+                            <FaClock className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#E41E26] text-xs transition-all duration-300 group-focus-within:scale-110" />
+                            <input
+                              type="number"
+                              name="PreparationTimeEnd"
+                              value={formData.PreparationTimeEnd}
+                              onChange={handlePreparationTimeChange}
+                              min="0"
+                              onWheel={(e) => e.target.blur()}
+                              className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white pr-8"
+                              placeholder="إلى"
+                            />
+                          </div>
+                        </div>
+                        {formData.PreparationTimeStart &&
+                          formData.PreparationTimeEnd &&
+                          parseInt(formData.PreparationTimeStart) >=
+                            parseInt(formData.PreparationTimeEnd) && (
+                            <p className="text-red-500 text-xs mt-1">
+                              وقت البدء يجب أن يكون أقل من وقت الانتهاء في وقت
+                              التحضير
+                            </p>
+                          )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
+                          الحالة *
+                        </label>
+                        <div className="flex gap-3 bg-gray-50/80 dark:bg-gray-600/80 rounded-lg p-2 xs:p-3 border border-gray-200 dark:border-gray-500">
+                          <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-2 xs:p-3 rounded-lg transition-all duration-200 border-2 border-transparent hover:border-[#E41E26]/30">
+                            <div className="relative">
+                              <input
+                                type="radio"
+                                name="IsActive"
+                                checked={formData.IsActive === true}
+                                onChange={() =>
+                                  setFormData({ ...formData, IsActive: true })
+                                }
+                                className="sr-only"
+                                required
+                              />
+                              <div
+                                className={`w-4 h-4 xs:w-5 xs:h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                                  formData.IsActive === true
+                                    ? "border-[#E41E26] bg-[#E41E26]"
+                                    : "border-gray-400 bg-white dark:bg-gray-500"
+                                }`}
+                              >
+                                {formData.IsActive === true && (
+                                  <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-white rounded-full"></div>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-xs xs:text-sm font-medium text-gray-700 dark:text-gray-300">
+                              نشط
+                            </span>
+                          </label>
+                          <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-2 xs:p-3 rounded-lg transition-all duration-200 border-2 border-transparent hover:border-[#E41E26]/30">
+                            <div className="relative">
+                              <input
+                                type="radio"
+                                name="IsActive"
+                                checked={formData.IsActive === false}
+                                onChange={() =>
+                                  setFormData({ ...formData, IsActive: false })
+                                }
+                                className="sr-only"
+                                required
+                              />
+                              <div
+                                className={`w-4 h-4 xs:w-5 xs:h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                                  formData.IsActive === false
+                                    ? "border-[#E41E26] bg-[#E41E26]"
+                                    : "border-gray-400 bg-white dark:bg-gray-500"
+                                }`}
+                              >
+                                {formData.IsActive === false && (
+                                  <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-white rounded-full"></div>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-xs xs:text-sm font-medium text-gray-700 dark:text-gray-300">
+                              غير نشط
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* حقل ShowInSlider الجديد */}
+                      <div>
+                        <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
+                          عرض في السلايدر
+                        </label>
+                        <div className="flex gap-3 bg-gray-50/80 dark:bg-gray-600/80 rounded-lg p-2 xs:p-3 border border-gray-200 dark:border-gray-500">
+                          <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-2 xs:p-3 rounded-lg transition-all duration-200 border-2 border-transparent hover:border-[#E41E26]/30">
+                            <div className="relative">
+                              <input
+                                type="radio"
+                                name="ShowInSlider"
+                                checked={formData.ShowInSlider === true}
+                                onChange={() =>
+                                  setFormData({
+                                    ...formData,
+                                    ShowInSlider: true,
+                                  })
+                                }
+                                className="sr-only"
+                              />
+                              <div
+                                className={`w-4 h-4 xs:w-5 xs:h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                                  formData.ShowInSlider === true
+                                    ? "border-[#E41E26] bg-[#E41E26]"
+                                    : "border-gray-400 bg-white dark:bg-gray-500"
+                                }`}
+                              >
+                                {formData.ShowInSlider === true && (
+                                  <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-white rounded-full"></div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <FaSlidersH className="text-[#E41E26] text-xs xs:text-sm" />
+                              <span className="text-xs xs:text-sm font-medium text-gray-700 dark:text-gray-300">
+                                عرض
+                              </span>
+                            </div>
+                          </label>
+                          <label className="flex-1 flex items-center justify-center gap-2 cursor-pointer p-2 xs:p-3 rounded-lg transition-all duration-200 border-2 border-transparent hover:border-[#E41E26]/30">
+                            <div className="relative">
+                              <input
+                                type="radio"
+                                name="ShowInSlider"
+                                checked={formData.ShowInSlider === false}
+                                onChange={() =>
+                                  setFormData({
+                                    ...formData,
+                                    ShowInSlider: false,
+                                  })
+                                }
+                                className="sr-only"
+                              />
+                              <div
+                                className={`w-4 h-4 xs:w-5 xs:h-5 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+                                  formData.ShowInSlider === false
+                                    ? "border-[#E41E26] bg-[#E41E26]"
+                                    : "border-gray-400 bg-white dark:bg-gray-500"
+                                }`}
+                              >
+                                {formData.ShowInSlider === false && (
+                                  <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 bg-white rounded-full"></div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <FaTimes className="text-gray-500 text-xs xs:text-sm" />
+                              <span className="text-xs xs:text-sm font-medium text-gray-700 dark:text-gray-300">
+                                إخفاء
+                              </span>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 xs:space-y-5 sm:space-y-6">
+                      <div>
+                        <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
+                          صورة المنتج *
+                        </label>
+
+                        {/* Switch between upload modes */}
+                        <div className="flex gap-2 mb-3 xs:mb-4">
+                          <motion.button
+                            type="button"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setImageInputMode("upload")}
+                            className={`flex-1 flex items-center justify-center gap-1.5 xs:gap-2 p-2 xs:p-2.5 rounded-lg border-2 transition-all duration-200 ${
+                              imageInputMode === "upload"
+                                ? "border-[#E41E26] bg-white text-[#E41E26] shadow-md dark:bg-gray-600"
+                                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300 dark:hover:border-gray-400"
+                            }`}
+                          >
+                            <FaUpload className="text-xs xs:text-sm" />
+                            <span className="text-xs xs:text-sm font-medium">
+                              رفع صورة
+                            </span>
+                          </motion.button>
+                          <motion.button
+                            type="button"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setImageInputMode("url")}
+                            className={`flex-1 flex items-center justify-center gap-1.5 xs:gap-2 p-2 xs:p-2.5 rounded-lg border-2 transition-all duration-200 ${
+                              imageInputMode === "url"
+                                ? "border-[#E41E26] bg-white text-[#E41E26] shadow-md dark:bg-gray-600"
+                                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-300 dark:hover:border-gray-400"
+                            }`}
+                          >
+                            <FaLink className="text-xs xs:text-sm" />
+                            <span className="text-xs xs:text-sm font-medium">
+                              رابط صورة
+                            </span>
+                          </motion.button>
+                        </div>
+
+                        {imageInputMode === "upload" ? (
+                          <div
+                            className="border-2 border-dashed border-gray-300 rounded-lg p-2 xs:p-3 sm:p-4 text-center hover:border-[#E41E26] transition-colors duration-200 cursor-pointer dark:border-gray-600"
+                            onClick={handleUploadAreaClick}
+                          >
                             {imagePreview ? (
                               <div className="relative">
                                 <img
                                   src={imagePreview}
+                                  loading="lazy"
                                   alt="Preview"
-                                  className="w-full h-48 xs:h-56 sm:h-64 object-contain rounded-lg mb-2 xs:mb-3"
+                                  className="w-full h-48 xs:h-56 sm:h-64 md:h-96 object-contain rounded-lg mb-2 xs:mb-3"
                                 />
                                 <button
                                   type="button"
@@ -1732,325 +1663,419 @@ const ProductForm = () => {
                                 </button>
                               </div>
                             ) : (
-                              <div className="py-6 xs:py-8 sm:py-10 text-center">
-                                <FaImage className="mx-auto text-3xl xs:text-4xl sm:text-5xl text-gray-400 dark:text-gray-500 mb-2 xs:mb-3 sm:mb-4" />
-                                <p className="text-gray-600 dark:text-gray-400 mb-1.5 xs:mb-2 sm:mb-3 text-xs xs:text-sm">
-                                  سيظهر معاينة الصورة هنا بعد التحميل
+                              <div className="py-8 xs:py-10 sm:py-12 md:py-16">
+                                <FaUpload className="mx-auto text-2xl xs:text-3xl sm:text-4xl md:text-5xl text-gray-400 dark:text-gray-500 mb-2 xs:mb-3 sm:mb-4" />
+                                <p className="text-gray-600 dark:text-gray-400 mb-1.5 xs:mb-2 sm:mb-3 text-xs xs:text-sm sm:text-base">
+                                  انقر لرفع الصورة
+                                </p>
+                                <p className="text-gray-500 dark:text-gray-500 text-[10px] xs:text-xs sm:text-sm">
+                                  الصيغ المدعومة: JPG, JPEG, PNG, JFIF,
+                                  HEIF/HEIC, WebP (الحد الأقصى 5MB)
                                 </p>
                               </div>
                             )}
+                            <input
+                              id="file-input"
+                              type="file"
+                              accept="image/jpeg,image/jpg,image/png,image/jfif,image/heic,image/heif,image/webp"
+                              onChange={handleImageChange}
+                              className="hidden"
+                              required={
+                                !isEditing && imageInputMode === "upload"
+                              }
+                            />
                           </div>
-                        </div>
-                      )}
-                    </div>
+                        ) : (
+                          <div className="space-y-3 xs:space-y-4">
+                            <div className="border-2 border-gray-300 rounded-lg p-2 xs:p-3 sm:p-4 dark:border-gray-600">
+                              <div className="mb-3 xs:mb-4">
+                                <label className="block text-xs xs:text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-2">
+                                  رابط الصورة
+                                </label>
+                                <div className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={imageUrl}
+                                    onChange={(e) =>
+                                      setImageUrl(e.target.value)
+                                    }
+                                    placeholder="أدخل رابط الصورة"
+                                    className="flex-1 border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                                  />
+                                  <motion.button
+                                    type="button"
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={handleDownloadFromUrl}
+                                    disabled={
+                                      isDownloadingImage || !imageUrl.trim()
+                                    }
+                                    className={`px-3 xs:px-4 py-2 xs:py-2.5 rounded-lg font-semibold transition-all duration-300 flex items-center gap-1.5 xs:gap-2 text-xs xs:text-sm ${
+                                      imageUrl.trim() && !isDownloadingImage
+                                        ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white hover:shadow-xl hover:shadow-[#E41E26]/25 cursor-pointer"
+                                        : "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400"
+                                    }`}
+                                  >
+                                    {isDownloadingImage ? (
+                                      <>
+                                        <div className="animate-spin h-3 w-3 xs:h-4 xs:w-4 border-t-2 border-b-2 border-white rounded-full"></div>
+                                        <span>جاري التحميل...</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <FaDownload className="xs:size-3" />
+                                        <span>تحميل</span>
+                                      </>
+                                    )}
+                                  </motion.button>
+                                </div>
+                                <p className="text-gray-500 dark:text-gray-400 text-[10px] xs:text-xs mt-2">
+                                  الصيغ المدعومة: JPG, JPEG, PNG, JFIF,
+                                  HEIF/HEIC, WebP (الحد الأقصى 5MB)
+                                </p>
+                              </div>
 
-                    <div>
-                      <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
-                        الوصف *
-                      </label>
-                      <textarea
-                        name="Description"
-                        value={formData.Description}
-                        onChange={handleInputChange}
-                        rows="3"
-                        className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 resize-none text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                        placeholder="قم بوصف المنتج بالتفصيل..."
-                        required
-                      />
+                              {imagePreview ? (
+                                <div className="relative">
+                                  <img
+                                    src={imagePreview}
+                                    loading="lazy"
+                                    alt="Preview"
+                                    className="w-full h-48 xs:h-56 sm:h-64 object-contain rounded-lg mb-2 xs:mb-3"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={handleRemoveImage}
+                                    className="absolute top-1 xs:top-2 left-1 xs:left-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                                  >
+                                    <FaTimes size={10} className="xs:size-2" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="py-6 xs:py-8 sm:py-10 text-center">
+                                  <FaImage className="mx-auto text-3xl xs:text-4xl sm:text-5xl text-gray-400 dark:text-gray-500 mb-2 xs:mb-3 sm:mb-4" />
+                                  <p className="text-gray-600 dark:text-gray-400 mb-1.5 xs:mb-2 sm:mb-3 text-xs xs:text-sm">
+                                    سيظهر معاينة الصورة هنا بعد التحميل
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-xs sm:text-sm lg:text-base font-semibold text-gray-700 dark:text-gray-300 mb-1 xs:mb-1.5 sm:mb-2">
+                          الوصف *
+                        </label>
+                        <textarea
+                          name="Description"
+                          value={formData.Description}
+                          onChange={handleInputChange}
+                          rows="3"
+                          className="w-full border border-gray-200 bg-white text-black rounded-lg px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 outline-none focus:ring-2 focus:ring-[#E41E26] focus:border-transparent transition-all duration-200 resize-none text-xs sm:text-sm dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                          placeholder="قم بوصف المنتج بالتفصيل..."
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {!isEditing && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg xs:rounded-xl sm:rounded-2xl p-3 xs:p-4 sm:p-6 border border-purple-200/50 dark:from-gray-700 dark:to-gray-800 dark:border-gray-600"
-                  >
-                    <div className="flex items-center gap-2 xs:gap-3 mb-3 xs:mb-4">
-                      <FaList className="text-purple-600 text-base xs:text-lg sm:text-xl dark:text-purple-400" />
-                      <h3 className="text-sm xs:text-base sm:text-lg font-bold text-gray-800 dark:text-gray-200">
-                        الإضافات (خيارات المنتج)
-                      </h3>
-                      {formData.IsPriceBasedOnRequest && (
-                        <div className="ml-auto px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                          يجب إضافة أنواع إضافات مطلوبة
-                        </div>
-                      )}
-                    </div>
+                  {!isEditing && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg xs:rounded-xl sm:rounded-2xl p-3 xs:p-4 sm:p-6 border border-purple-200/50 dark:from-gray-700 dark:to-gray-800 dark:border-gray-600"
+                    >
+                      <div className="flex items-center gap-2 xs:gap-3 mb-3 xs:mb-4">
+                        <FaList className="text-purple-600 text-base xs:text-lg sm:text-xl dark:text-purple-400" />
+                        <h3 className="text-sm xs:text-base sm:text-lg font-bold text-gray-800 dark:text-gray-200">
+                          الإضافات (خيارات المنتج)
+                        </h3>
+                        {formData.IsPriceBasedOnRequest && (
+                          <div className="ml-auto px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
+                            يجب إضافة أنواع إضافات مطلوبة
+                          </div>
+                        )}
+                      </div>
 
-                    <div className="space-y-4 xs:space-y-5">
-                      {menuItemOptions.map((optionType, typeIndex) => {
-                        const optionTypeData = optionTypes.find(
-                          (type) => type.id === optionType.typeId
-                        );
-                        const isRequired = optionTypeData?.isSelectionRequired;
+                      <div className="space-y-4 xs:space-y-5">
+                        {menuItemOptions.map((optionType, typeIndex) => {
+                          const optionTypeData = optionTypes.find(
+                            (type) => type.id === optionType.typeId,
+                          );
+                          const isRequired =
+                            optionTypeData?.isSelectionRequired;
 
-                        return (
-                          <div
-                            key={optionType.id}
-                            className={`bg-white/80 rounded-lg p-3 xs:p-4 border ${
-                              isRequired && formData.IsPriceBasedOnRequest
-                                ? "border-yellow-300 border-2"
-                                : "border-gray-200"
-                            } dark:bg-gray-600/80 dark:border-gray-500`}
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <h4 className="text-xs xs:text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                  نوع الإضافة {typeIndex + 1}
-                                </h4>
-                                {isRequired && (
-                                  <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-                                    مطلوب
-                                  </span>
-                                )}
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  removeMenuItemOption(optionType.id)
-                                }
-                                className="text-red-500 hover:text-red-700 transition-colors"
-                              >
-                                <FaTrash size={14} />
-                              </button>
-                            </div>
-
-                            <div className="mb-3 xs:mb-4">
-                              <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                نوع الإضافة *
-                              </label>
-                              <div className="relative">
+                          return (
+                            <div
+                              key={optionType.id}
+                              className={`bg-white/80 rounded-lg p-3 xs:p-4 border ${
+                                isRequired && formData.IsPriceBasedOnRequest
+                                  ? "border-yellow-300 border-2"
+                                  : "border-gray-200"
+                              } dark:bg-gray-600/80 dark:border-gray-500`}
+                            >
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <h4 className="text-xs xs:text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                    نوع الإضافة {typeIndex + 1}
+                                  </h4>
+                                  {isRequired && (
+                                    <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                                      مطلوب
+                                    </span>
+                                  )}
+                                </div>
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    setOptionTypesDropdownOpen(
-                                      optionTypesDropdownOpen === optionType.id
-                                        ? null
-                                        : optionType.id
-                                    )
+                                    removeMenuItemOption(optionType.id)
                                   }
-                                  className="w-full flex items-center justify-between border border-gray-200 bg-white rounded-lg px-3 py-2 text-black focus:ring-2 focus:ring-purple-500 transition-all duration-200 text-xs dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                                  className="text-red-500 hover:text-red-700 transition-colors"
                                 >
-                                  <span>
-                                    {optionType.typeId
-                                      ? optionTypes.find(
-                                          (type) =>
-                                            type.id === optionType.typeId
-                                        )?.name || "اختر النوع"
-                                      : "اختر النوع"}
-                                  </span>
-                                  <motion.div
-                                    animate={{
-                                      rotate:
-                                        optionTypesDropdownOpen ===
-                                        optionType.id
-                                          ? 180
-                                          : 0,
-                                    }}
-                                    transition={{ duration: 0.3 }}
-                                  >
-                                    <FaChevronDown
-                                      size={12}
-                                      className="text-purple-600 dark:text-purple-400"
-                                    />
-                                  </motion.div>
+                                  <FaTrash size={14} />
                                 </button>
+                              </div>
 
-                                {optionTypesDropdownOpen === optionType.id && (
-                                  <motion.ul
-                                    initial={{ opacity: 0, y: -5 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -5 }}
-                                    transition={{ duration: 0.2 }}
-                                    className="absolute z-50 mt-1 w-full bg-white border border-gray-200 shadow-2xl rounded-lg overflow-hidden max-h-48 overflow-y-auto dark:bg-gray-600 dark:border-gray-500"
+                              <div className="mb-3 xs:mb-4">
+                                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                  نوع الإضافة *
+                                </label>
+                                <div className="relative">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setOptionTypesDropdownOpen(
+                                        optionTypesDropdownOpen ===
+                                          optionType.id
+                                          ? null
+                                          : optionType.id,
+                                      )
+                                    }
+                                    className="w-full flex items-center justify-between border border-gray-200 bg-white rounded-lg px-3 py-2 text-black focus:ring-2 focus:ring-purple-500 transition-all duration-200 text-xs dark:bg-gray-600 dark:border-gray-500 dark:text-white"
                                   >
-                                    {optionTypes.map((type) => (
-                                      <li
-                                        key={type.id}
-                                        onClick={() => {
-                                          updateMenuItemOption(
-                                            optionType.id,
-                                            "typeId",
-                                            type.id
-                                          );
-                                          setOptionTypesDropdownOpen(null);
-                                        }}
-                                        className="px-3 py-2 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 cursor-pointer text-gray-700 transition-all text-xs border-b border-gray-100 last:border-b-0 dark:hover:from-gray-500 dark:hover:to-gray-400 dark:text-gray-300 dark:border-gray-500"
-                                      >
-                                        <div className="flex flex-col">
-                                          <span>{type.name}</span>
-                                          <div className="flex gap-2 mt-1">
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                                              {type.canSelectMultipleOptions
-                                                ? "✓ متعدد"
-                                                : "✗ فردي"}
-                                            </span>
-                                            <span className="text-xs text-gray-500 dark:text-gray-400">
-                                              {type.isSelectionRequired
-                                                ? "✓ مطلوب"
-                                                : "✗ اختياري"}
-                                            </span>
+                                    <span>
+                                      {optionType.typeId
+                                        ? optionTypes.find(
+                                            (type) =>
+                                              type.id === optionType.typeId,
+                                          )?.name || "اختر النوع"
+                                        : "اختر النوع"}
+                                    </span>
+                                    <motion.div
+                                      animate={{
+                                        rotate:
+                                          optionTypesDropdownOpen ===
+                                          optionType.id
+                                            ? 180
+                                            : 0,
+                                      }}
+                                      transition={{ duration: 0.3 }}
+                                    >
+                                      <FaChevronDown
+                                        size={12}
+                                        className="text-purple-600 dark:text-purple-400"
+                                      />
+                                    </motion.div>
+                                  </button>
+
+                                  {optionTypesDropdownOpen ===
+                                    optionType.id && (
+                                    <motion.ul
+                                      initial={{ opacity: 0, y: -5 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      exit={{ opacity: 0, y: -5 }}
+                                      transition={{ duration: 0.2 }}
+                                      className="absolute z-50 mt-1 w-full bg-white border border-gray-200 shadow-2xl rounded-lg overflow-hidden max-h-48 overflow-y-auto dark:bg-gray-600 dark:border-gray-500"
+                                    >
+                                      {optionTypes.map((type) => (
+                                        <li
+                                          key={type.id}
+                                          onClick={() => {
+                                            updateMenuItemOption(
+                                              optionType.id,
+                                              "typeId",
+                                              type.id,
+                                            );
+                                            setOptionTypesDropdownOpen(null);
+                                          }}
+                                          className="px-3 py-2 hover:bg-gradient-to-r hover:from-purple-50 hover:to-indigo-50 cursor-pointer text-gray-700 transition-all text-xs border-b border-gray-100 last:border-b-0 dark:hover:from-gray-500 dark:hover:to-gray-400 dark:text-gray-300 dark:border-gray-500"
+                                        >
+                                          <div className="flex flex-col">
+                                            <span>{type.name}</span>
+                                            <div className="flex gap-2 mt-1">
+                                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                {type.canSelectMultipleOptions
+                                                  ? "✓ متعدد"
+                                                  : "✗ فردي"}
+                                              </span>
+                                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                {type.isSelectionRequired
+                                                  ? "✓ مطلوب"
+                                                  : "✗ اختياري"}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </li>
+                                      ))}
+                                    </motion.ul>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="space-y-3 xs:space-y-4">
+                                {optionType.options.map(
+                                  (option, optionIndex) => (
+                                    <div
+                                      key={option.id}
+                                      className="grid grid-cols-1 md:grid-cols-3 gap-2 xs:gap-3 p-3 bg-gray-50/50 rounded-lg dark:bg-gray-700/50"
+                                    >
+                                      <div>
+                                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                          اسم الإضافة *
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={option.name}
+                                          onChange={(e) =>
+                                            updateOption(
+                                              optionType.id,
+                                              option.id,
+                                              "name",
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="w-full border border-gray-200 bg-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-xs dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                                          placeholder="اسم الإضافة"
+                                          required
+                                        />
+                                      </div>
+
+                                      <div>
+                                        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                                          السعر (جنيه) *
+                                        </label>
+                                        <input
+                                          type="number"
+                                          value={option.price}
+                                          onChange={(e) =>
+                                            updateOption(
+                                              optionType.id,
+                                              option.id,
+                                              "price",
+                                              e.target.value,
+                                            )
+                                          }
+                                          step="0.01"
+                                          min="0"
+                                          className="w-full border border-gray-200 bg-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-xs dark:bg-gray-600 dark:border-gray-500 dark:text-white"
+                                          placeholder="0.00"
+                                          required
+                                        />
+                                      </div>
+
+                                      <div className="flex items-end gap-2">
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <label className="flex items-center gap-1 cursor-pointer">
+                                              <input
+                                                type="checkbox"
+                                                checked={option.isAvailableNow}
+                                                onChange={(e) =>
+                                                  updateOption(
+                                                    optionType.id,
+                                                    option.id,
+                                                    "isAvailableNow",
+                                                    e.target.checked,
+                                                  )
+                                                }
+                                                className="text-purple-600 focus:ring-purple-500"
+                                              />
+                                              <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                متاح الآن
+                                              </span>
+                                            </label>
+                                            <label className="flex items-center gap-1 cursor-pointer">
+                                              <input
+                                                type="checkbox"
+                                                checked={option.isActive}
+                                                onChange={(e) =>
+                                                  updateOption(
+                                                    optionType.id,
+                                                    option.id,
+                                                    "isActive",
+                                                    e.target.checked,
+                                                  )
+                                                }
+                                                className="text-purple-600 focus:ring-purple-500"
+                                              />
+                                              <span className="text-xs text-gray-600 dark:text-gray-400">
+                                                نشط
+                                              </span>
+                                            </label>
                                           </div>
                                         </div>
-                                      </li>
-                                    ))}
-                                  </motion.ul>
-                                )}
-                              </div>
-                            </div>
-
-                            <div className="space-y-3 xs:space-y-4">
-                              {optionType.options.map((option, optionIndex) => (
-                                <div
-                                  key={option.id}
-                                  className="grid grid-cols-1 md:grid-cols-3 gap-2 xs:gap-3 p-3 bg-gray-50/50 rounded-lg dark:bg-gray-700/50"
-                                >
-                                  <div>
-                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                      اسم الإضافة *
-                                    </label>
-                                    <input
-                                      type="text"
-                                      value={option.name}
-                                      onChange={(e) =>
-                                        updateOption(
-                                          optionType.id,
-                                          option.id,
-                                          "name",
-                                          e.target.value
-                                        )
-                                      }
-                                      className="w-full border border-gray-200 bg-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-xs dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                                      placeholder="اسم الإضافة"
-                                      required
-                                    />
-                                  </div>
-
-                                  <div>
-                                    <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                                      السعر (جنيه) *
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={option.price}
-                                      onChange={(e) =>
-                                        updateOption(
-                                          optionType.id,
-                                          option.id,
-                                          "price",
-                                          e.target.value
-                                        )
-                                      }
-                                      step="0.01"
-                                      min="0"
-                                      className="w-full border border-gray-200 bg-white rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 text-xs dark:bg-gray-600 dark:border-gray-500 dark:text-white"
-                                      placeholder="0.00"
-                                      required
-                                    />
-                                  </div>
-
-                                  <div className="flex items-end gap-2">
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2">
-                                        <label className="flex items-center gap-1 cursor-pointer">
-                                          <input
-                                            type="checkbox"
-                                            checked={option.isAvailableNow}
-                                            onChange={(e) =>
-                                              updateOption(
+                                        {optionType.options.length > 1 && (
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              removeOptionFromType(
                                                 optionType.id,
                                                 option.id,
-                                                "isAvailableNow",
-                                                e.target.checked
                                               )
                                             }
-                                            className="text-purple-600 focus:ring-purple-500"
-                                          />
-                                          <span className="text-xs text-gray-600 dark:text-gray-400">
-                                            متاح الآن
-                                          </span>
-                                        </label>
-                                        <label className="flex items-center gap-1 cursor-pointer">
-                                          <input
-                                            type="checkbox"
-                                            checked={option.isActive}
-                                            onChange={(e) =>
-                                              updateOption(
-                                                optionType.id,
-                                                option.id,
-                                                "isActive",
-                                                e.target.checked
-                                              )
-                                            }
-                                            className="text-purple-600 focus:ring-purple-500"
-                                          />
-                                          <span className="text-xs text-gray-600 dark:text-gray-400">
-                                            نشط
-                                          </span>
-                                        </label>
+                                            className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                          >
+                                            <FaTrash size={12} />
+                                          </button>
+                                        )}
                                       </div>
                                     </div>
-                                    {optionType.options.length > 1 && (
-                                      <button
-                                        type="button"
-                                        onClick={() =>
-                                          removeOptionFromType(
-                                            optionType.id,
-                                            option.id
-                                          )
-                                        }
-                                        className="text-red-500 hover:text-red-700 transition-colors p-1"
-                                      >
-                                        <FaTrash size={12} />
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              ))}
+                                  ),
+                                )}
+                              </div>
+
+                              <motion.button
+                                type="button"
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => addOptionToType(optionType.id)}
+                                className="mt-3 w-full py-2 border border-dashed border-gray-300 text-gray-600 rounded-lg font-semibold hover:border-purple-500 hover:text-purple-600 transition-all duration-300 text-xs flex items-center justify-center gap-2 dark:border-gray-500 dark:text-gray-400 dark:hover:border-purple-500 dark:hover:text-purple-400"
+                              >
+                                <FaPlus size={10} />
+                                إضافة خيار جديد لهذا النوع
+                              </motion.button>
                             </div>
+                          );
+                        })}
+                      </div>
 
-                            <motion.button
-                              type="button"
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              onClick={() => addOptionToType(optionType.id)}
-                              className="mt-3 w-full py-2 border border-dashed border-gray-300 text-gray-600 rounded-lg font-semibold hover:border-purple-500 hover:text-purple-600 transition-all duration-300 text-xs flex items-center justify-center gap-2 dark:border-gray-500 dark:text-gray-400 dark:hover:border-purple-500 dark:hover:text-purple-400"
-                            >
-                              <FaPlus size={10} />
-                              إضافة خيار جديد لهذا النوع
-                            </motion.button>
+                      <motion.button
+                        type="button"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={addMenuItemOption}
+                        className="mt-4 w-full py-2 xs:py-2.5 border-2 border-dashed border-gray-300 text-gray-600 rounded-lg font-semibold hover:border-purple-500 hover:text-purple-600 transition-all duration-300 text-xs xs:text-sm flex items-center justify-center gap-2 dark:border-gray-500 dark:text-gray-400 dark:hover:border-purple-500 dark:hover:text-purple-400"
+                      >
+                        <FaPlus size={12} />
+                        إضافة نوع إضافة جديد
+                      </motion.button>
+
+                      {formData.IsPriceBasedOnRequest &&
+                        !hasRequiredOptionTypes() && (
+                          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-xs text-red-700">
+                              <span className="font-semibold">تنبيه:</span>{" "}
+                              المنتج بسعر حسب الطلب يجب أن يحتوي على أنواع
+                              إضافات مطلوبة للاختيار.
+                            </p>
                           </div>
-                        );
-                      })}
-                    </div>
+                        )}
+                    </motion.div>
+                  )}
 
-                    <motion.button
-                      type="button"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={addMenuItemOption}
-                      className="mt-4 w-full py-2 xs:py-2.5 border-2 border-dashed border-gray-300 text-gray-600 rounded-lg font-semibold hover:border-purple-500 hover:text-purple-600 transition-all duration-300 text-xs xs:text-sm flex items-center justify-center gap-2 dark:border-gray-500 dark:text-gray-400 dark:hover:border-purple-500 dark:hover:text-purple-400"
-                    >
-                      <FaPlus size={12} />
-                      إضافة نوع إضافة جديد
-                    </motion.button>
-
-                    {formData.IsPriceBasedOnRequest &&
-                      !hasRequiredOptionTypes() && (
-                        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <p className="text-xs text-red-700">
-                            <span className="font-semibold">تنبيه:</span> المنتج
-                            بسعر حسب الطلب يجب أن يحتوي على أنواع إضافات مطلوبة
-                            للاختيار.
-                          </p>
-                        </div>
-                      )}
-                  </motion.div>
-                )}
-
-                {/*
+                  {/*
                 <div className="bg-gradient-to-r from-[#fff8e7] to-[#ffe5b4] rounded-lg xs:rounded-xl sm:rounded-2xl p-3 xs:p-4 sm:p-6 border border-[#FDB913]/30 dark:from-gray-600 dark:to-gray-500 dark:border-gray-500">
                   <div className="flex items-center gap-2 xs:gap-3 mb-3 xs:mb-4">
                     <FaClock className="text-[#E41E26] text-base xs:text-lg sm:text-xl" />
@@ -2265,478 +2290,487 @@ const ProductForm = () => {
                 </div>
                 */}
 
-                <div className="flex gap-2 xs:gap-3 sm:gap-4 pt-3 xs:pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-600">
-                  <motion.button
-                    type="button"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => navigate("/")}
-                    className="flex-1 py-2 xs:py-2.5 sm:py-3 border-2 border-[#E41E26] text-[#E41E26] rounded-lg font-semibold hover:bg-[#E41E26] hover:text-white transition-all duration-300 text-xs xs:text-sm sm:text-base flex items-center justify-center gap-1.5 xs:gap-2 dark:border-[#E41E26] dark:text-[#E41E26] dark:hover:bg-[#E41E26] dark:hover:text-white"
-                  >
-                    <FaTimes size={12} className="xs:size-3 sm:size-4" />
-                    إلغاء
-                  </motion.button>
-                  <motion.button
-                    type="submit"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    disabled={
-                      !isFormValid() ||
-                      isLoading ||
-                      (isEditing && !hasChanges) ||
-                      (!isEditing &&
-                        formData.IsPriceBasedOnRequest &&
-                        !hasRequiredOptionTypes())
-                    }
-                    className={`flex-1 py-2 xs:py-2.5 sm:py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 xs:gap-2 text-xs xs:text-sm sm:text-base ${
-                      isFormValid() &&
-                      !isLoading &&
-                      (!isEditing || hasChanges) &&
-                      (!formData.IsPriceBasedOnRequest ||
-                        hasRequiredOptionTypes() ||
-                        isEditing)
-                        ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white hover:shadow-xl hover:shadow-[#E41E26]/25 cursor-pointer"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400"
-                    }`}
-                  >
-                    <FaSave size={12} className="xs:size-3 sm:size-4" />
-                    {isLoading
-                      ? "جاري الحفظ..."
-                      : isEditing
-                      ? "تحديث المنتج"
-                      : "حفظ المنتج"}
-                  </motion.button>
-                </div>
-              </form>
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
-
-      <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={handleOpenOptionTypesManager}
-        className="fixed bottom-4 left-4 z-40 bg-purple-500 text-white rounded-full p-3 sm:p-4 shadow-2xl hover:bg-purple-600 transition-colors duration-200"
-      >
-        <FaCog className="w-4 h-4 sm:w-6 sm:h-6" />
-      </motion.button>
-
-      <AnimatePresence>
-        {showOptionTypesManager && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-              onClick={handleCloseOptionTypesManager}
-            />
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
-              onClick={handleCloseOptionTypesManager}
-            >
-              <div
-                className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden w-full max-w-4xl mx-auto my-auto max-h-[90vh] overflow-y-auto transition-colors duration-300"
-                onClick={(e) => e.stopPropagation()}
-                dir="rtl"
-              >
-                <div className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white p-4 sm:p-6 relative">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 sm:gap-3">
-                      <div className="bg-white/20 p-2 sm:p-3 rounded-2xl backdrop-blur-sm">
-                        <FaCog className="text-xl sm:text-2xl" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl sm:text-2xl font-bold">
-                          إدارة أنواع الإضافات
-                        </h2>
-                        <p className="text-white/80 mt-1 text-sm sm:text-base">
-                          إضافة، تعديل وحذف أنواع الإضافات
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleCloseOptionTypesManager}
-                      className="bg-white/20 backdrop-blur-sm rounded-full p-2 sm:p-3 text-white hover:bg-white/30 transition-all duration-200 hover:scale-110"
+                  <div className="flex gap-2 xs:gap-3 sm:gap-4 pt-3 xs:pt-4 sm:pt-6 border-t border-gray-200 dark:border-gray-600">
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => navigate("/")}
+                      className="flex-1 py-2 xs:py-2.5 sm:py-3 border-2 border-[#E41E26] text-[#E41E26] rounded-lg font-semibold hover:bg-[#E41E26] hover:text-white transition-all duration-300 text-xs xs:text-sm sm:text-base flex items-center justify-center gap-1.5 xs:gap-2 dark:border-[#E41E26] dark:text-[#E41E26] dark:hover:bg-[#E41E26] dark:hover:text-white"
                     >
-                      <FaTimes size={16} className="sm:w-5" />
-                    </button>
+                      <FaTimes size={12} className="xs:size-3 sm:size-4" />
+                      إلغاء
+                    </motion.button>
+                    <motion.button
+                      type="submit"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      disabled={
+                        !isFormValid() ||
+                        isLoading ||
+                        (isEditing && !hasChanges) ||
+                        (!isEditing &&
+                          formData.IsPriceBasedOnRequest &&
+                          !hasRequiredOptionTypes())
+                      }
+                      className={`flex-1 py-2 xs:py-2.5 sm:py-3 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center gap-1.5 xs:gap-2 text-xs xs:text-sm sm:text-base ${
+                        isFormValid() &&
+                        !isLoading &&
+                        (!isEditing || hasChanges) &&
+                        (!formData.IsPriceBasedOnRequest ||
+                          hasRequiredOptionTypes() ||
+                          isEditing)
+                          ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white hover:shadow-xl hover:shadow-[#E41E26]/25 cursor-pointer"
+                          : "bg-gray-300 text-gray-500 cursor-not-allowed dark:bg-gray-600 dark:text-gray-400"
+                      }`}
+                    >
+                      <FaSave size={12} className="xs:size-3 sm:size-4" />
+                      {isLoading
+                        ? "جاري الحفظ..."
+                        : isEditing
+                          ? "تحديث المنتج"
+                          : "حفظ المنتج"}
+                    </motion.button>
                   </div>
-                </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
 
-                <div className="p-4 sm:p-6">
-                  <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 transition-colors duration-300 shadow-lg">
-                    <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-                      <div className="bg-[#E41E26]/10 p-2 rounded-xl">
-                        <FaPlus className="text-[#E41E26] text-base sm:text-lg" />
-                      </div>
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-200">
-                        إضافة نوع إضافة جديد
-                      </h3>
-                    </div>
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={handleOpenOptionTypesManager}
+          className="fixed bottom-4 left-4 z-40 bg-purple-500 text-white rounded-full p-3 sm:p-4 shadow-2xl hover:bg-purple-600 transition-colors duration-200"
+        >
+          <FaCog className="w-4 h-4 sm:w-6 sm:h-6" />
+        </motion.button>
 
-                    <div className="grid grid-cols-1 gap-4 sm:gap-6">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
-                          اسم نوع الإضافة
-                        </label>
-                        <div className="relative">
-                          <FaTag className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-base" />
-                          <input
-                            type="text"
-                            value={newOptionType.name}
-                            onChange={(e) =>
-                              setNewOptionType({
-                                ...newOptionType,
-                                name: e.target.value,
-                              })
-                            }
-                            placeholder="أدخل اسم نوع الإضافة الجديد..."
-                            className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-[#E41E26] focus:border-[#E41E26] outline-none transition-all text-right text-base sm:text-lg font-medium"
-                          />
+        <AnimatePresence>
+          {showOptionTypesManager && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+                onClick={handleCloseOptionTypesManager}
+              />
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+                onClick={handleCloseOptionTypesManager}
+              >
+                <div
+                  className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl overflow-hidden w-full max-w-4xl mx-auto my-auto max-h-[90vh] overflow-y-auto transition-colors duration-300"
+                  onClick={(e) => e.stopPropagation()}
+                  dir="rtl"
+                >
+                  <div className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white p-4 sm:p-6 relative">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="bg-white/20 p-2 sm:p-3 rounded-2xl backdrop-blur-sm">
+                          <FaCog className="text-xl sm:text-2xl" />
                         </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                         <div>
-                          <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
-                            <div className="relative">
-                              <input
-                                type="checkbox"
-                                checked={newOptionType.canSelectMultipleOptions}
-                                onChange={(e) =>
-                                  setNewOptionType({
-                                    ...newOptionType,
-                                    canSelectMultipleOptions: e.target.checked,
-                                  })
-                                }
-                                className="sr-only"
-                              />
-                              <div
-                                className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
-                                  newOptionType.canSelectMultipleOptions
-                                    ? "bg-green-500 border-green-500"
-                                    : "bg-white border-gray-300 dark:bg-gray-600 dark:border-gray-500"
-                                }`}
-                              >
-                                {newOptionType.canSelectMultipleOptions && (
-                                  <FaCheck className="text-white text-sm" />
-                                )}
-                              </div>
-                            </div>
-                            <div>
-                              <span className="font-semibold text-gray-800 dark:text-gray-200 block">
-                                اختيار متعدد
-                              </span>
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
-                                يسمح باختيار أكثر من خيار
-                              </span>
-                            </div>
-                          </label>
-                        </div>
-
-                        <div>
-                          <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
-                            <div className="relative">
-                              <input
-                                type="checkbox"
-                                checked={newOptionType.isSelectionRequired}
-                                onChange={(e) =>
-                                  setNewOptionType({
-                                    ...newOptionType,
-                                    isSelectionRequired: e.target.checked,
-                                  })
-                                }
-                                className="sr-only"
-                              />
-                              <div
-                                className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
-                                  newOptionType.isSelectionRequired
-                                    ? "bg-red-500 border-red-500"
-                                    : "bg-white border-gray-300 dark:bg-gray-600 dark:border-gray-500"
-                                }`}
-                              >
-                                {newOptionType.isSelectionRequired && (
-                                  <FaCheck className="text-white text-sm" />
-                                )}
-                              </div>
-                            </div>
-                            <div>
-                              <span className="font-semibold text-gray-800 dark:text-gray-200 block">
-                                اختيار مطلوب
-                              </span>
-                              <span className="text-sm text-gray-600 dark:text-gray-400">
-                                يجب على العميل اختيار خيار واحد على الأقل
-                              </span>
-                            </div>
-                          </label>
+                          <h2 className="text-xl sm:text-2xl font-bold">
+                            إدارة أنواع الإضافات
+                          </h2>
+                          <p className="text-white/80 mt-1 text-sm sm:text-base">
+                            إضافة، تعديل وحذف أنواع الإضافات
+                          </p>
                         </div>
                       </div>
-                    </div>
-
-                    <div className="flex justify-start mt-4 sm:mt-6">
-                      <motion.button
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={handleAddOptionType}
-                        className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:shadow-xl transition-all flex items-center gap-2 sm:gap-3 text-sm sm:text-base shadow-lg"
+                      <button
+                        onClick={handleCloseOptionTypesManager}
+                        className="bg-white/20 backdrop-blur-sm rounded-full p-2 sm:p-3 text-white hover:bg-white/30 transition-all duration-200 hover:scale-110"
                       >
-                        <FaPlus />
-                        إضافة نوع إضافة جديد
-                      </motion.button>
+                        <FaTimes size={16} className="sm:w-5" />
+                      </button>
                     </div>
                   </div>
 
-                  <div>
-                    <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-                      <div className="bg-[#FDB913]/10 p-2 rounded-xl">
-                        <FaList className="text-[#FDB913] text-base sm:text-lg" />
+                  <div className="p-4 sm:p-6">
+                    <div className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl p-4 sm:p-6 mb-6 sm:mb-8 transition-colors duration-300 shadow-lg">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                        <div className="bg-[#E41E26]/10 p-2 rounded-xl">
+                          <FaPlus className="text-[#E41E26] text-base sm:text-lg" />
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-200">
+                          إضافة نوع إضافة جديد
+                        </h3>
                       </div>
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-200">
-                        أنواع الإضافات الحالية ({optionTypes.length})
-                      </h3>
+
+                      <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
+                            اسم نوع الإضافة
+                          </label>
+                          <div className="relative">
+                            <FaTag className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-base" />
+                            <input
+                              type="text"
+                              value={newOptionType.name}
+                              onChange={(e) =>
+                                setNewOptionType({
+                                  ...newOptionType,
+                                  name: e.target.value,
+                                })
+                              }
+                              placeholder="أدخل اسم نوع الإضافة الجديد..."
+                              className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-[#E41E26] focus:border-[#E41E26] outline-none transition-all text-right text-base sm:text-lg font-medium"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                          <div>
+                            <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
+                              <div className="relative">
+                                <input
+                                  type="checkbox"
+                                  checked={
+                                    newOptionType.canSelectMultipleOptions
+                                  }
+                                  onChange={(e) =>
+                                    setNewOptionType({
+                                      ...newOptionType,
+                                      canSelectMultipleOptions:
+                                        e.target.checked,
+                                    })
+                                  }
+                                  className="sr-only"
+                                />
+                                <div
+                                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                                    newOptionType.canSelectMultipleOptions
+                                      ? "bg-green-500 border-green-500"
+                                      : "bg-white border-gray-300 dark:bg-gray-600 dark:border-gray-500"
+                                  }`}
+                                >
+                                  {newOptionType.canSelectMultipleOptions && (
+                                    <FaCheck className="text-white text-sm" />
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="font-semibold text-gray-800 dark:text-gray-200 block">
+                                  اختيار متعدد
+                                </span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                  يسمح باختيار أكثر من خيار
+                                </span>
+                              </div>
+                            </label>
+                          </div>
+
+                          <div>
+                            <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
+                              <div className="relative">
+                                <input
+                                  type="checkbox"
+                                  checked={newOptionType.isSelectionRequired}
+                                  onChange={(e) =>
+                                    setNewOptionType({
+                                      ...newOptionType,
+                                      isSelectionRequired: e.target.checked,
+                                    })
+                                  }
+                                  className="sr-only"
+                                />
+                                <div
+                                  className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                                    newOptionType.isSelectionRequired
+                                      ? "bg-red-500 border-red-500"
+                                      : "bg-white border-gray-300 dark:bg-gray-600 dark:border-gray-500"
+                                  }`}
+                                >
+                                  {newOptionType.isSelectionRequired && (
+                                    <FaCheck className="text-white text-sm" />
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="font-semibold text-gray-800 dark:text-gray-200 block">
+                                  اختيار مطلوب
+                                </span>
+                                <span className="text-sm text-gray-600 dark:text-gray-400">
+                                  يجب على العميل اختيار خيار واحد على الأقل
+                                </span>
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-start mt-4 sm:mt-6">
+                        <motion.button
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleAddOptionType}
+                          className="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-bold hover:shadow-xl transition-all flex items-center gap-2 sm:gap-3 text-sm sm:text-base shadow-lg"
+                        >
+                          <FaPlus />
+                          إضافة نوع إضافة جديد
+                        </motion.button>
+                      </div>
                     </div>
 
-                    <div className="space-y-3 sm:space-y-4">
-                      {optionTypes.map((optionType) => (
-                        <motion.div
-                          key={optionType.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 hover:border-[#E41E26]/30 dark:hover:border-[#E41E26]/30 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:shadow-lg group"
-                        >
-                          {editingOptionType &&
-                          editingOptionType.id === optionType.id ? (
-                            <div className="space-y-4 sm:space-y-6">
-                              <div className="grid grid-cols-1 gap-4 sm:gap-6">
-                                <div>
-                                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
-                                    اسم نوع الإضافة
-                                  </label>
-                                  <input
-                                    type="text"
-                                    value={editingOptionType.name}
-                                    onChange={(e) =>
-                                      setEditingOptionType({
-                                        ...editingOptionType,
-                                        name: e.target.value,
-                                      })
-                                    }
-                                    className="w-full px-3 sm:px-4 py-3 sm:py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-[#E41E26] focus:border-[#E41E26] outline-none transition-all text-right text-base sm:text-lg font-medium"
-                                    dir="rtl"
-                                  />
-                                </div>
-                              </div>
+                    <div>
+                      <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                        <div className="bg-[#FDB913]/10 p-2 rounded-xl">
+                          <FaList className="text-[#FDB913] text-base sm:text-lg" />
+                        </div>
+                        <h3 className="text-lg sm:text-xl font-bold text-gray-800 dark:text-gray-200">
+                          أنواع الإضافات الحالية ({optionTypes.length})
+                        </h3>
+                      </div>
 
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                                <div>
-                                  <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
-                                    <div className="relative">
-                                      <input
-                                        type="checkbox"
-                                        checked={
-                                          editingOptionType.canSelectMultipleOptions
-                                        }
-                                        onChange={(e) =>
-                                          setEditingOptionType({
-                                            ...editingOptionType,
-                                            canSelectMultipleOptions:
-                                              e.target.checked,
-                                          })
-                                        }
-                                        className="sr-only"
-                                      />
-                                      <div
-                                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
-                                          editingOptionType.canSelectMultipleOptions
-                                            ? "bg-green-500 border-green-500"
-                                            : "bg-white border-gray-300 dark:bg-gray-600 dark:border-gray-500"
-                                        }`}
-                                      >
-                                        {editingOptionType.canSelectMultipleOptions && (
-                                          <FaCheck className="text-white text-sm" />
-                                        )}
+                      <div className="space-y-3 sm:space-y-4">
+                        {optionTypes.map((optionType) => (
+                          <motion.div
+                            key={optionType.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 hover:border-[#E41E26]/30 dark:hover:border-[#E41E26]/30 rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:shadow-lg group"
+                          >
+                            {editingOptionType &&
+                            editingOptionType.id === optionType.id ? (
+                              <div className="space-y-4 sm:space-y-6">
+                                <div className="grid grid-cols-1 gap-4 sm:gap-6">
+                                  <div>
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
+                                      اسم نوع الإضافة
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={editingOptionType.name}
+                                      onChange={(e) =>
+                                        setEditingOptionType({
+                                          ...editingOptionType,
+                                          name: e.target.value,
+                                        })
+                                      }
+                                      className="w-full px-3 sm:px-4 py-3 sm:py-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 dark:bg-gray-600 dark:text-white focus:ring-2 focus:ring-[#E41E26] focus:border-[#E41E26] outline-none transition-all text-right text-base sm:text-lg font-medium"
+                                      dir="rtl"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                                  <div>
+                                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
+                                      <div className="relative">
+                                        <input
+                                          type="checkbox"
+                                          checked={
+                                            editingOptionType.canSelectMultipleOptions
+                                          }
+                                          onChange={(e) =>
+                                            setEditingOptionType({
+                                              ...editingOptionType,
+                                              canSelectMultipleOptions:
+                                                e.target.checked,
+                                            })
+                                          }
+                                          className="sr-only"
+                                        />
+                                        <div
+                                          className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                                            editingOptionType.canSelectMultipleOptions
+                                              ? "bg-green-500 border-green-500"
+                                              : "bg-white border-gray-300 dark:bg-gray-600 dark:border-gray-500"
+                                          }`}
+                                        >
+                                          {editingOptionType.canSelectMultipleOptions && (
+                                            <FaCheck className="text-white text-sm" />
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                    <div>
-                                      <span className="font-semibold text-gray-800 dark:text-gray-200 block">
-                                        اختيار متعدد
-                                      </span>
-                                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        يسمح باختيار أكثر من خيار
-                                      </span>
-                                    </div>
-                                  </label>
-                                </div>
-
-                                <div>
-                                  <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
-                                    <div className="relative">
-                                      <input
-                                        type="checkbox"
-                                        checked={
-                                          editingOptionType.isSelectionRequired
-                                        }
-                                        onChange={(e) =>
-                                          setEditingOptionType({
-                                            ...editingOptionType,
-                                            isSelectionRequired:
-                                              e.target.checked,
-                                          })
-                                        }
-                                        className="sr-only"
-                                      />
-                                      <div
-                                        className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
-                                          editingOptionType.isSelectionRequired
-                                            ? "bg-red-500 border-red-500"
-                                            : "bg-white border-gray-300 dark:bg-gray-600 dark:border-gray-500"
-                                        }`}
-                                      >
-                                        {editingOptionType.isSelectionRequired && (
-                                          <FaCheck className="text-white text-sm" />
-                                        )}
+                                      <div>
+                                        <span className="font-semibold text-gray-800 dark:text-gray-200 block">
+                                          اختيار متعدد
+                                        </span>
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                          يسمح باختيار أكثر من خيار
+                                        </span>
                                       </div>
-                                    </div>
-                                    <div>
-                                      <span className="font-semibold text-gray-800 dark:text-gray-200 block">
-                                        اختيار مطلوب
-                                      </span>
-                                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        يجب على العميل اختيار خيار واحد على
-                                        الأقل
-                                      </span>
-                                    </div>
-                                  </label>
-                                </div>
-                              </div>
+                                    </label>
+                                  </div>
 
-                              <div className="flex gap-2 sm:gap-3 justify-start pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-600">
-                                <motion.button
-                                  whileHover={{ scale: 1.02 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  onClick={() => setEditingOptionType(null)}
-                                  className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all text-sm sm:text-base"
-                                >
-                                  إلغاء التعديل
-                                </motion.button>
-                                <motion.button
-                                  whileHover={{ scale: 1.02, y: -2 }}
-                                  whileTap={{ scale: 0.98 }}
-                                  onClick={handleSaveOptionType}
-                                  className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold hover:shadow-lg transition-all flex items-center gap-2 text-sm sm:text-base shadow-lg"
-                                >
-                                  <FaSave />
-                                  حفظ التغييرات
-                                </motion.button>
-                              </div>
-                            </div>
-                          ) : (
-                            // View Mode
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-                              <div className="flex items-center gap-3 sm:gap-4">
-                                <div className="bg-blue-100 dark:bg-blue-900/30 p-2 sm:p-3 rounded-xl">
-                                  <FaCog className="text-blue-600 text-base sm:text-lg" />
+                                  <div>
+                                    <label className="flex items-center gap-3 cursor-pointer p-4 bg-gray-50 dark:bg-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
+                                      <div className="relative">
+                                        <input
+                                          type="checkbox"
+                                          checked={
+                                            editingOptionType.isSelectionRequired
+                                          }
+                                          onChange={(e) =>
+                                            setEditingOptionType({
+                                              ...editingOptionType,
+                                              isSelectionRequired:
+                                                e.target.checked,
+                                            })
+                                          }
+                                          className="sr-only"
+                                        />
+                                        <div
+                                          className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all duration-200 ${
+                                            editingOptionType.isSelectionRequired
+                                              ? "bg-red-500 border-red-500"
+                                              : "bg-white border-gray-300 dark:bg-gray-600 dark:border-gray-500"
+                                          }`}
+                                        >
+                                          {editingOptionType.isSelectionRequired && (
+                                            <FaCheck className="text-white text-sm" />
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <span className="font-semibold text-gray-800 dark:text-gray-200 block">
+                                          اختيار مطلوب
+                                        </span>
+                                        <span className="text-sm text-gray-600 dark:text-gray-400">
+                                          يجب على العميل اختيار خيار واحد على
+                                          الأقل
+                                        </span>
+                                      </div>
+                                    </label>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h4
-                                    className="font-bold text-gray-800 dark:text-gray-200 text-base sm:text-lg mb-1"
-                                    dir={
-                                      isArabic(optionType.name) ? "rtl" : "ltr"
-                                    }
+
+                                <div className="flex gap-2 sm:gap-3 justify-start pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-600">
+                                  <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setEditingOptionType(null)}
+                                    className="px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-semibold border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 transition-all text-sm sm:text-base"
                                   >
-                                    {optionType.name}
-                                  </h4>
-                                  <div className="flex gap-3 mt-2">
-                                    <div
-                                      className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${
-                                        optionType.canSelectMultipleOptions
-                                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                          : "bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300"
-                                      }`}
+                                    إلغاء التعديل
+                                  </motion.button>
+                                  <motion.button
+                                    whileHover={{ scale: 1.02, y: -2 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={handleSaveOptionType}
+                                    className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-6 py-2 sm:py-3 rounded-xl font-bold hover:shadow-lg transition-all flex items-center gap-2 text-sm sm:text-base shadow-lg"
+                                  >
+                                    <FaSave />
+                                    حفظ التغييرات
+                                  </motion.button>
+                                </div>
+                              </div>
+                            ) : (
+                              // View Mode
+                              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                                <div className="flex items-center gap-3 sm:gap-4">
+                                  <div className="bg-blue-100 dark:bg-blue-900/30 p-2 sm:p-3 rounded-xl">
+                                    <FaCog className="text-blue-600 text-base sm:text-lg" />
+                                  </div>
+                                  <div>
+                                    <h4
+                                      className="font-bold text-gray-800 dark:text-gray-200 text-base sm:text-lg mb-1"
+                                      dir={
+                                        isArabic(optionType.name)
+                                          ? "rtl"
+                                          : "ltr"
+                                      }
                                     >
-                                      {optionType.canSelectMultipleOptions ? (
-                                        <>
-                                          <FaCheckSquare className="text-xs" />
-                                          متعدد الاختيار
-                                        </>
-                                      ) : (
-                                        <>
-                                          <FaSquare className="text-xs" />
-                                          اختيار فردي
-                                        </>
-                                      )}
-                                    </div>
-                                    <div
-                                      className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${
-                                        optionType.isSelectionRequired
-                                          ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
-                                          : "bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300"
-                                      }`}
-                                    >
-                                      {optionType.isSelectionRequired ? (
-                                        <>
-                                          <FaCheckCircle className="text-xs" />
-                                          مطلوب
-                                        </>
-                                      ) : (
-                                        <>
-                                          <FaSquare className="text-xs" />
-                                          اختياري
-                                        </>
-                                      )}
+                                      {optionType.name}
+                                    </h4>
+                                    <div className="flex gap-3 mt-2">
+                                      <div
+                                        className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${
+                                          optionType.canSelectMultipleOptions
+                                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                                            : "bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300"
+                                        }`}
+                                      >
+                                        {optionType.canSelectMultipleOptions ? (
+                                          <>
+                                            <FaCheckSquare className="text-xs" />
+                                            متعدد الاختيار
+                                          </>
+                                        ) : (
+                                          <>
+                                            <FaSquare className="text-xs" />
+                                            اختيار فردي
+                                          </>
+                                        )}
+                                      </div>
+                                      <div
+                                        className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${
+                                          optionType.isSelectionRequired
+                                            ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                            : "bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-300"
+                                        }`}
+                                      >
+                                        {optionType.isSelectionRequired ? (
+                                          <>
+                                            <FaCheckCircle className="text-xs" />
+                                            مطلوب
+                                          </>
+                                        ) : (
+                                          <>
+                                            <FaSquare className="text-xs" />
+                                            اختياري
+                                          </>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                              </div>
 
-                              <div className="flex gap-1 sm:gap-2 justify-end sm:justify-start">
-                                <motion.button
-                                  whileHover={{ scale: 1.1, y: -2 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={() =>
-                                    handleEditOptionType(optionType)
-                                  }
-                                  className="bg-blue-500 text-white p-2 sm:p-3 rounded-xl hover:bg-blue-600 transition-all shadow-md"
-                                  title="تعديل نوع الإضافة"
-                                >
-                                  <FaEdit size={16} className="sm:w-4 sm:h-4" />
-                                </motion.button>
-                                <motion.button
-                                  whileHover={{ scale: 1.1, y: -2 }}
-                                  whileTap={{ scale: 0.9 }}
-                                  onClick={() =>
-                                    handleDeleteOptionType(optionType.id)
-                                  }
-                                  className="bg-red-500 text-white p-2 sm:p-3 rounded-xl hover:bg-red-600 transition-all shadow-md"
-                                  title="حذف نوع الإضافة"
-                                >
-                                  <FaTrash
-                                    size={16}
-                                    className="sm:w-4 sm:h-4"
-                                  />
-                                </motion.button>
+                                <div className="flex gap-1 sm:gap-2 justify-end sm:justify-start">
+                                  <motion.button
+                                    whileHover={{ scale: 1.1, y: -2 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() =>
+                                      handleEditOptionType(optionType)
+                                    }
+                                    className="bg-blue-500 text-white p-2 sm:p-3 rounded-xl hover:bg-blue-600 transition-all shadow-md"
+                                    title="تعديل نوع الإضافة"
+                                  >
+                                    <FaEdit
+                                      size={16}
+                                      className="sm:w-4 sm:h-4"
+                                    />
+                                  </motion.button>
+                                  <motion.button
+                                    whileHover={{ scale: 1.1, y: -2 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={() =>
+                                      handleDeleteOptionType(optionType.id)
+                                    }
+                                    className="bg-red-500 text-white p-2 sm:p-3 rounded-xl hover:bg-red-600 transition-all shadow-md"
+                                    title="حذف نوع الإضافة"
+                                  >
+                                    <FaTrash
+                                      size={16}
+                                      className="sm:w-4 sm:h-4"
+                                    />
+                                  </motion.button>
+                                </div>
                               </div>
-                            </div>
-                          )}
-                        </motion.div>
-                      ))}
+                            )}
+                          </motion.div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
   );
 };
 

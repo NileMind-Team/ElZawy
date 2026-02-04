@@ -2,7 +2,6 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Helmet } from "react-helmet-async";
 import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import ConfirmEmail from "./pages/ConfirmEmail";
@@ -12,7 +11,6 @@ import Profile from "./pages/Profile";
 import Addresses from "./pages/Addresses";
 import Reviews from "./pages/Reviews";
 import Cart from "./pages/Cart";
-import OrderTracking from "./pages/OrderTracking";
 import MyOrders from "./pages/MyOrders";
 import ProductForm from "./pages/ProductForm";
 import Footer from "./components/Footer";
@@ -108,14 +106,6 @@ function App() {
         <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
       )}
 
-      <Helmet>
-        <title>Chicken One El-Zawy</title>
-        <meta
-          name="description"
-          content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
-        />
-      </Helmet>
-
       {/* Main content */}
       <main className="flex-grow w-full bg-white dark:bg-gray-900">
         <Routes>
@@ -133,7 +123,6 @@ function App() {
             <Route path="/addresses" element={<Addresses />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/cart" element={<Cart />} />
-            <Route path="/order-tracking" element={<OrderTracking />} />
             <Route path="/my-orders" element={<MyOrders />} />
             <Route path="/products/new" element={<ProductForm />} />
             <Route path="/products/edit" element={<ProductForm />} />

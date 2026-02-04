@@ -26,6 +26,7 @@ import axiosInstance from "../api/axiosInstance";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Helmet } from "react-helmet-async";
 
 const Branches = () => {
   const [branches, setBranches] = useState([]);
@@ -131,7 +132,7 @@ const Branches = () => {
     };
 
     fetchBranchesAndCities();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -143,7 +144,7 @@ const Branches = () => {
         (branch) =>
           branch.name?.toLowerCase().includes(searchLower) ||
           branch.address?.toLowerCase().includes(searchLower) ||
-          branch.city?.name?.toLowerCase().includes(searchLower)
+          branch.city?.name?.toLowerCase().includes(searchLower),
       );
     }
 
@@ -243,18 +244,18 @@ const Branches = () => {
     for (let i = 1; i <= 5; i++) {
       if (i <= fullStars) {
         stars.push(
-          <FaStar key={i} className="text-yellow-500 text-sm sm:text-base" />
+          <FaStar key={i} className="text-yellow-500 text-sm sm:text-base" />,
         );
       } else if (i === fullStars + 1 && hasHalfStar) {
         stars.push(
           <FaStarHalfAlt
             key={i}
             className="text-yellow-500 text-sm sm:text-base"
-          />
+          />,
         );
       } else {
         stars.push(
-          <FaRegStar key={i} className="text-gray-300 text-sm sm:text-base" />
+          <FaRegStar key={i} className="text-gray-300 text-sm sm:text-base" />,
         );
       }
     }
@@ -292,7 +293,13 @@ const Branches = () => {
 
   return (
     <>
-
+      <Helmet>
+        <title>Chicken One El-Zawy</title>
+        <meta
+          name="description"
+          content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
+        />
+      </Helmet>
       <div
         className="min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-3 sm:px-4 md:px-6 py-3 sm:py-6 relative font-sans overflow-hidden transition-colors duration-300"
         dir="rtl"
@@ -530,12 +537,12 @@ const Branches = () => {
                                     <div className="flex items-center gap-1">
                                       {getStatusIcon(
                                         branch.status,
-                                        branch.isActive
+                                        branch.isActive,
                                       )}
                                       <div
                                         className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-xs font-semibold ${getStatusColor(
                                           branch.status,
-                                          branch.isActive
+                                          branch.isActive,
                                         )}`}
                                       >
                                         {branch.isActive ? "نشط" : "غير نشط"}
@@ -544,7 +551,7 @@ const Branches = () => {
                                     <div
                                       className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-xs font-semibold ${getStatusColor(
                                         branch.status,
-                                        branch.isActive
+                                        branch.isActive,
                                       )}`}
                                     >
                                       {getStatusText(branch.status)}
@@ -664,7 +671,7 @@ const Branches = () => {
                                                     </span>
                                                     <span className="text-gray-500 dark:text-gray-400 text-xs bg-gray-200 dark:bg-gray-500 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded flex-shrink-0">
                                                       {getPhoneTypeArabic(
-                                                        phone.type
+                                                        phone.type,
                                                       )}
                                                     </span>
                                                   </div>
@@ -672,7 +679,7 @@ const Branches = () => {
                                                     <FaWhatsapp className="text-green-500 text-base sm:text-lg md:text-xl flex-shrink-0 ml-1" />
                                                   )}
                                                 </div>
-                                              )
+                                              ),
                                             )}
                                           </div>
                                         </div>
@@ -747,7 +754,7 @@ const Branches = () => {
                                                             <img
                                                               src={getImageUrl(
                                                                 review.user
-                                                                  .imageUrl
+                                                                  .imageUrl,
                                                               )}
                                                               alt={`${
                                                                 review.user
@@ -799,7 +806,7 @@ const Branches = () => {
                                                           dir="ltr"
                                                         >
                                                           {renderStars(
-                                                            review.rating
+                                                            review.rating,
                                                           )}
                                                         </div>
                                                       </div>
@@ -817,7 +824,7 @@ const Branches = () => {
                                                       </div>
                                                     )}
                                                   </motion.div>
-                                                )
+                                                ),
                                               )}
                                             </div>
                                           </motion.div>
@@ -843,12 +850,12 @@ const Branches = () => {
                                       <div className="flex items-center justify-center gap-1">
                                         {getStatusIcon(
                                           branch.status,
-                                          branch.isActive
+                                          branch.isActive,
                                         )}
                                         <div
                                           className={`px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-full text-xs font-semibold ${getStatusColor(
                                             branch.status,
-                                            branch.isActive
+                                            branch.isActive,
                                           )}`}
                                         >
                                           {branch.isActive ? "نشط" : "غير نشط"}

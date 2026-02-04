@@ -21,6 +21,7 @@ import SearchBar from "../components/adminUsers/SearchBar";
 import UserCard from "../components/adminUsers/UserCard";
 import EmptyState from "../components/adminUsers/EmptyState";
 import UserForm from "../components/adminUsers/UserForm";
+import { Helmet } from "react-helmet-async";
 
 export default function AdminUsers() {
   const navigate = useNavigate();
@@ -231,162 +232,171 @@ export default function AdminUsers() {
   const sortedUsers = getSortedUsers(filteredUsers);
 
   return (
-    <div
-      className={`min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] px-3 sm:px-4 md:px-6 py-3 sm:py-6 relative font-sans overflow-hidden transition-colors duration-300`}
-      style={{ direction: "rtl" }}
-    >
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -left-10 sm:-left-20 -top-10 sm:-top-20 w-40 h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#E41E26]/10 to-[#FDB913]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
-        <div className="absolute -right-10 sm:-right-20 -bottom-10 sm:-bottom-20 w-40 h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#FDB913]/10 to-[#E41E26]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
-      </div>
-
-      <motion.button
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        onClick={() => navigate(-1)}
-        className="fixed top-3 sm:top-4 left-3 sm:left-4 z-50 bg-white/80 backdrop-blur-md hover:bg-[#E41E26] hover:text-white rounded-full p-2 sm:p-3 text-[#E41E26] border border-[#E41E26]/30 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl group"
-      >
-        <FaArrowLeft
-          size={14}
-          className="sm:size-4 group-hover:scale-110 transition-transform"
+    <>
+      <Helmet>
+        <title>Chicken One El-Zawy</title>
+        <meta
+          name="description"
+          content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
         />
-      </motion.button>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, type: "spring" }}
-        className="max-w-7xl mx-auto bg-white/90 backdrop-blur-xl shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl border border-white/50 relative overflow-hidden"
+      </Helmet>
+      <div
+        className={`min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] px-3 sm:px-4 md:px-6 py-3 sm:py-6 relative font-sans overflow-hidden transition-colors duration-300`}
+        style={{ direction: "rtl" }}
       >
-        <Header />
-
-        <div className="relative px-3 sm:px-4 md:px-6 lg:px-8 pb-4 sm:pb-6 md:pb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex justify-center -mt-6 sm:-mt-7 md:-mt-8 mb-6 sm:mb-8 md:mb-10"
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleAddNewUser}
-              className="flex items-center gap-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-5 md:px-6 py-3 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-2xl sm:shadow-3xl hover:shadow-4xl hover:shadow-[#E41E26]/50 transition-all duration-300 text-sm sm:text-base md:text-lg border-2 border-white whitespace-nowrap transform translate-y-2"
-            >
-              <FaPlus className="text-sm sm:text-base md:text-lg" />
-              <span>إضافة مستخدم جديد</span>
-            </motion.button>
-          </motion.div>
-
-          <SearchBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            searchUsers={searchUsers}
-            isSearching={isSearching}
-          />
-
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-            <div
-              className={`space-y-3 sm:space-y-4 md:space-y-5 ${
-                isAdding ? "xl:col-span-2" : "xl:col-span-3"
-              }`}
-            >
-              {sortedUsers.length > 0 ? (
-                <>
-                  {sortedUsers.map((user, index) => (
-                    <UserCard
-                      key={user.id}
-                      user={user}
-                      index={index}
-                      isCurrentUser={isCurrentUser}
-                      getRoleBadgeColor={getRoleBadgeColor}
-                      getRoleIcon={getRoleIcon}
-                      getStatusBadge={getStatusBadge}
-                      getAvailableRolesToAssign={getAvailableRolesToAssign}
-                      assigningRole={assigningRole}
-                      setAssigningRole={setAssigningRole}
-                      handleAssignRole={handleAssignRole}
-                      handleToggleStatus={handleToggleStatus}
-                    />
-                  ))}
-
-                  {/* Pagination Controls */}
-                  {totalPages > 1 && (
-                    <div className="mt-6 sm:mt-8 flex flex-col items-center">
-                      <div className="flex items-center justify-center gap-1 sm:gap-2">
-                        <button
-                          onClick={handlePrevPage}
-                          disabled={currentPage === 1}
-                          className={`p-2 sm:p-3 rounded-xl ${
-                            currentPage === 1
-                              ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
-                              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                          }`}
-                        >
-                          <FaChevronRight className="text-sm sm:text-base" />
-                        </button>
-
-                        <div className="flex items-center gap-1 sm:gap-2">
-                          {getPaginationNumbers().map((pageNum, index) => (
-                            <React.Fragment key={index}>
-                              {pageNum === "..." ? (
-                                <span className="px-2 sm:px-3 py-1 sm:py-2 text-gray-500">
-                                  ...
-                                </span>
-                              ) : (
-                                <button
-                                  onClick={() => handlePageChange(pageNum)}
-                                  className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl font-semibold ${
-                                    currentPage === pageNum
-                                      ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white shadow-lg"
-                                      : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                                  }`}
-                                >
-                                  {pageNum}
-                                </button>
-                              )}
-                            </React.Fragment>
-                          ))}
-                        </div>
-
-                        <button
-                          onClick={handleNextPage}
-                          disabled={currentPage === totalPages}
-                          className={`p-2 sm:p-3 rounded-xl ${
-                            currentPage === totalPages
-                              ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
-                              : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                          }`}
-                        >
-                          <FaChevronLeft className="text-sm sm:text-base" />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <EmptyState
-                  searchTerm={searchTerm}
-                  handleAddNewUser={handleAddNewUser}
-                />
-              )}
-            </div>
-
-            <AnimatePresence>
-              <UserForm
-                isAdding={isAdding}
-                formData={formData}
-                setFormData={setFormData}
-                availableRoles={filteredAvailableRoles}
-                handleSubmit={handleSubmit}
-                resetForm={resetForm}
-                getRoleIcon={getRoleIcon}
-                isFormValid={isFormValid}
-              />
-            </AnimatePresence>
-          </div>
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -left-10 sm:-left-20 -top-10 sm:-top-20 w-40 h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#E41E26]/10 to-[#FDB913]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
+          <div className="absolute -right-10 sm:-right-20 -bottom-10 sm:-bottom-20 w-40 h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#FDB913]/10 to-[#E41E26]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
         </div>
-      </motion.div>
-    </div>
+
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => navigate(-1)}
+          className="fixed top-3 sm:top-4 left-3 sm:left-4 z-50 bg-white/80 backdrop-blur-md hover:bg-[#E41E26] hover:text-white rounded-full p-2 sm:p-3 text-[#E41E26] border border-[#E41E26]/30 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl group"
+        >
+          <FaArrowLeft
+            size={14}
+            className="sm:size-4 group-hover:scale-110 transition-transform"
+          />
+        </motion.button>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, type: "spring" }}
+          className="max-w-7xl mx-auto bg-white/90 backdrop-blur-xl shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl border border-white/50 relative overflow-hidden"
+        >
+          <Header />
+
+          <div className="relative px-3 sm:px-4 md:px-6 lg:px-8 pb-4 sm:pb-6 md:pb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex justify-center -mt-6 sm:-mt-7 md:-mt-8 mb-6 sm:mb-8 md:mb-10"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleAddNewUser}
+                className="flex items-center gap-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-5 md:px-6 py-3 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-2xl sm:shadow-3xl hover:shadow-4xl hover:shadow-[#E41E26]/50 transition-all duration-300 text-sm sm:text-base md:text-lg border-2 border-white whitespace-nowrap transform translate-y-2"
+              >
+                <FaPlus className="text-sm sm:text-base md:text-lg" />
+                <span>إضافة مستخدم جديد</span>
+              </motion.button>
+            </motion.div>
+
+            <SearchBar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              searchUsers={searchUsers}
+              isSearching={isSearching}
+            />
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+              <div
+                className={`space-y-3 sm:space-y-4 md:space-y-5 ${
+                  isAdding ? "xl:col-span-2" : "xl:col-span-3"
+                }`}
+              >
+                {sortedUsers.length > 0 ? (
+                  <>
+                    {sortedUsers.map((user, index) => (
+                      <UserCard
+                        key={user.id}
+                        user={user}
+                        index={index}
+                        isCurrentUser={isCurrentUser}
+                        getRoleBadgeColor={getRoleBadgeColor}
+                        getRoleIcon={getRoleIcon}
+                        getStatusBadge={getStatusBadge}
+                        getAvailableRolesToAssign={getAvailableRolesToAssign}
+                        assigningRole={assigningRole}
+                        setAssigningRole={setAssigningRole}
+                        handleAssignRole={handleAssignRole}
+                        handleToggleStatus={handleToggleStatus}
+                      />
+                    ))}
+
+                    {/* Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="mt-6 sm:mt-8 flex flex-col items-center">
+                        <div className="flex items-center justify-center gap-1 sm:gap-2">
+                          <button
+                            onClick={handlePrevPage}
+                            disabled={currentPage === 1}
+                            className={`p-2 sm:p-3 rounded-xl ${
+                              currentPage === 1
+                                ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
+                                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                            }`}
+                          >
+                            <FaChevronRight className="text-sm sm:text-base" />
+                          </button>
+
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            {getPaginationNumbers().map((pageNum, index) => (
+                              <React.Fragment key={index}>
+                                {pageNum === "..." ? (
+                                  <span className="px-2 sm:px-3 py-1 sm:py-2 text-gray-500">
+                                    ...
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() => handlePageChange(pageNum)}
+                                    className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl font-semibold ${
+                                      currentPage === pageNum
+                                        ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white shadow-lg"
+                                        : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                                    }`}
+                                  >
+                                    {pageNum}
+                                  </button>
+                                )}
+                              </React.Fragment>
+                            ))}
+                          </div>
+
+                          <button
+                            onClick={handleNextPage}
+                            disabled={currentPage === totalPages}
+                            className={`p-2 sm:p-3 rounded-xl ${
+                              currentPage === totalPages
+                                ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
+                                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                            }`}
+                          >
+                            <FaChevronLeft className="text-sm sm:text-base" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <EmptyState
+                    searchTerm={searchTerm}
+                    handleAddNewUser={handleAddNewUser}
+                  />
+                )}
+              </div>
+
+              <AnimatePresence>
+                <UserForm
+                  isAdding={isAdding}
+                  formData={formData}
+                  setFormData={setFormData}
+                  availableRoles={filteredAvailableRoles}
+                  handleSubmit={handleSubmit}
+                  resetForm={resetForm}
+                  getRoleIcon={getRoleIcon}
+                  isFormValid={isFormValid}
+                />
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </>
   );
 }

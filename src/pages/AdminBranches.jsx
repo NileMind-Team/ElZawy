@@ -12,6 +12,7 @@ import BranchForm from "../components/adminBranchs/BranchForm";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { translateErrorMessageAdminBranches } from "../utils/ErrorTranslator";
+import { Helmet } from "react-helmet-async";
 
 const adjustTimeForBackend = (timeString) => {
   if (!timeString) return "";
@@ -309,7 +310,7 @@ const showErrorAlert = (errorMessages) => {
       ">
         <span style="position: absolute; right: 0; top: 0;">-</span>
         ${msg}
-      </div>`
+      </div>`,
     );
 
     Swal.fire({
@@ -381,7 +382,7 @@ export default function AdminBranches() {
           const isMobile = showMobileMessage(
             "error",
             "تم الرفض",
-            "ليس لديك صلاحية للوصول إلى هذه الصفحة."
+            "ليس لديك صلاحية للوصول إلى هذه الصفحة.",
           );
 
           if (!isMobile) {
@@ -411,7 +412,7 @@ export default function AdminBranches() {
         const isMobile = showMobileMessage(
           "error",
           "تم الرفض",
-          errorText || "فشل في التحقق من صلاحياتك."
+          errorText || "فشل في التحقق من صلاحياتك.",
         );
 
         if (!isMobile) {
@@ -533,7 +534,7 @@ export default function AdminBranches() {
       const isMobile = showMobileMessage(
         "success",
         "تم تحديث الحالة",
-        `تم ${currentStatus ? "تعطيل" : "تفعيل"} الفرع.`
+        `تم ${currentStatus ? "تعطيل" : "تفعيل"} الفرع.`,
       );
 
       if (!isMobile) {
@@ -582,7 +583,7 @@ export default function AdminBranches() {
         const isMobile = showMobileMessage(
           "success",
           "تم تحديث الفرع",
-          "تم تحديث الفرع بنجاح."
+          "تم تحديث الفرع بنجاح.",
         );
 
         if (!isMobile) {
@@ -600,7 +601,7 @@ export default function AdminBranches() {
         const isMobile = showMobileMessage(
           "success",
           "تم إضافة الفرع",
-          "تم إضافة الفرع الجديد بنجاح."
+          "تم إضافة الفرع الجديد بنجاح.",
         );
 
         if (!isMobile) {
@@ -651,136 +652,145 @@ export default function AdminBranches() {
   }
 
   return (
-    <div
-      className="min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-3 sm:px-4 md:px-6 py-3 sm:py-6 relative font-sans overflow-hidden"
-      dir="rtl"
-    >
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -left-10 sm:-left-20 -top-10 sm:-top-20 w-40 h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#E41E26]/10 to-[#FDB913]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
-        <div className="absolute -right-10 sm:-right-20 -bottom-10 sm:-bottom-20 w-40 h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#FDB913]/10 to-[#E41E26]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
-      </div>
-
-      <motion.button
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        onClick={() => navigate(-1)}
-        className="fixed top-3 sm:top-4 left-3 sm:left-4 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md hover:bg-[#E41E26] hover:text-white rounded-full p-2 sm:p-3 text-[#E41E26] dark:text-gray-300 border border-[#E41E26]/30 dark:border-gray-600 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl group"
-      >
-        <FaArrowLeft
-          size={14}
-          className="sm:size-4 group-hover:scale-110 transition-transform"
+    <>
+      <Helmet>
+        <title>Chicken One El-Zawy</title>
+        <meta
+          name="description"
+          content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
         />
-      </motion.button>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, type: "spring" }}
-        className="max-w-7xl mx-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl border border-white/50 dark:border-gray-700/50 relative overflow-hidden"
+      </Helmet>
+      <div
+        className="min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-3 sm:px-4 md:px-6 py-3 sm:py-6 relative font-sans overflow-hidden"
+        dir="rtl"
       >
-        <Header title="لوحة التحكم" subtitle="إدارة فروع المطعم" />
-
-        <div className="relative px-3 sm:px-4 md:px-6 lg:px-8 pb-4 sm:pb-6 md:pb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex justify-center -mt-6 sm:-mt-7 md:-mt-8 mb-6 sm:mb-8 md:mb-10"
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleAddNewBranch}
-              className="flex items-center gap-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-5 md:px-6 py-3 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-2xl sm:shadow-3xl hover:shadow-4xl hover:shadow-[#E41E26]/50 transition-all duration-300 text-sm sm:text-base md:text-lg border-2 border-white whitespace-nowrap transform translate-y-2"
-            >
-              <FaPlus className="text-sm sm:text-base md:text-lg" />
-              <span>إضافة فرع جديد</span>
-            </motion.button>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mb-6 sm:mb-8"
-          >
-            <SearchBar
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              placeholder="البحث بالاسم، العنوان، البريد الإلكتروني، المدينة، أو رقم الهاتف..."
-            />
-          </motion.div>
-
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-            <div
-              className={`space-y-3 sm:space-y-4 md:space-y-5 ${
-                isAdding ? "xl:col-span-2" : "xl:col-span-3"
-              }`}
-            >
-              {filteredBranches.map((branch, index) => (
-                <BranchCard
-                  key={branch.id}
-                  branch={branch}
-                  onEdit={handleEdit}
-                  onToggleActive={handleToggleActive}
-                  getPhoneTypeArabic={getPhoneTypeArabic}
-                  adjustTimeFromBackend={adjustTimeFromBackend}
-                />
-              ))}
-
-              {filteredBranches.length === 0 && !isAdding && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-8 sm:py-10 md:py-12 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-gray-200/50 dark:border-gray-600/50"
-                >
-                  <FaBuilding className="mx-auto text-3xl sm:text-4xl md:text-5xl text-gray-400 dark:text-gray-500 mb-3 sm:mb-4" />
-                  <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-600 dark:text-gray-400 mb-2 sm:mb-3">
-                    {searchTerm
-                      ? "لم يتم العثور على فروع"
-                      : "لم يتم العثور على فروع"}
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base mb-4 sm:mb-6 max-w-xs sm:max-w-sm mx-auto">
-                    {searchTerm
-                      ? "حاول تعديل مصطلحات البحث"
-                      : "ابدأ بإضافة أول فرع لك"}
-                  </p>
-                  {!searchTerm && (
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleAddNewBranch}
-                      className="flex items-center gap-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base mx-auto"
-                    >
-                      <FaPlus className="text-xs sm:text-sm" />
-                      <span>أضف أول فرع لك</span>
-                    </motion.button>
-                  )}
-                </motion.div>
-              )}
-            </div>
-
-            <AnimatePresence>
-              {isAdding && (
-                <BranchForm
-                  formData={formData}
-                  setFormData={setFormData}
-                  cities={cities}
-                  managers={managers}
-                  onSubmit={handleSubmit}
-                  onCancel={resetForm}
-                  isEditing={!!editingId}
-                  openDropdown={openDropdown}
-                  setOpenDropdown={setOpenDropdown}
-                  convert24To12HourFormat={convert24To12HourFormat}
-                  convert12To24HourFormat={convert12To24HourFormat}
-                  adjustTimeFromBackend={adjustTimeFromBackend}
-                />
-              )}
-            </AnimatePresence>
-          </div>
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -left-10 sm:-left-20 -top-10 sm:-top-20 w-40 h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#E41E26]/10 to-[#FDB913]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
+          <div className="absolute -right-10 sm:-right-20 -bottom-10 sm:-bottom-20 w-40 h-40 sm:w-60 sm:h-60 md:w-80 md:h-80 bg-gradient-to-r from-[#FDB913]/10 to-[#E41E26]/10 rounded-full blur-2xl sm:blur-3xl animate-pulse"></div>
         </div>
-      </motion.div>
-    </div>
+
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => navigate(-1)}
+          className="fixed top-3 sm:top-4 left-3 sm:left-4 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md hover:bg-[#E41E26] hover:text-white rounded-full p-2 sm:p-3 text-[#E41E26] dark:text-gray-300 border border-[#E41E26]/30 dark:border-gray-600 shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl group"
+        >
+          <FaArrowLeft
+            size={14}
+            className="sm:size-4 group-hover:scale-110 transition-transform"
+          />
+        </motion.button>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, type: "spring" }}
+          className="max-w-7xl mx-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl sm:shadow-2xl rounded-2xl sm:rounded-3xl border border-white/50 dark:border-gray-700/50 relative overflow-hidden"
+        >
+          <Header title="لوحة التحكم" subtitle="إدارة فروع المطعم" />
+
+          <div className="relative px-3 sm:px-4 md:px-6 lg:px-8 pb-4 sm:pb-6 md:pb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex justify-center -mt-6 sm:-mt-7 md:-mt-8 mb-6 sm:mb-8 md:mb-10"
+            >
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleAddNewBranch}
+                className="flex items-center gap-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-5 md:px-6 py-3 sm:py-3 md:py-4 rounded-xl sm:rounded-2xl font-semibold shadow-2xl sm:shadow-3xl hover:shadow-4xl hover:shadow-[#E41E26]/50 transition-all duration-300 text-sm sm:text-base md:text-lg border-2 border-white whitespace-nowrap transform translate-y-2"
+              >
+                <FaPlus className="text-sm sm:text-base md:text-lg" />
+                <span>إضافة فرع جديد</span>
+              </motion.button>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mb-6 sm:mb-8"
+            >
+              <SearchBar
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                placeholder="البحث بالاسم، العنوان، البريد الإلكتروني، المدينة، أو رقم الهاتف..."
+              />
+            </motion.div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
+              <div
+                className={`space-y-3 sm:space-y-4 md:space-y-5 ${
+                  isAdding ? "xl:col-span-2" : "xl:col-span-3"
+                }`}
+              >
+                {filteredBranches.map((branch, index) => (
+                  <BranchCard
+                    key={branch.id}
+                    branch={branch}
+                    onEdit={handleEdit}
+                    onToggleActive={handleToggleActive}
+                    getPhoneTypeArabic={getPhoneTypeArabic}
+                    adjustTimeFromBackend={adjustTimeFromBackend}
+                  />
+                ))}
+
+                {filteredBranches.length === 0 && !isAdding && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-8 sm:py-10 md:py-12 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-gray-200/50 dark:border-gray-600/50"
+                  >
+                    <FaBuilding className="mx-auto text-3xl sm:text-4xl md:text-5xl text-gray-400 dark:text-gray-500 mb-3 sm:mb-4" />
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-600 dark:text-gray-400 mb-2 sm:mb-3">
+                      {searchTerm
+                        ? "لم يتم العثور على فروع"
+                        : "لم يتم العثور على فروع"}
+                    </h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm sm:text-base mb-4 sm:mb-6 max-w-xs sm:max-w-sm mx-auto">
+                      {searchTerm
+                        ? "حاول تعديل مصطلحات البحث"
+                        : "ابدأ بإضافة أول فرع لك"}
+                    </p>
+                    {!searchTerm && (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleAddNewBranch}
+                        className="flex items-center gap-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base mx-auto"
+                      >
+                        <FaPlus className="text-xs sm:text-sm" />
+                        <span>أضف أول فرع لك</span>
+                      </motion.button>
+                    )}
+                  </motion.div>
+                )}
+              </div>
+
+              <AnimatePresence>
+                {isAdding && (
+                  <BranchForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    cities={cities}
+                    managers={managers}
+                    onSubmit={handleSubmit}
+                    onCancel={resetForm}
+                    isEditing={!!editingId}
+                    openDropdown={openDropdown}
+                    setOpenDropdown={setOpenDropdown}
+                    convert24To12HourFormat={convert24To12HourFormat}
+                    convert12To24HourFormat={convert12To24HourFormat}
+                    adjustTimeFromBackend={adjustTimeFromBackend}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </>
   );
 }

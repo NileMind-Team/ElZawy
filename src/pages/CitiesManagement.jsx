@@ -13,6 +13,7 @@ import Swal from "sweetalert2";
 import axiosInstance from "../api/axiosInstance";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Helmet } from "react-helmet-async";
 
 const isMobile = () => {
   return window.innerWidth < 768;
@@ -135,7 +136,7 @@ const translateErrorMessage = (errorData) => {
       errorData.errors.UserName.forEach((msg) => {
         if (msg.includes("letters, numbers, and underscores")) {
           errorMessages.push(
-            "اسم المستخدم يجب أن يحتوي فقط على أحرف و أرقام وشرطة سفلية"
+            "اسم المستخدم يجب أن يحتوي فقط على أحرف و أرقام وشرطة سفلية",
           );
         } else if (msg.includes("required")) {
           errorMessages.push("اسم المستخدم مطلوب");
@@ -405,7 +406,13 @@ export default function CitiesManagement() {
 
   return (
     <>
-
+      <Helmet>
+        <title>Chicken One El-Zawy</title>
+        <meta
+          name="description"
+          content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
+        />
+      </Helmet>
       <div className="min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-3 sm:px-4 py-4 sm:py-8 transition-colors duration-300">
         <div className="max-w-7xl mx-auto">
           {/* Header */}

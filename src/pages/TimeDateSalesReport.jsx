@@ -36,6 +36,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { format } from "date-fns";
 import axiosInstance from "../api/axiosInstance";
+import { Helmet } from "react-helmet-async";
 
 const showSalesMobileSuccessToast = (message) => {
   if (window.innerWidth < 768) {
@@ -400,6 +401,7 @@ const OrderDetailsModal = ({ order, onClose }) => {
                                   item.menuItemNameSnapshotAtOrder ||
                                   "صورة المنتج"
                                 }
+                                loading="lazy"
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   e.target.src =
@@ -1550,592 +1552,601 @@ ${
   }
 
   return (
-    <div
-      dir="rtl"
-      className="min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-3 sm:px-4 md:px-6 py-6 relative font-sans overflow-hidden transition-colors duration-300"
-    >
-      {/* Background decorations */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -left-10 -top-10 w-40 h-40 sm:w-60 sm:h-60 bg-gradient-to-r from-[#E41E26]/10 to-[#FDB913]/10 rounded-full blur-2xl animate-pulse"></div>
-        <div className="absolute -right-10 -bottom-10 w-40 h-40 sm:w-60 sm:h-60 bg-gradient-to-r from-[#FDB913]/10 to-[#E41E26]/10 rounded-full blur-2xl animate-pulse"></div>
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, type: "spring" }}
-        className="max-w-7xl mx-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl rounded-2xl sm:rounded-3xl border border-white/50 dark:border-gray-700/50 relative overflow-hidden transition-colors duration-300"
+    <>
+      <Helmet>
+        <title>Chicken One El-Zawy</title>
+        <meta
+          name="description"
+          content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
+        />
+      </Helmet>
+      <div
+        dir="rtl"
+        className="min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-3 sm:px-4 md:px-6 py-6 relative font-sans overflow-hidden transition-colors duration-300"
       >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] px-6 py-8 relative overflow-hidden">
-          <div className="absolute inset-0 bg-black/10"></div>
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-                <FaCalendarDay className="text-white text-2xl" />
-              </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                  تقارير المبيعات بالوقت والتاريخ
-                </h1>
-                <p className="text-white/90 text-sm">
-                  تحليل مفصل للمبيعات حسب الفترة الزمنية
-                </p>
+        {/* Background decorations */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -left-10 -top-10 w-40 h-40 sm:w-60 sm:h-60 bg-gradient-to-r from-[#E41E26]/10 to-[#FDB913]/10 rounded-full blur-2xl animate-pulse"></div>
+          <div className="absolute -right-10 -bottom-10 w-40 h-40 sm:w-60 sm:h-60 bg-gradient-to-r from-[#FDB913]/10 to-[#E41E26]/10 rounded-full blur-2xl animate-pulse"></div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, type: "spring" }}
+          className="max-w-7xl mx-auto bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl shadow-xl rounded-2xl sm:rounded-3xl border border-white/50 dark:border-gray-700/50 relative overflow-hidden transition-colors duration-300"
+        >
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#E41E26] to-[#FDB913] px-6 py-8 relative overflow-hidden">
+            <div className="absolute inset-0 bg-black/10"></div>
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
+                  <FaCalendarDay className="text-white text-2xl" />
+                </div>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
+                    تقارير المبيعات بالوقت والتاريخ
+                  </h1>
+                  <p className="text-white/90 text-sm">
+                    تحليل مفصل للمبيعات حسب الفترة الزمنية
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Main Content */}
-        <div className="p-4 sm:p-6" dir="rtl">
-          {/* Date & Time Filter Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl p-4 sm:p-6 mb-6 shadow-lg"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-              <div className="flex items-center gap-2">
-                <FaCalendar className="text-[#E41E26] text-xl" />
-                <h3 className="text-lg font-bold text-gray-800 dark:text-white">
-                  فلترة بالتاريخ والوقت
-                </h3>
-              </div>
-            </div>
-
-            {/* First Row: All filter fields */}
-            <div
-              className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4"
-              dir="rtl"
+          {/* Main Content */}
+          <div className="p-4 sm:p-6" dir="rtl">
+            {/* Date & Time Filter Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-gradient-to-br from-gray-50 to-white dark:from-gray-700 dark:to-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl p-4 sm:p-6 mb-6 shadow-lg"
             >
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  تاريخ من
-                </label>
-                <div className="relative">
-                  <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#E41E26]" />
-                  <DatePicker
-                    selected={startDate}
-                    onChange={(date) => setStartDate(date)}
-                    selectsStart
-                    startDate={startDate}
-                    endDate={endDate}
-                    dateFormat="dd/MM/yyyy"
-                    className="w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-[#E41E26] focus:border-transparent outline-none text-right"
-                    locale="ar"
-                    placeholderText="اختر تاريخ البداية"
-                  />
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <FaCalendar className="text-[#E41E26] text-xl" />
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                    فلترة بالتاريخ والوقت
+                  </h3>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  وقت من
-                </label>
-                <div className="relative">
-                  <FaClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#E41E26]" />
-                  <input
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-[#E41E26] focus:border-transparent outline-none text-right"
-                  />
+              {/* First Row: All filter fields */}
+              <div
+                className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4"
+                dir="rtl"
+              >
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    تاريخ من
+                  </label>
+                  <div className="relative">
+                    <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#E41E26]" />
+                    <DatePicker
+                      selected={startDate}
+                      onChange={(date) => setStartDate(date)}
+                      selectsStart
+                      startDate={startDate}
+                      endDate={endDate}
+                      dateFormat="dd/MM/yyyy"
+                      className="w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-[#E41E26] focus:border-transparent outline-none text-right"
+                      locale="ar"
+                      placeholderText="اختر تاريخ البداية"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  تاريخ إلى
-                </label>
-                <div className="relative">
-                  <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#E41E26]" />
-                  <DatePicker
-                    selected={endDate}
-                    onChange={(date) => setEndDate(date)}
-                    selectsEnd
-                    startDate={startDate}
-                    endDate={endDate}
-                    minDate={startDate}
-                    dateFormat="dd/MM/yyyy"
-                    className="w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-[#E41E26] focus:border-transparent outline-none text-right"
-                    locale="ar"
-                    placeholderText="اختر تاريخ النهاية"
-                  />
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    وقت من
+                  </label>
+                  <div className="relative">
+                    <FaClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#E41E26]" />
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-[#E41E26] focus:border-transparent outline-none text-right"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  وقت إلى
-                </label>
-                <div className="relative">
-                  <FaClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#E41E26]" />
-                  <input
-                    type="time"
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-[#E41E26] focus:border-transparent outline-none text-right"
-                  />
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    تاريخ إلى
+                  </label>
+                  <div className="relative">
+                    <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#E41E26]" />
+                    <DatePicker
+                      selected={endDate}
+                      onChange={(date) => setEndDate(date)}
+                      selectsEnd
+                      startDate={startDate}
+                      endDate={endDate}
+                      minDate={startDate}
+                      dateFormat="dd/MM/yyyy"
+                      className="w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-[#E41E26] focus:border-transparent outline-none text-right"
+                      locale="ar"
+                      placeholderText="اختر تاريخ النهاية"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  الفرع
-                </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setBranchesDropdownOpen(!branchesDropdownOpen)
-                    }
-                    className="w-full flex items-center justify-between border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-lg px-3 py-2.5 text-right focus:ring-2 focus:ring-[#E41E26] focus:border-transparent outline-none hover:border-[#E41E26] transition-all group"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FaBuilding className="text-[#E41E26] text-sm" />
-                      <span className="text-sm">
-                        {selectedBranch ? selectedBranch.name : "جميع الفروع"}
-                      </span>
-                    </div>
-                    <motion.div
-                      animate={{ rotate: branchesDropdownOpen ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    وقت إلى
+                  </label>
+                  <div className="relative">
+                    <FaClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#E41E26]" />
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      className="w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-[#E41E26] focus:border-transparent outline-none text-right"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    الفرع
+                  </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setBranchesDropdownOpen(!branchesDropdownOpen)
+                      }
+                      className="w-full flex items-center justify-between border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 rounded-lg px-3 py-2.5 text-right focus:ring-2 focus:ring-[#E41E26] focus:border-transparent outline-none hover:border-[#E41E26] transition-all group"
                     >
-                      <FaChevronDown className="text-[#E41E26]" />
-                    </motion.div>
-                  </button>
-
-                  {branchesDropdownOpen && (
-                    <div className="absolute z-10 mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-lg overflow-hidden max-h-48 overflow-y-auto">
-                      <div
-                        onClick={handleClearBranchFilter}
-                        className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-all text-sm border-b dark:border-gray-600 flex items-center gap-2"
-                      >
-                        <span className="text-gray-700 dark:text-gray-300">
-                          جميع الفروع
+                      <div className="flex items-center gap-3">
+                        <FaBuilding className="text-[#E41E26] text-sm" />
+                        <span className="text-sm">
+                          {selectedBranch ? selectedBranch.name : "جميع الفروع"}
                         </span>
                       </div>
-                      {branches.map((branch) => (
+                      <motion.div
+                        animate={{ rotate: branchesDropdownOpen ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <FaChevronDown className="text-[#E41E26]" />
+                      </motion.div>
+                    </button>
+
+                    {branchesDropdownOpen && (
+                      <div className="absolute z-10 mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xl rounded-lg overflow-hidden max-h-48 overflow-y-auto">
                         <div
-                          key={branch.id}
-                          onClick={() => handleBranchSelect(branch)}
-                          className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-all text-sm border-b dark:border-gray-600 last:border-b-0 ${
-                            selectedBranch?.id === branch.id
-                              ? "bg-gradient-to-r from-[#fff8e7] to-[#ffe5b4] dark:from-gray-700 dark:to-gray-600"
-                              : ""
-                          }`}
+                          onClick={handleClearBranchFilter}
+                          className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-all text-sm border-b dark:border-gray-600 flex items-center gap-2"
                         >
                           <span className="text-gray-700 dark:text-gray-300">
-                            {branch.name}
+                            جميع الفروع
                           </span>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        {branches.map((branch) => (
+                          <div
+                            key={branch.id}
+                            onClick={() => handleBranchSelect(branch)}
+                            className={`px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-all text-sm border-b dark:border-gray-600 last:border-b-0 ${
+                              selectedBranch?.id === branch.id
+                                ? "bg-gradient-to-r from-[#fff8e7] to-[#ffe5b4] dark:from-gray-700 dark:to-gray-600"
+                                : ""
+                            }`}
+                          >
+                            <span className="text-gray-700 dark:text-gray-300">
+                              {branch.name}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Second Row: Filter and Print buttons only */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                  إجراءات التقرير
-                </label>
-                <div className="flex gap-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleDateFilter}
-                    disabled={!startDate || !endDate}
-                    className={`flex-1 px-4 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
-                      startDate && endDate
-                        ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white cursor-pointer"
-                        : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                    }`}
-                  >
-                    <FaFilter />
-                    تطبيق الفلترة
-                  </motion.button>
-                  {reportData && reportData.length > 0 && (
+              {/* Second Row: Filter and Print buttons only */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    إجراءات التقرير
+                  </label>
+                  <div className="flex gap-3">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={handlePrint}
-                      disabled={isPrinting}
-                      className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 ${
-                        isPrinting
-                          ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
-                          : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white cursor-pointer"
+                      onClick={handleDateFilter}
+                      disabled={!startDate || !endDate}
+                      className={`flex-1 px-4 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                        startDate && endDate
+                          ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white cursor-pointer"
+                          : "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
                       }`}
                     >
-                      {isPrinting ? (
-                        <>
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                          جاري الطباعة...
-                        </>
-                      ) : (
-                        <>
-                          <FaPrint />
-                          طباعة
-                        </>
-                      )}
+                      <FaFilter />
+                      تطبيق الفلترة
                     </motion.button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Summary Cards */}
-          {summary && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
-            >
-              {/* Total Sales Card */}
-              <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-5 text-white shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-90">إجمالي المبيعات</p>
-                    <p className="text-2xl font-bold mt-1">
-                      {formatCurrency(summary.totalSales)}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <FaMoneyBill className="text-2xl" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Orders Card */}
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl p-5 text-white shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-90">إجمالي الطلبات</p>
-                    <p className="text-2xl font-bold mt-1">
-                      {summary.totalOrders}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <FaShoppingCart className="text-2xl" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Delivery Orders */}
-              <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-5 text-white shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-90">طلبات التوصيل</p>
-                    <p className="text-2xl font-bold mt-1">
-                      {summary.deliveryOrders}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <FaTruck className="text-2xl" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Pickup Orders */}
-              <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl p-5 text-white shadow-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm opacity-90">طلبات الاستلام</p>
-                    <p className="text-2xl font-bold mt-1">
-                      {summary.pickupOrders}
-                    </p>
-                  </div>
-                  <div className="p-3 bg-white/20 rounded-xl">
-                    <FaStore className="text-2xl" />
+                    {reportData && reportData.length > 0 && (
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handlePrint}
+                        disabled={isPrinting}
+                        className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 ${
+                          isPrinting
+                            ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed"
+                            : "bg-gradient-to-r from-blue-600 to-cyan-600 text-white cursor-pointer"
+                        }`}
+                      >
+                        {isPrinting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                            جاري الطباعة...
+                          </>
+                        ) : (
+                          <>
+                            <FaPrint />
+                            طباعة
+                          </>
+                        )}
+                      </motion.button>
+                    )}
                   </div>
                 </div>
               </div>
             </motion.div>
-          )}
 
-          {/* Top Products Section */}
-          {summary?.topProducts && summary.topProducts.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6 shadow-lg"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <FaChartBar className="text-[#E41E26] text-xl" />
-                  <h3 className="text-lg font-bold text-gray-800 dark:text-white">
-                    المنتجات الأكثر مبيعاً
-                  </h3>
-                </div>
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  أعلى 5 منتجات حسب الإيرادات
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                {summary.topProducts.map((product, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#E41E26] to-[#FDB913] flex items-center justify-center text-white font-bold">
-                        {index + 1}
-                      </div>
-                      <div>
-                        <p className="font-medium text-gray-800 dark:text-white">
-                          {product.name}
-                        </p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {product.quantity} وحدة مباعة
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-800 dark:text-white">
-                        {formatCurrency(product.revenue)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Orders Table */}
-          {reportData && reportData.length > 0 && (
-            <>
+            {/* Summary Cards */}
+            {summary && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg mb-6"
+                transition={{ delay: 0.2 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
               >
-                <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                {/* Total Sales Card */}
+                <div className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-5 text-white shadow-lg">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <FaListAlt className="text-[#E41E26] text-xl" />
-                      <h3 className="text-lg font-bold text-gray-800 dark:text-white">
-                        تفاصيل الطلبات
-                      </h3>
+                    <div>
+                      <p className="text-sm opacity-90">إجمالي المبيعات</p>
+                      <p className="text-2xl font-bold mt-1">
+                        {formatCurrency(summary.totalSales)}
+                      </p>
                     </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400">
-                      إجمالي {totalItems} طلب • صفحة {currentPage} من{" "}
-                      {totalPages} • الفرع: {summary?.branch || "جميع الفروع"}
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <FaMoneyBill className="text-2xl" />
                     </div>
                   </div>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-700/50">
-                      <tr>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          رقم الطلب
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          اسم العميل
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          رقم الهاتف
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          نوع الطلب
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          المدينة
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          الفرع
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          الإجمالي
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          الإجراءات
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                      {reportData.map((order) => (
-                        <tr
-                          key={order.id}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150"
-                        >
-                          <td className="px-4 py-3 text-center font-mono text-sm text-gray-800 dark:text-white font-bold">
-                            {order.orderNumber}
-                          </td>
-                          <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
-                            {getCustomerName(order)}
-                          </td>
-                          <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
-                            {getCustomerPhone(order)}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <span
-                              className={`inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
-                                order.deliveryFee?.fee > 0
-                                  ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                                  : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                              }`}
-                            >
-                              {order.deliveryFee?.fee > 0 ? (
-                                <>
-                                  <FaTruck className="text-xs" />
-                                  توصيل
-                                </>
-                              ) : (
-                                <>
-                                  <FaStore className="text-xs" />
-                                  استلام
-                                </>
-                              )}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
-                            {getCustomerCity(order)}
-                          </td>
-                          <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
-                            {getBranchName(order)}
-                          </td>
-                          <td className="px-4 py-3 text-center font-bold text-[#E41E26] dark:text-[#FDB913]">
-                            {formatCurrency(order.totalWithFee)}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => handleViewOrderDetails(order.id)}
-                              disabled={loadingDetails}
-                              className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 mx-auto"
-                            >
-                              {loadingDetails &&
-                              selectedOrder?.id === order.id ? (
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                              ) : (
-                                <FaEye />
-                              )}
-                              عرض التفاصيل
-                            </motion.button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot className="bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
-                      <tr>
-                        <td
-                          colSpan="6"
-                          className="px-4 py-3 text-center font-bold text-gray-800 dark:text-white"
-                        >
-                          المجموع الكلي:
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-xl font-bold text-[#E41E26] dark:text-[#FDB913]">
-                            {formatCurrency(summary?.totalSales || 0)}
-                          </span>
-                        </td>
-                        <td></td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                {/* Total Orders Card */}
+                <div className="bg-gradient-to-r from-blue-500 to-cyan-600 rounded-2xl p-5 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm opacity-90">إجمالي الطلبات</p>
+                      <p className="text-2xl font-bold mt-1">
+                        {summary.totalOrders}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <FaShoppingCart className="text-2xl" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Delivery Orders */}
+                <div className="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-5 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm opacity-90">طلبات التوصيل</p>
+                      <p className="text-2xl font-bold mt-1">
+                        {summary.deliveryOrders}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <FaTruck className="text-2xl" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pickup Orders */}
+                <div className="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl p-5 text-white shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm opacity-90">طلبات الاستلام</p>
+                      <p className="text-2xl font-bold mt-1">
+                        {summary.pickupOrders}
+                      </p>
+                    </div>
+                    <div className="p-3 bg-white/20 rounded-xl">
+                      <FaStore className="text-2xl" />
+                    </div>
+                  </div>
                 </div>
               </motion.div>
+            )}
 
-              {/* Pagination */}
-              {totalPages > 1 && (
+            {/* Top Products Section */}
+            {summary?.topProducts && summary.topProducts.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 mb-6 shadow-lg"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <FaChartBar className="text-[#E41E26] text-xl" />
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                      المنتجات الأكثر مبيعاً
+                    </h3>
+                  </div>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    أعلى 5 منتجات حسب الإيرادات
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  {summary.topProducts.map((product, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-[#E41E26] to-[#FDB913] flex items-center justify-center text-white font-bold">
+                          {index + 1}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-800 dark:text-white">
+                            {product.name}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {product.quantity} وحدة مباعة
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-gray-800 dark:text-white">
+                          {formatCurrency(product.revenue)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Orders Table */}
+            {reportData && reportData.length > 0 && (
+              <>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="mt-8 flex flex-col items-center"
+                  transition={{ delay: 0.4 }}
+                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg mb-6"
                 >
-                  <div className="flex items-center justify-center gap-1 sm:gap-2">
-                    <button
-                      onClick={handlePrevPage}
-                      disabled={currentPage === 1}
-                      className={`p-2 sm:p-3 rounded-xl ${
-                        currentPage === 1
-                          ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
-                          : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                      }`}
-                    >
-                      <FaChevronRight className="text-sm sm:text-base" />
-                    </button>
-
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      {getPaginationNumbers().map((pageNum, index) => (
-                        <React.Fragment key={index}>
-                          {pageNum === "..." ? (
-                            <span className="px-2 sm:px-3 py-1 sm:py-2 text-gray-500">
-                              ...
-                            </span>
-                          ) : (
-                            <button
-                              onClick={() => handlePageChange(pageNum)}
-                              className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl font-semibold ${
-                                currentPage === pageNum
-                                  ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white shadow-lg"
-                                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                              }`}
-                            >
-                              {pageNum}
-                            </button>
-                          )}
-                        </React.Fragment>
-                      ))}
+                  <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FaListAlt className="text-[#E41E26] text-xl" />
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                          تفاصيل الطلبات
+                        </h3>
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        إجمالي {totalItems} طلب • صفحة {currentPage} من{" "}
+                        {totalPages} • الفرع: {summary?.branch || "جميع الفروع"}
+                      </div>
                     </div>
+                  </div>
 
-                    <button
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages}
-                      className={`p-2 sm:p-3 rounded-xl ${
-                        currentPage === totalPages
-                          ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
-                          : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                      }`}
-                    >
-                      <FaChevronLeft className="text-sm sm:text-base" />
-                    </button>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 dark:bg-gray-700/50">
+                        <tr>
+                          <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                            رقم الطلب
+                          </th>
+                          <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                            اسم العميل
+                          </th>
+                          <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                            رقم الهاتف
+                          </th>
+                          <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                            نوع الطلب
+                          </th>
+                          <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                            المدينة
+                          </th>
+                          <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                            الفرع
+                          </th>
+                          <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                            الإجمالي
+                          </th>
+                          <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                            الإجراءات
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {reportData.map((order) => (
+                          <tr
+                            key={order.id}
+                            className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150"
+                          >
+                            <td className="px-4 py-3 text-center font-mono text-sm text-gray-800 dark:text-white font-bold">
+                              {order.orderNumber}
+                            </td>
+                            <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                              {getCustomerName(order)}
+                            </td>
+                            <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                              {getCustomerPhone(order)}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <span
+                                className={`inline-flex items-center justify-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
+                                  order.deliveryFee?.fee > 0
+                                    ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                    : "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                                }`}
+                              >
+                                {order.deliveryFee?.fee > 0 ? (
+                                  <>
+                                    <FaTruck className="text-xs" />
+                                    توصيل
+                                  </>
+                                ) : (
+                                  <>
+                                    <FaStore className="text-xs" />
+                                    استلام
+                                  </>
+                                )}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                              {getCustomerCity(order)}
+                            </td>
+                            <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                              {getBranchName(order)}
+                            </td>
+                            <td className="px-4 py-3 text-center font-bold text-[#E41E26] dark:text-[#FDB913]">
+                              {formatCurrency(order.totalWithFee)}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleViewOrderDetails(order.id)}
+                                disabled={loadingDetails}
+                                className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-300 mx-auto"
+                              >
+                                {loadingDetails &&
+                                selectedOrder?.id === order.id ? (
+                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                ) : (
+                                  <FaEye />
+                                )}
+                                عرض التفاصيل
+                              </motion.button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot className="bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
+                        <tr>
+                          <td
+                            colSpan="6"
+                            className="px-4 py-3 text-center font-bold text-gray-800 dark:text-white"
+                          >
+                            المجموع الكلي:
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-xl font-bold text-[#E41E26] dark:text-[#FDB913]">
+                              {formatCurrency(summary?.totalSales || 0)}
+                            </span>
+                          </td>
+                          <td></td>
+                        </tr>
+                      </tfoot>
+                    </table>
                   </div>
                 </motion.div>
-              )}
-            </>
-          )}
 
-          {(!reportData || reportData.length === 0) && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-12"
-            >
-              <div className="text-5xl mb-4 text-gray-400">📊</div>
-              <h3 className="text-xl font-bold text-gray-600 dark:text-gray-300 mb-2">
-                لا توجد بيانات لعرضها
-              </h3>
-              <p className="text-gray-500 dark:text-gray-400">
-                {selectedBranch
-                  ? `يرجى تحديد فترة زمنية وتطبيق الفلترة لعرض التقرير للفرع: ${selectedBranch.name}`
-                  : "يرجى تحديد فترة زمنية وتطبيق الفلترة لعرض التقرير"}
-              </p>
-            </motion.div>
-          )}
-        </div>
-      </motion.div>
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="mt-8 flex flex-col items-center"
+                  >
+                    <div className="flex items-center justify-center gap-1 sm:gap-2">
+                      <button
+                        onClick={handlePrevPage}
+                        disabled={currentPage === 1}
+                        className={`p-2 sm:p-3 rounded-xl ${
+                          currentPage === 1
+                            ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
+                            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                        }`}
+                      >
+                        <FaChevronRight className="text-sm sm:text-base" />
+                      </button>
 
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <OrderDetailsModal
-          order={orderDetails || selectedOrder}
-          onClose={handleCloseOrderDetails}
-        />
-      )}
-    </div>
+                      <div className="flex items-center gap-1 sm:gap-2">
+                        {getPaginationNumbers().map((pageNum, index) => (
+                          <React.Fragment key={index}>
+                            {pageNum === "..." ? (
+                              <span className="px-2 sm:px-3 py-1 sm:py-2 text-gray-500">
+                                ...
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handlePageChange(pageNum)}
+                                className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl font-semibold ${
+                                  currentPage === pageNum
+                                    ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white shadow-lg"
+                                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            )}
+                          </React.Fragment>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={handleNextPage}
+                        disabled={currentPage === totalPages}
+                        className={`p-2 sm:p-3 rounded-xl ${
+                          currentPage === totalPages
+                            ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
+                            : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
+                        }`}
+                      >
+                        <FaChevronLeft className="text-sm sm:text-base" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </>
+            )}
+
+            {(!reportData || reportData.length === 0) && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center py-12"
+              >
+                <div className="text-5xl mb-4 text-gray-400">📊</div>
+                <h3 className="text-xl font-bold text-gray-600 dark:text-gray-300 mb-2">
+                  لا توجد بيانات لعرضها
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {selectedBranch
+                    ? `يرجى تحديد فترة زمنية وتطبيق الفلترة لعرض التقرير للفرع: ${selectedBranch.name}`
+                    : "يرجى تحديد فترة زمنية وتطبيق الفلترة لعرض التقرير"}
+                </p>
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Order Details Modal */}
+        {selectedOrder && (
+          <OrderDetailsModal
+            order={orderDetails || selectedOrder}
+            onClose={handleCloseOrderDetails}
+          />
+        )}
+      </div>
+    </>
   );
 };
 
