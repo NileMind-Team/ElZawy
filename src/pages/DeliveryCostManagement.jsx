@@ -46,7 +46,7 @@ export default function DeliveryCostManagement() {
   return (
     <>
       <Helmet>
-        <title>Chicken One El-Zawy</title>
+        <title>Chicken One | تشيكن وان الزاوي</title>
         <meta
           name="description"
           content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
