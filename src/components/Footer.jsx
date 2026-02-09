@@ -40,7 +40,6 @@ const Footer = () => {
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
         <div className="grid grid-cols-12 gap-8 lg:gap-12">
-          {/* الجزء الأول: معلومات المطعم - يأخذ 5 أعمدة */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -81,7 +80,6 @@ const Footer = () => {
             </div>
           </motion.div>
 
-          {/* الجزء الثاني: ساعات العمل - يأخذ 5 أعمدة */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -112,7 +110,6 @@ const Footer = () => {
             </div>
           </motion.div>
 
-          {/* الجزء الثالث: أيقونات التواصل - يأخذ 2 عمود */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -173,8 +170,24 @@ const Footer = () => {
               dir="rtl"
             >
               © {currentYear} Chicken-One. جميع الحقوق محفوظة. | صنع بواسطة{" "}
-              <span className="text-[#E41E26]">شركة TripleS للبرمجيات</span> في
-              مصر
+              <a
+                href="https://wa.me/201062485133"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#FDB913] font-semibold hover:text-yellow-400 transition-colors duration-300"
+              >
+                شركه TripleS للبرمجيات
+              </a>
+              في مصر — وللتواصل
+              <a
+                href="https://wa.me/201062485133"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-green-600 hover:bg-green-500 transition-all duration-300 hover:scale-110"
+                title="تواصل واتساب"
+              >
+                <FaWhatsapp className="text-white text-sm" />
+              </a>
             </p>
           </div>
         </motion.div>
