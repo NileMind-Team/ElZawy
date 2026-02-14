@@ -221,7 +221,7 @@ const HeroSwipper = () => {
         <title>Chicken One | تشيكن وان الزاوي</title>
         <meta
           name="description"
-          content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
+          content="تشيكن ون - الزاوي مطعم عصري يقدم خدمة عالية الجودة وتجربة طعام مميزة، مع مذاق رائع واهتمام كبير برضا العملاء."
         />
       </Helmet>
       <div className="relative w-full h-[40vh] sm:h-[45vh] md:h-[50vh] lg:h-[55vh] min-h-[300px] sm:min-h-[350px] md:min-h-[400px] lg:min-h-[450px] max-h-[400px] sm:max-h-[450px] md:max-h-[500px] lg:max-h-[600px] overflow-hidden rounded-b-2xl shadow-xl">

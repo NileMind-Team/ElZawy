@@ -463,7 +463,7 @@ const Favorites = () => {
         <title>Chicken One | تشيكن وان الزاوي</title>
         <meta
           name="description"
-          content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
+          content="تشيكن ون - الزاوي مطعم عصري يقدم خدمة عالية الجودة وتجربة طعام مميزة، مع مذاق رائع واهتمام كبير برضا العملاء."
         />
       </Helmet>
       <div className="min-h-screen bg-gradient-to-br from-white via-[#fff8e7] to-[#ffe5b4] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 px-3 sm:px-4 md:px-6 py-3 sm:py-6 relative font-sans overflow-hidden transition-colors duration-300">

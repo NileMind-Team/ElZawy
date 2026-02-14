@@ -1477,7 +1477,7 @@ const Home = () => {
         <title>Chicken One | تشيكن وان الزاوي</title>
         <meta
           name="description"
-          content="Chicken One - ElZawy is a modern restaurant offering high-quality service and a unique dining experience, delivering great taste and exceptional customer satisfaction."
+          content="تشيكن ون - الزاوي مطعم عصري يقدم خدمة عالية الجودة وتجربة طعام مميزة، مع مذاق رائع واهتمام كبير برضا العملاء."
         />
       </Helmet>
 
