@@ -74,6 +74,13 @@ export default function MyOrders() {
     return window.innerWidth < 768;
   };
 
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, [currentPage]);
+
   const showMessage = (type, title, text, options = {}) => {
     if (isMobile() && !options.forceSwal) {
       const toastOptions = {
