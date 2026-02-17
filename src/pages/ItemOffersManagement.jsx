@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -364,6 +364,7 @@ export default function ItemOffersManagement() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoadingPage] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAdminOrRestaurantOrBranch, setIsAdminOrRestaurantOrBranch] =
     useState(false);
@@ -378,6 +379,9 @@ export default function ItemOffersManagement() {
   const [totalPages, setTotalPages] = useState(1);
   // eslint-disable-next-line no-unused-vars
   const [pageSize, setPageSize] = useState(5);
+  const isPaginationChange = useRef(false);
+  const offersContainerRef = useRef(null);
+  const firstOfferRef = useRef(null);
 
   const selectedProductId = location.state?.selectedProductId || "";
   const selectedOfferId = location.state?.selectedOfferId || null;
@@ -394,12 +398,34 @@ export default function ItemOffersManagement() {
     branchesIds: [],
   });
 
-  useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }, [currentPage]);
+  const scrollToFirstOffer = () => {
+    if (isPaginationChange.current) {
+      setTimeout(() => {
+        if (firstOfferRef.current) {
+          const offset = 120;
+          const elementPosition =
+            firstOfferRef.current.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          });
+        } else if (offersContainerRef.current) {
+          const containerPosition =
+            offersContainerRef.current.getBoundingClientRect().top;
+          const offsetPosition = containerPosition + window.pageYOffset - 80;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          });
+        }
+      }, 200);
+
+      isPaginationChange.current = false;
+    }
+  };
 
   useEffect(() => {
     const checkUserRoleAndFetchData = async () => {
@@ -455,6 +481,7 @@ export default function ItemOffersManagement() {
         );
       } finally {
         setLoading(false);
+        isPaginationChange.current = false;
       }
     };
 
@@ -494,6 +521,12 @@ export default function ItemOffersManagement() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, pageSize]);
 
+  useEffect(() => {
+    if (!loading && !loadingPage && offers.length > 0) {
+      scrollToFirstOffer();
+    }
+  }, [offers, loading, loadingPage]);
+
   const buildFiltersArray = () => {
     const filtersArray = [];
 
@@ -508,7 +541,14 @@ export default function ItemOffersManagement() {
     return filtersArray;
   };
 
-  const fetchOffers = async (branchesList = branches) => {
+  const fetchOffers = async (
+    branchesList = branches,
+    showPageLoading = true,
+  ) => {
+    if (showPageLoading) {
+      setLoadingPage(true);
+    }
+
     try {
       const requestBody = {
         pageNumber: currentPage,
@@ -556,6 +596,10 @@ export default function ItemOffersManagement() {
       showMessage("error", "خطأ", "فشل في تحميل بيانات العروض");
       setOffers([]);
       setFilteredOffers([]);
+    } finally {
+      if (showPageLoading) {
+        setLoadingPage(false);
+      }
     }
   };
 
@@ -590,7 +634,7 @@ export default function ItemOffersManagement() {
     if (currentPage !== 1) {
       setCurrentPage(1);
     } else {
-      fetchOffers(branches);
+      fetchOffers(branches, false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm]);
@@ -854,17 +898,22 @@ export default function ItemOffersManagement() {
   };
 
   const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
+    if (pageNumber !== currentPage) {
+      isPaginationChange.current = true;
+      setCurrentPage(pageNumber);
+    }
   };
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
+      isPaginationChange.current = true;
       setCurrentPage(currentPage - 1);
     }
   };
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
+      isPaginationChange.current = true;
       setCurrentPage(currentPage + 1);
     }
   };
@@ -979,256 +1028,271 @@ export default function ItemOffersManagement() {
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
             <div
+              ref={offersContainerRef}
               className={`space-y-3 sm:space-y-4 md:space-y-5 ${
                 isAdding ? "xl:col-span-2" : "xl:col-span-3"
               }`}
             >
-              <AnimatePresence>
-                {filteredOffers.map((offer, index) => (
-                  <motion.div
-                    key={offer.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl p-4 sm:p-5 lg:p-6 hover:shadow-2xl transition-all duration-300 dark:bg-gray-800/90 border-2 ${
-                      offer.isEnabled &&
-                      new Date(offer.startDate) <= new Date() &&
-                      new Date(offer.endDate) >= new Date()
-                        ? "border-green-200 dark:border-green-800"
-                        : "border-gray-200/50 dark:border-gray-600"
-                    }`}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                      <div className="flex-1 min-w-0">
-                        {/* Header with icon and status */}
-                        <div className="flex items-start justify-between mb-3 sm:mb-4">
-                          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                            <div
-                              className={`p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r ${
-                                offer.isPercentage
-                                  ? "from-green-500/10 to-green-600/10 dark:from-green-500/20 dark:to-green-600/20"
-                                  : "from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20"
-                              } border ${getStatusColor(offer)} flex-shrink-0`}
-                            >
-                              {offer.isPercentage ? (
-                                <FaPercent className="text-[#E41E26] text-lg sm:text-xl" />
-                              ) : (
-                                <FaMoneyBillWave className="text-[#E41E26] text-lg sm:text-xl" />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                <h3
-                                  className={`font-bold ${
-                                    offer.isEnabled
-                                      ? "text-gray-800 dark:text-gray-200"
-                                      : "text-gray-500 dark:text-gray-400"
-                                  } text-base sm:text-lg md:text-xl truncate`}
-                                >
-                                  {offer.menuItem?.name ||
-                                    `عنصر #${offer.menuItemId}`}
-                                </h3>
-                                <span
-                                  className={`px-2 py-1 rounded-full text-xs whitespace-nowrap inline-flex items-center gap-1 self-start sm:self-center ${getStatusColor(
-                                    offer,
-                                  )}`}
-                                >
-                                  {offer.isEnabled && (
-                                    <FaStar className="text-xs" />
-                                  )}
-                                  {getStatusText(offer)}
-                                </span>
-                              </div>
-                              {offer.menuItem?.description ? (
-                                <p
-                                  className={`${offer.isEnabled ? "text-gray-600 dark:text-gray-400" : "text-gray-400 dark:text-gray-500"} text-xs sm:text-sm truncate mt-1`}
-                                >
-                                  {offer.menuItem.description}
-                                </p>
-                              ) : (
-                                <p className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm italic truncate mt-1">
-                                  لا يوجد وصف
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+              {/* Loading overlay للصفحات */}
+              {loadingPage && (
+                <div className="flex justify-center items-center py-12">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#E41E26]"></div>
+                  </div>
+                </div>
+              )}
 
-                        {/* Discount and Price Info - Full Width */}
-                        <div
-                          className={`mb-4 ${offer.isEnabled ? "opacity-100" : "opacity-75"}`}
-                        >
-                          <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl border border-green-200 dark:border-green-700 p-4 sm:p-5">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                              <div className="flex items-center gap-3 sm:gap-4 flex-1">
+              {!loadingPage && (
+                <AnimatePresence mode="wait">
+                  {filteredOffers.map((offer, index) => (
+                    <motion.div
+                      key={offer.id}
+                      ref={index === 0 ? firstOfferRef : null}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className={`bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl p-4 sm:p-5 lg:p-6 hover:shadow-2xl transition-all duration-300 dark:bg-gray-800/90 border-2 ${
+                        offer.isEnabled &&
+                        new Date(offer.startDate) <= new Date() &&
+                        new Date(offer.endDate) >= new Date()
+                          ? "border-green-200 dark:border-green-800"
+                          : "border-gray-200/50 dark:border-gray-600"
+                      }`}
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                        <div className="flex-1 min-w-0">
+                          {/* Header with icon and status */}
+                          <div className="flex items-start justify-between mb-3 sm:mb-4">
+                            <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                              <div
+                                className={`p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-r ${
+                                  offer.isPercentage
+                                    ? "from-green-500/10 to-green-600/10 dark:from-green-500/20 dark:to-green-600/20"
+                                    : "from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20"
+                                } border ${getStatusColor(offer)} flex-shrink-0`}
+                              >
                                 {offer.isPercentage ? (
-                                  <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
-                                    <FaPercent className="text-green-600 dark:text-green-400 text-2xl" />
-                                  </div>
+                                  <FaPercent className="text-[#E41E26] text-lg sm:text-xl" />
                                 ) : (
-                                  <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
-                                    <FaMoneyBillWave className="text-green-600 dark:text-green-400 text-2xl" />
-                                  </div>
+                                  <FaMoneyBillWave className="text-[#E41E26] text-lg sm:text-xl" />
                                 )}
-                                <div>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                                    قيمة الخصم
-                                  </p>
-                                  <p className="font-bold text-green-600 dark:text-green-400 text-2xl">
-                                    {offer.isPercentage
-                                      ? `${offer.discountValue}%`
-                                      : `ج.م ${offer.discountValue}`}
-                                  </p>
-                                </div>
                               </div>
-
-                              <div className="flex items-center gap-3 sm:gap-4 flex-1">
-                                <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
-                                  <FaHamburger className="text-blue-600 dark:text-blue-400 text-2xl" />
-                                </div>
-                                <div>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                                    السعر الأصلي
-                                  </p>
-                                  <p className="font-bold text-blue-600 dark:text-blue-400 text-2xl">
-                                    {offer.menuItem?.basePrice === 0 ? (
-                                      <span className="text-[#E41E26] dark:text-[#FDB913] font-bold">
-                                        السعر حسب الطلب
-                                      </span>
-                                    ) : (
-                                      `ج.م ${
-                                        offer.menuItem?.basePrice || "غير متاح"
-                                      }`
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                  <h3
+                                    className={`font-bold ${
+                                      offer.isEnabled
+                                        ? "text-gray-800 dark:text-gray-200"
+                                        : "text-gray-500 dark:text-gray-400"
+                                    } text-base sm:text-lg md:text-xl truncate`}
+                                  >
+                                    {offer.menuItem?.name ||
+                                      `عنصر #${offer.menuItemId}`}
+                                  </h3>
+                                  <span
+                                    className={`px-2 py-1 rounded-full text-xs whitespace-nowrap inline-flex items-center gap-1 self-start sm:self-center ${getStatusColor(
+                                      offer,
+                                    )}`}
+                                  >
+                                    {offer.isEnabled && (
+                                      <FaStar className="text-xs" />
                                     )}
+                                    {getStatusText(offer)}
+                                  </span>
+                                </div>
+                                {offer.menuItem?.description ? (
+                                  <p
+                                    className={`${offer.isEnabled ? "text-gray-600 dark:text-gray-400" : "text-gray-400 dark:text-gray-500"} text-xs sm:text-sm truncate mt-1`}
+                                  >
+                                    {offer.menuItem.description}
                                   </p>
+                                ) : (
+                                  <p className="text-gray-400 dark:text-gray-500 text-xs sm:text-sm italic truncate mt-1">
+                                    لا يوجد وصف
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Discount and Price Info - Full Width */}
+                          <div
+                            className={`mb-4 ${offer.isEnabled ? "opacity-100" : "opacity-75"}`}
+                          >
+                            <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-2xl border border-green-200 dark:border-green-700 p-4 sm:p-5">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                                  {offer.isPercentage ? (
+                                    <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
+                                      <FaPercent className="text-green-600 dark:text-green-400 text-2xl" />
+                                    </div>
+                                  ) : (
+                                    <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-xl">
+                                      <FaMoneyBillWave className="text-green-600 dark:text-green-400 text-2xl" />
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                      قيمة الخصم
+                                    </p>
+                                    <p className="font-bold text-green-600 dark:text-green-400 text-2xl">
+                                      {offer.isPercentage
+                                        ? `${offer.discountValue}%`
+                                        : `ج.م ${offer.discountValue}`}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                                  <div className="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                                    <FaHamburger className="text-blue-600 dark:text-blue-400 text-2xl" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                      السعر الأصلي
+                                    </p>
+                                    <p className="font-bold text-blue-600 dark:text-blue-400 text-2xl">
+                                      {offer.menuItem?.basePrice === 0 ? (
+                                        <span className="text-[#E41E26] dark:text-[#FDB913] font-bold">
+                                          السعر حسب الطلب
+                                        </span>
+                                      ) : (
+                                        `ج.م ${
+                                          offer.menuItem?.basePrice ||
+                                          "غير متاح"
+                                        }`
+                                      )}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Date Info - Full Width */}
-                        <div className="mb-4">
-                          <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl border border-orange-200 dark:border-orange-700 p-4 sm:p-5">
-                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                              <div className="flex items-center gap-3 sm:gap-4 flex-1">
-                                <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
-                                  <FaCalendarAlt className="text-orange-600 dark:text-orange-400 text-2xl" />
+                          {/* Date Info - Full Width */}
+                          <div className="mb-4">
+                            <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-2xl border border-orange-200 dark:border-orange-700 p-4 sm:p-5">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                                  <div className="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl">
+                                    <FaCalendarAlt className="text-orange-600 dark:text-orange-400 text-2xl" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                      تاريخ ووقت البداية
+                                    </p>
+                                    <p className="font-bold text-orange-600 dark:text-orange-400 text-lg">
+                                      {formatDateTime(offer.startDate)}
+                                    </p>
+                                  </div>
                                 </div>
-                                <div>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                                    تاريخ ووقت البداية
-                                  </p>
-                                  <p className="font-bold text-orange-600 dark:text-orange-400 text-lg">
-                                    {formatDateTime(offer.startDate)}
-                                  </p>
-                                </div>
-                              </div>
 
-                              <div className="flex items-center gap-3 sm:gap-4 flex-1">
-                                <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
-                                  <FaCalendarAlt className="text-purple-600 dark:text-purple-400 text-2xl" />
-                                </div>
-                                <div>
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                                    تاريخ ووقت النهاية
-                                  </p>
-                                  <p className="font-bold text-purple-600 dark:text-purple-400 text-lg">
-                                    {formatDateTime(offer.endDate)}
-                                  </p>
+                                <div className="flex items-center gap-3 sm:gap-4 flex-1">
+                                  <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+                                    <FaCalendarAlt className="text-purple-600 dark:text-purple-400 text-2xl" />
+                                  </div>
+                                  <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                                      تاريخ ووقت النهاية
+                                    </p>
+                                    <p className="font-bold text-purple-600 dark:text-purple-400 text-lg">
+                                      {formatDateTime(offer.endDate)}
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Branches */}
-                        <div className="mb-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                              <FaStore className="text-blue-600 dark:text-blue-400 text-sm" />
+                          {/* Branches */}
+                          <div className="mb-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                                <FaStore className="text-blue-600 dark:text-blue-400 text-sm" />
+                              </div>
+                              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                الفروع المطبق عليها:
+                              </p>
                             </div>
-                            <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                              الفروع المطبق عليها:
-                            </p>
+                            {offer.branchNames &&
+                            offer.branchNames.length > 0 ? (
+                              <div className="flex flex-wrap gap-2">
+                                {offer.branchNames.map((branchName, index) => (
+                                  <span
+                                    key={index}
+                                    className="px-3 py-1.5 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white rounded-lg text-xs font-medium flex items-center gap-1"
+                                  >
+                                    <FaStore className="text-xs" />
+                                    {branchName}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-gray-400 dark:text-gray-500">
+                                لم يتم تحديد فروع
+                              </p>
+                            )}
                           </div>
-                          {offer.branchNames && offer.branchNames.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                              {offer.branchNames.map((branchName, index) => (
-                                <span
-                                  key={index}
-                                  className="px-3 py-1.5 bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white rounded-lg text-xs font-medium flex items-center gap-1"
-                                >
-                                  <FaStore className="text-xs" />
-                                  {branchName}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-xs text-gray-400 dark:text-gray-500">
-                              لم يتم تحديد فروع
-                            </p>
-                          )}
+
+                          {/* Created At */}
+                          <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-xs mt-2">
+                            <FaClock className="text-xs" />
+                            <span>
+                              تم الإنشاء: {formatDateTime(offer.createdAt)}
+                            </span>
+                          </div>
                         </div>
 
-                        {/* Created At */}
-                        <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500 text-xs mt-2">
-                          <FaClock className="text-xs" />
-                          <span>
-                            تم الإنشاء: {formatDateTime(offer.createdAt)}
-                          </span>
+                        {/* Action Buttons */}
+                        <div className="flex flex-row sm:flex-col lg:flex-row gap-1 sm:gap-2 justify-end sm:justify-start items-center mt-2 sm:mt-0">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={(e) => handleToggleActive(offer.id, e)}
+                            className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${
+                              offer.isEnabled
+                                ? "bg-yellow-50 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-900/50 dark:text-yellow-300 dark:hover:bg-yellow-800 border-yellow-200 dark:border-yellow-800"
+                                : "bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/50 dark:text-green-300 dark:hover:bg-green-800 border-green-200 dark:border-green-800"
+                            } rounded-lg transition-colors duration-200 text-xs sm:text-sm font-medium flex-1 sm:flex-none justify-center border`}
+                          >
+                            {offer.isEnabled ? (
+                              <>
+                                <FaTimesCircle className="text-xs sm:text-sm" />
+                                <span className="whitespace-nowrap">تعطيل</span>
+                              </>
+                            ) : (
+                              <>
+                                <FaCheckCircle className="text-xs sm:text-sm" />
+                                <span className="whitespace-nowrap">تفعيل</span>
+                              </>
+                            )}
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleEdit(offer)}
+                            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-800 rounded-lg transition-colors duration-200 text-xs sm:text-sm font-medium flex-1 sm:flex-none justify-center border border-blue-200 dark:border-blue-800"
+                          >
+                            <FaEdit className="text-xs sm:text-sm" />
+                            <span className="whitespace-nowrap">تعديل</span>
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleDelete(offer.id)}
+                            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/50 dark:text-red-300 dark:hover:bg-red-800 rounded-lg transition-colors duration-200 text-xs sm:text-sm font-medium flex-1 sm:flex-none justify-center border border-red-200 dark:border-red-800"
+                          >
+                            <FaTrash className="text-xs sm:text-sm" />
+                            <span className="whitespace-nowrap">حذف</span>
+                          </motion.button>
                         </div>
                       </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
 
-                      {/* Action Buttons */}
-                      <div className="flex flex-row sm:flex-col lg:flex-row gap-1 sm:gap-2 justify-end sm:justify-start items-center mt-2 sm:mt-0">
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={(e) => handleToggleActive(offer.id, e)}
-                          className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 ${
-                            offer.isEnabled
-                              ? "bg-yellow-50 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-900/50 dark:text-yellow-300 dark:hover:bg-yellow-800 border-yellow-200 dark:border-yellow-800"
-                              : "bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-900/50 dark:text-green-300 dark:hover:bg-green-800 border-green-200 dark:border-green-800"
-                          } rounded-lg transition-colors duration-200 text-xs sm:text-sm font-medium flex-1 sm:flex-none justify-center border`}
-                        >
-                          {offer.isEnabled ? (
-                            <>
-                              <FaTimesCircle className="text-xs sm:text-sm" />
-                              <span className="whitespace-nowrap">تعطيل</span>
-                            </>
-                          ) : (
-                            <>
-                              <FaCheckCircle className="text-xs sm:text-sm" />
-                              <span className="whitespace-nowrap">تفعيل</span>
-                            </>
-                          )}
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleEdit(offer)}
-                          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:bg-blue-800 rounded-lg transition-colors duration-200 text-xs sm:text-sm font-medium flex-1 sm:flex-none justify-center border border-blue-200 dark:border-blue-800"
-                        >
-                          <FaEdit className="text-xs sm:text-sm" />
-                          <span className="whitespace-nowrap">تعديل</span>
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleDelete(offer.id)}
-                          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-900/50 dark:text-red-300 dark:hover:bg-red-800 rounded-lg transition-colors duration-200 text-xs sm:text-sm font-medium flex-1 sm:flex-none justify-center border border-red-200 dark:border-red-800"
-                        >
-                          <FaTrash className="text-xs sm:text-sm" />
-                          <span className="whitespace-nowrap">حذف</span>
-                        </motion.button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              {!loading && filteredOffers.length === 0 && (
+              {!loading && !loadingPage && filteredOffers.length === 0 && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -1261,9 +1325,9 @@ export default function ItemOffersManagement() {
                   <div className="flex items-center justify-center gap-1 sm:gap-2">
                     <button
                       onClick={handlePrevPage}
-                      disabled={currentPage === 1}
+                      disabled={currentPage === 1 || loadingPage}
                       className={`p-2 sm:p-3 rounded-xl ${
-                        currentPage === 1
+                        currentPage === 1 || loadingPage
                           ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
                           : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
                       }`}
@@ -1281,11 +1345,12 @@ export default function ItemOffersManagement() {
                           ) : (
                             <button
                               onClick={() => handlePageChange(pageNum)}
+                              disabled={loadingPage}
                               className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl font-semibold ${
                                 currentPage === pageNum
                                   ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white shadow-lg"
                                   : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                              }`}
+                              } ${loadingPage ? "opacity-50 cursor-not-allowed" : ""}`}
                             >
                               {pageNum}
                             </button>
@@ -1296,9 +1361,9 @@ export default function ItemOffersManagement() {
 
                     <button
                       onClick={handleNextPage}
-                      disabled={currentPage === totalPages}
+                      disabled={currentPage === totalPages || loadingPage}
                       className={`p-2 sm:p-3 rounded-xl ${
-                        currentPage === totalPages
+                        currentPage === totalPages || loadingPage
                           ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
                           : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
                       }`}
