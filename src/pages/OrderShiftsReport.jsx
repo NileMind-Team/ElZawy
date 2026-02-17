@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   FaCalendarAlt,
@@ -201,7 +201,9 @@ const formatTimeTo12Hour = (timeString) => {
 };
 
 const OrderShiftsReport = () => {
+  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(false);
+  const [loadingPage, setLoadingPage] = useState(false);
   const [day, setDay] = useState(null);
   const [shiftId, setShiftId] = useState("");
   const [branchId, setBranchId] = useState("");
@@ -217,13 +219,44 @@ const OrderShiftsReport = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  const tableContainerRef = useRef(null);
+  const firstRowRef = useRef(null);
+  const isPaginationChange = useRef(false);
+
+  const scrollToFirstRow = () => {
+    if (isPaginationChange.current) {
+      setTimeout(() => {
+        if (firstRowRef.current) {
+          const offset = 150;
+          const elementPosition =
+            firstRowRef.current.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          });
+        } else if (tableContainerRef.current) {
+          const containerPosition =
+            tableContainerRef.current.getBoundingClientRect().top;
+          const offsetPosition = containerPosition + window.pageYOffset - 100;
+
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: "smooth",
+          });
+        }
+      }, 200);
+
+      isPaginationChange.current = false;
+    }
+  };
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }, [currentPage]);
+    if (!loadingPage && reportData.length > 0) {
+      scrollToFirstRow();
+    }
+  }, [reportData, loadingPage, currentPage]);
 
   useEffect(() => {
     const loadBranches = async () => {
@@ -296,7 +329,7 @@ const OrderShiftsReport = () => {
     setOpenDropdown(openDropdown === menu ? null : menu);
   };
 
-  const handleFilter = async (page = 1) => {
+  const handleFilter = async (page = 1, showPageLoading = true) => {
     if (!day) {
       Swal.fire({
         icon: "warning",
@@ -336,7 +369,10 @@ const OrderShiftsReport = () => {
       return;
     }
 
-    setLoading(true);
+    if (showPageLoading) {
+      setLoadingPage(true);
+    }
+
     try {
       const response = await fetchOrdersWithFilter(
         day,
@@ -399,7 +435,9 @@ const OrderShiftsReport = () => {
       setCurrentPage(1);
       setTotalItems(0);
     } finally {
-      setLoading(false);
+      if (showPageLoading) {
+        setLoadingPage(false);
+      }
     }
   };
 
@@ -411,22 +449,23 @@ const OrderShiftsReport = () => {
   };
 
   const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-    handleFilter(pageNumber);
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    if (pageNumber !== currentPage) {
+      isPaginationChange.current = true;
+      setCurrentPage(pageNumber);
+      handleFilter(pageNumber, true);
+    }
   };
 
   const handlePrevPage = () => {
     if (currentPage > 1) {
+      isPaginationChange.current = true;
       handlePageChange(currentPage - 1);
     }
   };
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
+      isPaginationChange.current = true;
       handlePageChange(currentPage + 1);
     }
   };
@@ -1224,7 +1263,7 @@ const OrderShiftsReport = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => handleFilter(1)}
+                  onClick={() => handleFilter(1, true)}
                   disabled={!day || !branchId || !shiftId}
                   className={`px-6 py-3 rounded-lg font-semibold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                     day && branchId && shiftId
@@ -1264,103 +1303,115 @@ const OrderShiftsReport = () => {
               </div>
             </motion.div>
 
-            {/* Orders Table */}
             {reportData && reportData.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg"
-              >
-                <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center gap-2">
-                    <FaListAlt className="text-[#E41E26] text-xl" />
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">
-                      تفاصيل الطلبات حسب الورديات
-                    </h3>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      ({totalItems} طلب)
-                    </span>
+              <>
+                <motion.div
+                  ref={tableContainerRef}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-lg"
+                >
+                  <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <FaListAlt className="text-[#E41E26] text-xl" />
+                      <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                        تفاصيل الطلبات حسب الورديات
+                      </h3>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        ({totalItems} طلب)
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-700/50">
-                      <tr>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          رقم الفاتورة
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          الإجمالي
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          اسم الفرع
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          اسم الشيفت
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          بداية الشيفت
-                        </th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
-                          نهاية الشيفت
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                      {reportData.map((order) => (
-                        <tr
-                          key={order.id}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150"
-                        >
-                          <td className="px-4 py-3 text-center font-mono text-sm text-gray-800 dark:text-white font-bold">
-                            {order.orderNumber}
-                          </td>
-                          <td className="px-4 py-3 text-center font-bold text-[#E41E26] dark:text-[#FDB913]">
-                            {formatCurrency(order.totalWithFee)}
-                          </td>
-                          <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
-                            {order.branch?.name || "غير محدد"}
-                          </td>
-                          <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
-                            {order.orderShift?.name || "غير محدد"}
-                          </td>
-                          <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
-                            <div className="flex items-center justify-center gap-1">
-                              {order.orderShift?.start
-                                ? formatTimeTo12Hour(order.orderShift.start)
-                                : "غير محدد"}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
-                            <div className="flex items-center justify-center gap-1">
-                              {order.orderShift?.end
-                                ? formatTimeTo12Hour(order.orderShift.end)
-                                : "غير محدد"}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                  {loadingPage && (
+                    <div className="flex justify-center items-center py-12">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#E41E26]"></div>
+                      </div>
+                    </div>
+                  )}
 
-                      <tr className="bg-gray-50 dark:bg-gray-700/50 border-t-2 border-gray-200 dark:border-gray-600">
-                        <td
-                          colSpan="5"
-                          className="px-4 py-3 text-center font-bold text-gray-800 dark:text-white"
-                        >
-                          الإجمالي الكلي لجميع الفواتير:
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-xl font-bold text-[#E41E26] dark:text-[#FDB913]">
-                            {formatCurrency(totalPrice)}
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                  {!loadingPage && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 dark:bg-gray-700/50">
+                          <tr>
+                            <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                              رقم الفاتورة
+                            </th>
+                            <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                              الإجمالي
+                            </th>
+                            <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                              اسم الفرع
+                            </th>
+                            <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                              اسم الشيفت
+                            </th>
+                            <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                              بداية الشيفت
+                            </th>
+                            <th className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-gray-300">
+                              نهاية الشيفت
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                          {reportData.map((order, index) => (
+                            <tr
+                              key={order.id}
+                              ref={index === 0 ? firstRowRef : null}
+                              className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150"
+                            >
+                              <td className="px-4 py-3 text-center font-mono text-sm text-gray-800 dark:text-white font-bold">
+                                {order.orderNumber}
+                              </td>
+                              <td className="px-4 py-3 text-center font-bold text-[#E41E26] dark:text-[#FDB913]">
+                                {formatCurrency(order.totalWithFee)}
+                              </td>
+                              <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                                {order.branch?.name || "غير محدد"}
+                              </td>
+                              <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                                {order.orderShift?.name || "غير محدد"}
+                              </td>
+                              <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center justify-center gap-1">
+                                  {order.orderShift?.start
+                                    ? formatTimeTo12Hour(order.orderShift.start)
+                                    : "غير محدد"}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-center text-sm text-gray-600 dark:text-gray-400">
+                                <div className="flex items-center justify-center gap-1">
+                                  {order.orderShift?.end
+                                    ? formatTimeTo12Hour(order.orderShift.end)
+                                    : "غير محدد"}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
 
-                {/* Pagination Controls */}
+                          <tr className="bg-gray-50 dark:bg-gray-700/50 border-t-2 border-gray-200 dark:border-gray-600">
+                            <td
+                              colSpan="5"
+                              className="px-4 py-3 text-center font-bold text-gray-800 dark:text-white"
+                            >
+                              الإجمالي الكلي لجميع الفواتير:
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <span className="text-xl font-bold text-[#E41E26] dark:text-[#FDB913]">
+                                {formatCurrency(totalPrice)}
+                              </span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </motion.div>
+
                 {totalPages > 1 && (
                   <div className="px-4 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700">
                     <div className="flex items-center justify-center gap-2">
@@ -1368,9 +1419,9 @@ const OrderShiftsReport = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handlePrevPage}
-                        disabled={currentPage === 1}
+                        disabled={currentPage === 1 || loadingPage}
                         className={`p-2 sm:p-3 rounded-xl transition-all ${
-                          currentPage === 1
+                          currentPage === 1 || loadingPage
                             ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
                             : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
                         }`}
@@ -1390,11 +1441,12 @@ const OrderShiftsReport = () => {
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => handlePageChange(pageNum)}
+                                disabled={loadingPage}
                                 className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl font-semibold transition-all ${
                                   currentPage === pageNum
                                     ? "bg-gradient-to-r from-[#E41E26] to-[#FDB913] text-white shadow-lg"
                                     : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
-                                }`}
+                                } ${loadingPage ? "opacity-50 cursor-not-allowed" : ""}`}
                               >
                                 {pageNum}
                               </motion.button>
@@ -1407,9 +1459,9 @@ const OrderShiftsReport = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleNextPage}
-                        disabled={currentPage === totalPages}
+                        disabled={currentPage === totalPages || loadingPage}
                         className={`p-2 sm:p-3 rounded-xl transition-all ${
-                          currentPage === totalPages
+                          currentPage === totalPages || loadingPage
                             ? "bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed"
                             : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600"
                         }`}
@@ -1419,10 +1471,10 @@ const OrderShiftsReport = () => {
                     </div>
                   </div>
                 )}
-              </motion.div>
+              </>
             )}
 
-            {(!reportData || reportData.length === 0) && (
+            {(!reportData || reportData.length === 0) && !loadingPage && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
