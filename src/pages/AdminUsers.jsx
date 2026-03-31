@@ -64,6 +64,9 @@ export default function AdminUsers() {
     handlePrevPage,
     handleNextPage,
     getPaginationNumbers,
+    getAllPhoneNumbers,
+    getPrimaryPhoneNumber,
+    hasLocationPhones,
   } = useUsers();
 
   const scrollToFirstUser = () => {
@@ -377,6 +380,9 @@ export default function AdminUsers() {
                         setAssigningRole={setAssigningRole}
                         handleAssignRole={handleAssignRole}
                         handleToggleStatus={handleToggleStatus}
+                        getAllPhoneNumbers={getAllPhoneNumbers}
+                        getPrimaryPhoneNumber={getPrimaryPhoneNumber}
+                        hasLocationPhones={hasLocationPhones}
                       />
                     ))}
 

@@ -2243,7 +2243,6 @@ export default function MyOrders() {
                             </div>
                           )}
 
-                          {/* البريد الإلكتروني */}
                           {orderDetails.user?.email && (
                             <div className="flex items-start gap-2 sm:gap-3">
                               <FaEnvelope className="text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" />
@@ -2255,19 +2254,17 @@ export default function MyOrders() {
                             </div>
                           )}
 
-                          {/* رقم الهاتف */}
-                          {orderDetails.user?.phoneNumber && (
-                            <div className="flex items-start gap-2 sm:gap-3">
-                              <FaPhone className="text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" />
-                              <div className="min-w-0">
-                                <p className="font-medium text-gray-800 dark:text-gray-200 break-words">
-                                  {orderDetails.user.phoneNumber}
-                                </p>
-                              </div>
+                          <div className="flex items-start gap-2 sm:gap-3">
+                            <FaPhone className="text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" />
+                            <div className="min-w-0">
+                              <p className="font-medium text-gray-800 dark:text-gray-200 break-words">
+                                {orderDetails.location?.phoneNumber ||
+                                  orderDetails.user?.phoneNumber ||
+                                  "غير متوفر"}{" "}
+                              </p>
                             </div>
-                          )}
+                          </div>
 
-                          {/* العنوان */}
                           {orderDetails.location ? (
                             <div className="flex items-start gap-2 sm:gap-3">
                               <FaMapMarkerAlt className="text-gray-400 dark:text-gray-500 mt-0.5 flex-shrink-0" />

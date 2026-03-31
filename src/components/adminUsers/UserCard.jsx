@@ -6,6 +6,7 @@ import {
   FaUserSlash,
   FaUserCheck,
   FaUserTag,
+  FaMapMarkerAlt,
 } from "react-icons/fa";
 
 export default function UserCard({
@@ -20,7 +21,18 @@ export default function UserCard({
   setAssigningRole,
   handleAssignRole,
   handleToggleStatus,
+  getAllPhoneNumbers,
+  getPrimaryPhoneNumber,
+  hasLocationPhones,
 }) {
+  const locationPhones = getAllPhoneNumbers ? getAllPhoneNumbers(user) : [];
+  const primaryPhone = getPrimaryPhoneNumber
+    ? getPrimaryPhoneNumber(user)
+    : user.phoneNumber;
+  const hasLocationPhonesData = hasLocationPhones
+    ? hasLocationPhones(user)
+    : false;
+
   return (
     <motion.div
       key={user.id}
@@ -74,7 +86,7 @@ export default function UserCard({
 
           <div className="flex-1 min-w-0">
             <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-3 mb-2 sm:mb-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h3
                   className={`font-bold text-base sm:text-lg md:text-xl truncate ${
                     user.isActive === false ? "text-gray-500" : "text-gray-800"
@@ -117,13 +129,61 @@ export default function UserCard({
                 />
                 <span className="truncate">{user.email}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <FaPhone
-                  className={`flex-shrink-0 text-xs sm:text-sm ${
-                    user.isActive === false ? "text-gray-400" : "text-[#E41E26]"
-                  }`}
-                />
-                <span>{user.phoneNumber || "غير متوفر"}</span>
+
+              <div className="flex flex-col gap-1">
+                {primaryPhone && (
+                  <div className="flex items-center gap-2">
+                    <FaPhone
+                      className={`flex-shrink-0 text-xs sm:text-sm ${
+                        user.isActive === false
+                          ? "text-gray-400"
+                          : "text-[#E41E26]"
+                      }`}
+                    />
+                    <span className="truncate">{primaryPhone}</span>
+                    {hasLocationPhonesData && locationPhones.length > 1 && (
+                      <span className="text-xs text-gray-500 mr-1">
+                        (الرئيسي)
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {locationPhones.length > 0 && (
+                  <>
+                    {locationPhones.map((phone, idx) => {
+                      if (phone === primaryPhone && primaryPhone) return null;
+                      return (
+                        <div key={idx} className="flex items-center gap-2 mr-5">
+                          <FaMapMarkerAlt
+                            className={`flex-shrink-0 text-xs ${
+                              user.isActive === false
+                                ? "text-gray-400"
+                                : "text-green-500"
+                            }`}
+                          />
+                          <span className="text-sm truncate">{phone}</span>
+                          <span className="text-xs text-gray-400">
+                            (عنوان {idx + 1})
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+
+                {!primaryPhone && locationPhones.length === 0 && (
+                  <div className="flex items-center gap-2">
+                    <FaPhone
+                      className={`flex-shrink-0 text-xs sm:text-sm ${
+                        user.isActive === false
+                          ? "text-gray-400"
+                          : "text-gray-400"
+                      }`}
+                    />
+                    <span className="text-gray-400">غير متوفر</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
