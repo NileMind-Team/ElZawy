@@ -35,6 +35,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import * as signalR from "@microsoft/signalr";
 import { Helmet } from "react-helmet-async";
+import logo from "../assets/logo.png";
 
 export default function MyOrders() {
   const navigate = useNavigate();
@@ -73,6 +74,7 @@ export default function MyOrders() {
   const firstOrderRef = useRef(null);
   const isPaginationChange = useRef(false);
   const previousPageRef = useRef(currentPage);
+  const [printingOrderId, setPrintingOrderId] = useState(null);
 
   const isMobile = () => {
     return window.innerWidth < 768;
@@ -557,7 +559,7 @@ export default function MyOrders() {
       },
     });
 
-    return response.data; // مثال: branch-1 أو orders
+    return response.data;
   };
 
   const connectSignalR = async () => {
@@ -627,7 +629,6 @@ export default function MyOrders() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInitialLoad]);
 
-  // Function to normalize WebSocket order format to match our app format
   const normalizeWebSocketOrder = (wsOrder) => {
     let createdAt = wsOrder.CreatedAt || wsOrder.createdAt;
     let updatedAt = wsOrder.UpdatedAt || wsOrder.updatedAt;
@@ -879,33 +880,325 @@ export default function MyOrders() {
     }
   };
 
-  const handleReprintOrder = async (orderId, e) => {
+  const printOrder = async (orderId, e) => {
     if (e) {
       e.stopPropagation();
     }
 
+    setPrintingOrderId(orderId);
+
     try {
-      const token = localStorage.getItem("token");
+      let orderToPrint;
 
-      const response = await axiosInstance.get(
-        `/api/Orders/ReprintOrder/${orderId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      if (orderDetails && orderDetails.id === orderId) {
+        orderToPrint = orderDetails;
+      } else {
+        const token = localStorage.getItem("token");
+        let response;
 
-      if (response.status === 200) {
-        showMessage("success", "تم بنجاح!", "تم إرسال طلب إعادة الطباعة بنجاح");
+        if (isAdminOrRestaurantOrBranch) {
+          response = await axiosInstance.get(`/api/Orders/GetById/${orderId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+        } else {
+          response = await axiosInstance.get(
+            `/api/Orders/GetByIdForUser/${orderId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+        }
+
+        orderToPrint = response.data;
+
+        if (orderToPrint && orderToPrint.items) {
+          orderToPrint.items = orderToPrint.items.map((item) => ({
+            ...item,
+            menuItemImageUrlSnapshotAtOrder:
+              item.menuItemImageUrlSnapshotAtOrder ||
+              item.imageUrlSnapshot ||
+              (item.menuItem ? item.menuItem.imageUrl : null),
+            menuItemNameSnapshotAtOrder:
+              item.menuItemNameSnapshotAtOrder ||
+              item.nameSnapshot ||
+              (item.menuItem ? item.menuItem.name : "عنصر غير معروف"),
+            menuItemDescriptionAtOrder:
+              item.menuItemDescriptionAtOrder ||
+              item.descriptionSnapshot ||
+              (item.menuItem ? item.menuItem.description : ""),
+            menuItemBasePriceSnapshotAtOrder:
+              item.menuItemBasePriceSnapshotAtOrder > 0
+                ? item.menuItemBasePriceSnapshotAtOrder
+                : item.basePriceSnapshot || item.menuItem?.basePrice || 0,
+            totalPrice:
+              item.totalPrice < 0 ? Math.abs(item.totalPrice) : item.totalPrice,
+          }));
+        }
+
+        if (orderToPrint) {
+          const calculatedPrices =
+            calculatePricesFromOrderDetails(orderToPrint);
+          orderToPrint.calculatedPrices = calculatedPrices;
+        }
       }
+
+      if (!orderToPrint) {
+        showMessage("error", "خطأ", "فشل تحميل بيانات الطلب للطباعة");
+        return;
+      }
+
+      const printContent = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>فاتورة</title>
+
+<style>
+  @page {
+    size: 80mm auto;
+    margin: 0;
+  }
+
+  body {
+    font-family: monospace;
+    width: 76mm;
+    margin: 0 auto;
+    padding: 6px;
+    font-size: 12px;
+    direction: ltr; /* مهم علشان يمنع القص */
+  }
+
+  .center {
+    text-align: center;
+  }
+
+  .logo img {
+    width: 100px;
+    margin-bottom: 5px;
+  }
+
+  .line {
+    border-top: 1px dashed #000;
+    margin: 6px 0;
+  }
+
+  .bold-line {
+    border-top: 2px solid #000;
+    margin: 6px 0;
+  }
+
+  .text {
+    margin: 2px 0;
+    text-align: right;
+    word-break: break-word;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  th, td {
+    padding: 2px 0;
+  }
+
+  th {
+    font-weight: bold;
+  }
+
+  .col-name {
+    width: 40%;
+    text-align: right;
+  }
+
+  .col-qty {
+    width: 15%;
+    text-align: center;
+  }
+
+  .col-price {
+    width: 20%;
+    text-align: center;
+  }
+
+  .col-total {
+    width: 25%;
+    text-align: left;
+  }
+
+  .item-name {
+    font-weight: bold;
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    direction: rtl;
+  }
+
+  .total {
+    font-weight: bold;
+    font-size: 13px;
+  }
+
+</style>
+</head>
+
+<body>
+
+<!-- Logo -->
+<div class="center logo">
+  <img src="${logo}" />
+</div>
+
+<div class="bold-line"></div>
+
+<div class="center">${orderToPrint.orderNumber}</div>
+<div class="center">${formatShortArabicDate(orderToPrint.createdAt)}</div>
+
+<div class="line"></div>
+
+<div class="text" style="direction: rtl;">
+  العميل:
+  <span style="direction: ltr; unicode-bidi: embed;">
+    ${orderToPrint.user?.firstName || ""} ${orderToPrint.user?.lastName || ""}
+  </span>
+</div>
+
+<div class="text">
+الرقم: ${orderToPrint.location?.phoneNumber || orderToPrint.user?.phoneNumber || "-"}
+</div>
+
+<div class="text">
+${orderToPrint.location ? "توصيل" : "استلام من المكان"}
+</div>
+
+<div class="bold-line"></div>
+
+<!-- Header Table -->
+<table style="direction: rtl;">
+  <thead>
+    <tr>
+      <th class="col-name">الصنف</th>
+      <th class="col-qty">ك</th>
+      <th class="col-price">سعر</th>
+      <th class="col-total">إجمالي</th>
+    </tr>
+  </thead>
+</table>
+
+<div class="line"></div>
+
+<!-- Items -->
+${orderToPrint.items
+  ?.map((item) => {
+    const price = calculateItemFinalPrice(item);
+    const qty = item.quantity || 1;
+    const total = price * qty;
+
+    const name =
+      item.menuItemNameSnapshotAtOrder ||
+      item.nameSnapshot ||
+      item.menuItem?.name ||
+      "عنصر";
+
+    return `
+      <table style="direction: rtl;">
+        <tr>
+          <td class="col-name">${name}</td>
+          <td class="col-qty">${qty}</td>
+          <td class="col-price">${price.toFixed(2)}</td>
+          <td class="col-total">${total.toFixed(2)}</td>
+        </tr>
+      </table>
+    `;
+  })
+  .join("")}
+
+<div class="bold-line"></div>
+
+<!-- Totals -->
+<div class="row">
+  <span>الإجمالي</span>
+  <span>${(orderToPrint.calculatedPrices?.subtotal || 0).toFixed(2)}</span>
+</div>
+
+${
+  (orderToPrint.calculatedPrices?.totalDiscount || 0) > 0
+    ? `
+    <div class="row">
+      <span>خصم</span>
+      <span>-${orderToPrint.calculatedPrices.totalDiscount.toFixed(2)}</span>
+    </div>
+`
+    : ""
+}
+
+<div class="row">
+  <span>توصيل</span>
+  <span>${(orderToPrint.calculatedPrices?.deliveryFee || 0).toFixed(2)}</span>
+</div>
+
+<div class="bold-line"></div>
+
+<div class="row total">
+  <span>المطلوب</span>
+  <span>${(orderToPrint.calculatedPrices?.totalWithFee || 0).toFixed(2)}</span>
+</div>
+
+<div class="bold-line"></div>
+
+<script>
+window.onload = function () {
+  setTimeout(() => {
+    window.print();
+  }, 500);
+};
+</script>
+
+</body>
+</html>
+`;
+
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "absolute";
+      iframe.style.width = "0px";
+      iframe.style.height = "0px";
+      iframe.style.border = "none";
+      document.body.appendChild(iframe);
+
+      const iframeDoc = iframe.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(printContent);
+      iframeDoc.close();
+
+      iframe.contentWindow.onload = function () {
+        setTimeout(() => {
+          iframe.contentWindow.print();
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 1000);
+        }, 500);
+      };
+
+      showMessage("success", "تم", "تم إرسال الفاتورة إلى الطابعة");
     } catch (error) {
-      console.error("Error reprinting order:", error);
+      console.error("Error printing order:", error);
       showMessage(
         "error",
         "خطأ",
-        "فشل إرسال طلب إعادة الطباعة. يرجى المحاولة مرة أخرى.",
+        "فشل طباعة الفاتورة. يرجى المحاولة مرة أخرى.",
       );
+    } finally {
+      setPrintingOrderId(null);
     }
   };
 
@@ -1814,7 +2107,7 @@ export default function MyOrders() {
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={(e) => handleReprintOrder(order.id, e)}
+                                onClick={(e) => printOrder(order.id, e)}
                                 className="flex items-center gap-1 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:from-green-600 hover:to-green-700 transition-all"
                               >
                                 <FaPrint size={10} />
@@ -2828,9 +3121,7 @@ export default function MyOrders() {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={(e) =>
-                              handleReprintOrder(orderDetails.id, e)
-                            }
+                            onClick={(e) => printOrder(orderDetails.id, e)}
                             className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-semibold hover:from-green-600 hover:to-green-700 transition-all text-sm sm:text-base"
                           >
                             <FaPrint className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -2852,6 +3143,29 @@ export default function MyOrders() {
                   )}
                 </div>
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Printing Loading Overlay */}
+      <AnimatePresence>
+        {printingOrderId && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[200]"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed inset-0 z-[201] flex items-center justify-center"
+            >
+              <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-t-4 border-b-4 border-[#E41E26]"></div>
             </motion.div>
           </>
         )}
